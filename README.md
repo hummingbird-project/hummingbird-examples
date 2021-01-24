@@ -1,3 +1,1 @@
-# hummingbird-examples
-
-A description of this package.
+# Hummingbird Example Code
