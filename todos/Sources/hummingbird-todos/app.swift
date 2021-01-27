@@ -10,8 +10,8 @@ func runApp(_ arguments: HummingbirdArguments) throws {
     app.encoder = JSONEncoder()
     app.decoder = JSONDecoder()
     
-    // initialize Fluent
-    app.initializeFluent()
+    // add Fluent
+    app.addFluent()
     // add sqlite database
     app.fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
     // add migrations
