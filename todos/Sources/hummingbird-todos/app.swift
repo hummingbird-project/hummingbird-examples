@@ -25,11 +25,13 @@ func runApp(_ arguments: HummingbirdArguments) throws {
         return "Hello"
     }
     let todoController = TodoController()
-    app.router.get("todos", use: todoController.list)
-    app.router.put("todos", use: todoController.create)
-    app.router.get("todos/:id", use: todoController.get)
-    app.router.put("todos/:id", use: todoController.update)
-    app.router.delete("todos/:id", use: todoController.delete)
+    app.router
+        .endpoint("todos")
+        .get(use: todoController.list)
+        .put(use: todoController.create)
+        .get(":id", use: todoController.get)
+        .put(":id", use: todoController.update)
+        .delete(":id", use: todoController.delete)
 
     app.start()
     app.wait()
