@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - '**.swift'
+  pull_request:
+    branches:
+    - main
+    paths:
+    - '**.swift'
+  workflow_dispatch:
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ['swift:5.3-bionic', 'swift:5.3-focal', 'swift:5.3-amazonlinux2', 'swift:5.3-centos8']
+    container:
+      image: ${{ matrix.image }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Build Hello
+      run: |
+        cd hello
+        swift build
+    - name: Build HTTP2
+      run: |
+        cd ../http2
+        swift build
+    - name: Build Todos
+      run: |
+        cd ../todos
+        swift build
+    - name: Build HTML form
+      run: |
+        cd ../html-fowm
+        swift build
+
