@@ -13,7 +13,7 @@ func runApp(_ arguments: HummingbirdArguments) throws {
     // add Fluent
     app.addFluent()
     // add sqlite database
-    app.fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
+    app.fluent.databases.use(.sqlite(.memory), as: .sqlite)
     // add migrations
     app.fluent.migrations.add(CreateTodo())
     // migrate
@@ -26,7 +26,7 @@ func runApp(_ arguments: HummingbirdArguments) throws {
     }
     let todoController = TodoController()
     app.router
-        .endpoint("todos")
+        .group("todos")
         .get(use: todoController.list)
         .put(use: todoController.create)
         .get(":id", use: todoController.get)
