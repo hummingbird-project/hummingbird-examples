@@ -22,18 +22,12 @@ func runApp(_ arguments: HummingbirdArguments) throws {
     }
 
     app.middleware.add(CORSMiddleware())
-    
+
     app.router.get("/") { _ in
         return "Hello"
     }
     let todoController = TodoController()
-    app.router
-        .group("todos")
-        .get(use: todoController.list)
-        .put(use: todoController.create)
-        .get(":id", use: todoController.get)
-        .put(":id", use: todoController.update)
-        .delete(":id", use: todoController.delete)
+    todoController.addRoutes(to: app.router.group("todos"))
 
     app.start()
     app.wait()

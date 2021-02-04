@@ -4,6 +4,15 @@ import HummingbirdFluent
 import NIO
 
 struct TodoController {
+    func addRoutes(to group: HBRouterGroup) {
+        group
+            .get(use: list)
+            .post(use: create)
+            .delete(use: deleteAll)
+            .get(":id", use: get)
+            .put(":id", use: update)
+    }
+    
     func list(_ request: HBRequest) -> EventLoopFuture<[Todo]> {
         return Todo.query(on: request.db).all()
     }
@@ -30,10 +39,8 @@ struct TodoController {
             .transform(to: todo)
     }
 
-    func delete(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
-        guard let id = request.parameters.get("id", as: UUID.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        return Todo.find(id, on: request.db)
-            .unwrap(orError: HBHTTPError(.notFound))
+    func deleteAll(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
+        return Todo.query(on: request.db).all()
             .flatMap { $0.delete(on: request.db) }
             .transform(to: .ok)
     }
