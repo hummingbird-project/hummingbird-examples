@@ -14,11 +14,19 @@ final class Todo: Model, HBResponseCodable {
     @Field(key: "order")
     var order: Int?
 
+    @Field(key: "url")
+    var url: String?
+
+    @Field(key: "completed")
+    var completed: Bool?
+
     init() { }
 
-    init(id: UUID? = nil, title: String, order: Int?) {
+    init(id: UUID? = nil, title: String, order: Int?, url: String?, completed: Bool?) {
         self.id = id
         self.title = title
         self.order = order
+        self.url = url
+        self.completed = completed
     }
 }

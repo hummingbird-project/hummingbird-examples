@@ -5,7 +5,9 @@ struct CreateTodo: Migration {
         return database.schema("todos")
             .id()
             .field("title", .string, .required)
-            .field("order", .string)
+            .field("order", .int)
+            .field("completed", .bool)
+            .field("url", .string)
             .create()
     }
 
@@ -13,3 +15,4 @@ struct CreateTodo: Migration {
         return database.schema("todos").delete()
     }
 }
+
