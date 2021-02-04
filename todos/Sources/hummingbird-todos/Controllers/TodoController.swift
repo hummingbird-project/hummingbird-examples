@@ -1,6 +1,7 @@
 import Foundation
 import Hummingbird
 import HummingbirdFluent
+import FluentKit
 import NIO
 
 struct TodoController {
@@ -9,7 +10,7 @@ struct TodoController {
             .get(use: list)
             .post(use: create)
             .delete(use: deleteAll)
-            .get(":id", use: get)
+            .patch(use: update)
             .put(":id", use: update)
     }
     
@@ -28,20 +29,20 @@ struct TodoController {
     }
 
     func update(_ request: HBRequest) -> EventLoopFuture<Todo> {
-        guard let todo = try? request.decode(as: Todo.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        guard let id = request.parameters.get("id", as: UUID.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        return Todo.find(id, on: request.db)
+        guard let newTodo = try? request.decode(as: Todo.self) else { return request.failure(HBHTTPError(.badRequest)) }
+        return Todo.query(on: request.db)
+            .filter(\.$title == "Test")
+            .first()
             .unwrap(orError: HBHTTPError(.notFound))
-            .flatMap { dbEntry -> EventLoopFuture<Void> in
-                dbEntry.title = todo.title
-                return dbEntry.update(on: request.db)
+            .flatMap { todo -> EventLoopFuture<Todo> in
+                todo.order = newTodo.order
+                return todo.update(on: request.db).map { todo }
             }
-            .transform(to: todo)
     }
 
     func deleteAll(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
-        return Todo.query(on: request.db).all()
-            .flatMap { $0.delete(on: request.db) }
+        return Todo.query(on: request.db)
+            .delete()
             .transform(to: .ok)
     }
 }

@@ -5,8 +5,7 @@ struct CORSMiddleware: HBMiddleware {
         if request.method == .OPTIONS {
             let headers: HTTPHeaders = [
                 "access-control-allow-origin": "*",
-                "access-control-allow-headers": "content-type",
-                "access-control-allow-methods": "OPTIONS, GET, POST, DELETE, PATCH"
+                "access-control-allow-headers": "content-type"
             ]
             return request.success(HBResponse(status: .noContent, headers: headers, body: .empty))
         } else {
