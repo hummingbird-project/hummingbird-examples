@@ -25,7 +25,7 @@ struct TodoController {
         return todo.save(on: request.db)
             .flatMap { _ in
                 todo.completed = false
-                todo.url = "http://dev.opticalaberration.com/todos/\(todo.id!)"
+                todo.url = "http://dev.opticalaberration.com:8080/todos/\(todo.id!)"
                 return todo.update(on: request.db)
             }
             .map { request.response.status = .created; return todo }
@@ -55,6 +55,7 @@ struct TodoController {
         return Todo.find(id, on: request.db)
             .unwrap(orError: HBHTTPError(.notFound))
             .flatMap { todo -> EventLoopFuture<Todo> in
+                todo.title = newTodo.title
                 todo.completed = newTodo.completed
                 todo.order = newTodo.order
                 return todo.update(on: request.db).map { todo }
