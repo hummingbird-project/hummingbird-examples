@@ -2,7 +2,7 @@ import Foundation
 import FluentSQLiteDriver
 import Hummingbird
 import HummingbirdFluent
-import HummingbirdJSON
+import HummingbirdFoundation
 
 func runApp(_ arguments: HummingbirdArguments) throws {
     let app = HBApplication(configuration: .init(address: .hostname(arguments.hostname, port: arguments.port)))

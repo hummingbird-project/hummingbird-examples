@@ -22,7 +22,7 @@ let package = Package(
             .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
             .product(name: "Hummingbird", package: "hummingbird"),
             .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
-            .product(name: "HummingbirdJSON", package: "hummingbird"),
+            .product(name: "HummingbirdFoundation", package: "hummingbird"),
             .product(name: "ArgumentParser", package: "swift-argument-parser"),
         ]),
     ]
