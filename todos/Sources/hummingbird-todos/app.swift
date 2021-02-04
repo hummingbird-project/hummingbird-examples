@@ -13,7 +13,7 @@ func runApp(_ arguments: HummingbirdArguments) throws {
     // add Fluent
     app.addFluent()
     // add sqlite database
-    app.fluent.databases.use(.sqlite(.memory), as: .sqlite)
+    app.fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
     // add migrations
     app.fluent.migrations.add(CreateTodo())
     // migrate
