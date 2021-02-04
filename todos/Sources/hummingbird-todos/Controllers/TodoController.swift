@@ -19,7 +19,7 @@ struct TodoController {
 
     func create(_ request: HBRequest) -> EventLoopFuture<Todo> {
         guard let todo = try? request.decode(as: Todo.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        return todo.save(on: request.db).map { todo }
+        return todo.save(on: request.db).map { request.response.status = .created; return todo }
     }
 
     func get(_ request: HBRequest) -> EventLoopFuture<Todo?> {
