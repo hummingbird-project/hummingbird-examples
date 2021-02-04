@@ -7,7 +7,7 @@ struct HummingbirdArguments: ParsableCommand {
     @Option(name: .shortAndLong)
     var port: Int = 8080
 
-    @Option(name: .shortAndLong)
+    @Flag(name: .shortAndLong)
     var migrate: Bool = false
 
     func run() throws {
