@@ -30,13 +30,31 @@ final class Todo: Model, HBResponseCodable {
         self.completed = completed
     }
 
-    func update(from: Todo) {
-        self.title = from.title
-        if let order = from.order {
+    func update(from edit: EditTodo) {
+        if let title = edit.title {
+            self.title = title
+        }
+        if let order = edit.order {
             self.order = order
         }
-        if let completed = from.completed {
+        if let completed = edit.completed {
             self.completed = completed
         }
     }
+
+    func update(from todo: Todo) {
+        self.title = todo.title
+        if let order = todo.order {
+            self.order = order
+        }
+        if let completed = todo.completed {
+            self.completed = completed
+        }
+    }
+}
+
+struct EditTodo: HBResponseCodable {
+    var title: String?
+    var order: Int?
+    var completed: Bool?
 }

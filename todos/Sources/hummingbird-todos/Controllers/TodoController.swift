@@ -50,7 +50,7 @@ struct TodoController {
 
     func updateId(_ request: HBRequest) -> EventLoopFuture<Todo> {
         guard let id = request.parameters.get("id", as: UUID.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        guard let newTodo = try? request.decode(as: Todo.self) else { return request.failure(HBHTTPError(.badRequest)) }
+        guard let newTodo = try? request.decode(as: EditTodo.self) else { return request.failure(HBHTTPError(.badRequest)) }
         return Todo.find(id, on: request.db)
             .unwrap(orError: HBHTTPError(.notFound))
             .flatMap { todo -> EventLoopFuture<Todo> in
