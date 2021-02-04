@@ -8,12 +8,12 @@ struct TodoController {
     func addRoutes(to group: HBRouterGroup) {
         group
             .get(use: list)
-            .get(use: get)
+            .get(":id", use: get)
             .post(use: create)
             .delete(use: deleteAll)
             .patch(use: update)
             .patch(":id", use: updateId)
-            .delete(":id", use: updateId)
+            .delete(":id", use: deleteId)
     }
     
     func list(_ request: HBRequest) -> EventLoopFuture<[Todo]> {
