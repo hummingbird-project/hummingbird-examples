@@ -43,8 +43,7 @@ struct TodoController {
             .first()
             .unwrap(orError: HBHTTPError(.notFound))
             .flatMap { todo -> EventLoopFuture<Todo> in
-                todo.completed = newTodo.completed
-                todo.order = newTodo.order
+                todo.update(from: newTodo)
                 return todo.update(on: request.db).map { todo }
             }
     }
@@ -55,9 +54,7 @@ struct TodoController {
         return Todo.find(id, on: request.db)
             .unwrap(orError: HBHTTPError(.notFound))
             .flatMap { todo -> EventLoopFuture<Todo> in
-                todo.title = newTodo.title
-                todo.completed = newTodo.completed
-                todo.order = newTodo.order
+                todo.update(from: newTodo)
                 return todo.update(on: request.db).map { todo }
             }
     }

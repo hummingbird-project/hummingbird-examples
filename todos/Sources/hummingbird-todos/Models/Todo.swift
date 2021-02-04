@@ -29,4 +29,14 @@ final class Todo: Model, HBResponseCodable {
         self.url = url
         self.completed = completed
     }
+
+    func update(from: Todo) {
+        self.title = from.title
+        if let order = from.order {
+            self.order = order
+        }
+        if let completed = from.completed {
+            self.completed = completed
+        }
+    }
 }
