@@ -21,6 +21,8 @@ func runApp(_ arguments: HummingbirdArguments) throws {
         try app.fluent.migrate().wait()
     }
 
+    app.middleware.add(CORSMiddleware())
+    
     app.router.get("/") { _ in
         return "Hello"
     }
