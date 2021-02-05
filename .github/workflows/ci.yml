@@ -30,14 +30,14 @@ jobs:
         swift build
     - name: Build HTTP2
       run: |
-        cd ../http2
+        cd http2
         swift build
     - name: Build Todos
       run: |
-        cd ../todos
+        cd todos-fluent
         swift build
     - name: Build HTML form
       run: |
-        cd ../html-fowm
+        cd html-form
         swift build
 
