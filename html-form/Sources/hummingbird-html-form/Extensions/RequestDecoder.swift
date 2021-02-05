@@ -1,5 +1,5 @@
 import Hummingbird
-import HummingbirdURLEncoded
+import HummingbirdFoundation
 
 
 struct RequestDecoder: HBRequestDecoder {
