@@ -22,10 +22,11 @@ struct TodoController {
 
     func create(_ request: HBRequest) -> EventLoopFuture<Todo> {
         guard let todo = try? request.decode(as: Todo.self) else { return request.failure(HBHTTPError(.badRequest)) }
+        guard let host = request.headers["host"].first else { return request.failure(HBHTTPError(.badRequest, message: "No host header"))}
         return todo.save(on: request.db)
             .flatMap { _ in
                 todo.completed = false
-                todo.url = "http://dev.opticalaberration.com:8080/todos/\(todo.id!)"
+                todo.url = "http://\(host)/todos/\(todo.id!)"
                 return todo.update(on: request.db)
             }
             .map { request.response.status = .created; return todo }
