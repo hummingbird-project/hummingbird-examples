@@ -59,7 +59,7 @@ struct TodoController {
         guard let id = request.parameters.get("id", as: UUID.self) else { return request.failure(HBHTTPError(.badRequest)) }
         todo.id = id
         let input = DynamoDB.UpdateItemCodableInput(
-//            conditionExpression: "attribute_exists(:id)",
+            conditionExpression: "attribute_exists(id)",
             key: ["id"],
             returnValues: .allNew,
             tableName: self.tableName,
@@ -67,7 +67,7 @@ struct TodoController {
         )
         return request.aws.dynamoDB.updateItem(input, logger: request.logger, on: request.eventLoop)
             .flatMapErrorThrowing { error in
-                if let error = error as? AWSErrorType, error.errorCode == "ValidationException" {
+                if let error = error as? DynamoDBErrorType, error == .conditionalCheckFailedException {
                     throw HBHTTPError(.notFound)
                 }
                 throw error
@@ -83,12 +83,14 @@ struct TodoController {
         return request.aws.dynamoDB.scan(input, logger: request.logger, on: request.eventLoop)
             .map { $0.items }
             .unwrap(orReplace: [])
-            .flatMap { items -> EventLoopFuture<DynamoDB.BatchWriteItemOutput> in
+            .flatMap { items -> EventLoopFuture<Void> in
                 let requestItems: [DynamoDB.WriteRequest] = items.compactMap { item in
                     item["id"].map { .init(deleteRequest: .init(key: ["id": $0])) }
                 }
+                guard requestItems.count > 0 else { return request.success(()) }
                 let input = DynamoDB.BatchWriteItemInput(requestItems: [self.tableName: requestItems])
                 return request.aws.dynamoDB.batchWriteItem(input, logger: request.logger, on: request.eventLoop)
+                    .map { _ in }
             }
             .map { _ in .ok }
     }
@@ -97,14 +99,13 @@ struct TodoController {
         guard let id = request.parameters.get("id", as: String.self) else { return request.failure(HBHTTPError(.badRequest)) }
 
         let input = DynamoDB.DeleteItemInput(
-            conditionExpression: "attribute_exists(:id)",
-            expressionAttributeValues: [":id": .s("id")],
+            conditionExpression: "attribute_exists(id)",
             key: ["id": .s(id)],
             tableName: self.tableName
         )
         return request.aws.dynamoDB.deleteItem(input, logger: request.logger, on: request.eventLoop)
             .flatMapErrorThrowing { error in
-                if let error = error as? AWSErrorType, error.errorCode == "ValidationException" {
+                if let error = error as? DynamoDBErrorType, error == .conditionalCheckFailedException {
                     throw HBHTTPError(.notFound)
                 }
                 throw error
