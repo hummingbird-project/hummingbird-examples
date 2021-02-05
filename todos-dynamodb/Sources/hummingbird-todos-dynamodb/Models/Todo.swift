@@ -1,26 +1,16 @@
-import FluentKit
 import Foundation
 import Hummingbird
 
-final class Todo: Model, HBResponseCodable {
-    static let schema = "todos"
-
-    @ID(key: .id)
+struct Todo: HBResponseCodable {
     var id: UUID?
 
-    @Field(key: "title")
     var title: String
 
-    @Field(key: "order")
     var order: Int?
 
-    @Field(key: "url")
     var url: String?
 
-    @Field(key: "completed")
     var completed: Bool?
-
-    init() { }
 
     init(id: UUID? = nil, title: String, order: Int?, url: String?, completed: Bool?) {
         self.id = id
@@ -30,7 +20,7 @@ final class Todo: Model, HBResponseCodable {
         self.completed = completed
     }
 
-    func update(from edit: EditTodo) {
+    mutating func update(from edit: EditTodo) {
         if let title = edit.title {
             self.title = title
         }
@@ -42,7 +32,7 @@ final class Todo: Model, HBResponseCodable {
         }
     }
 
-    func update(from todo: Todo) {
+    mutating func update(from todo: Todo) {
         self.title = todo.title
         if let order = todo.order {
             self.order = order
@@ -54,6 +44,7 @@ final class Todo: Model, HBResponseCodable {
 }
 
 struct EditTodo: HBResponseCodable {
+    var id: UUID?
     var title: String?
     var order: Int?
     var completed: Bool?
