@@ -24,20 +24,30 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+    - name: Install dependencies (Ubuntu)
+      if: ${{ matrix.image == 'swift:5.3-bionic' || matrix.image == 'swift:5.3-focal'}}
+      run: |
+        apt-get update -qq
+        apt-get install -q -y libsqlite3-dev
+    - name: Install dependencies (Amazon Linux2/CentOS8)
+      if: ${{ matrix.image == 'swift:5.3-amazonlinux2' || matrix.image == 'swift:5.3-centos8'}}
+      run: |
+        yum -y update
+        yum -y install sqlite-devel
     - name: Build Hello
       run: |
         cd hello
         swift build
     - name: Build HTTP2
       run: |
-        cd ../http2
+        cd http2
         swift build
     - name: Build Todos
       run: |
-        cd ../todos
+        cd todos-fluent
         swift build
     - name: Build HTML form
       run: |
-        cd ../html-fowm
+        cd html-form
         swift build
 

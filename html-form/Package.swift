@@ -16,7 +16,7 @@ let package = Package(
     targets: [
         .target(name: "hummingbird-html-form", dependencies: [
             .product(name: "Hummingbird", package: "hummingbird"),
-            .product(name: "HummingbirdURLEncoded", package: "hummingbird"),
+            .product(name: "HummingbirdFoundation", package: "hummingbird"),
             .product(name: "ArgumentParser", package: "swift-argument-parser"),
             .product(name: "Plot", package: "Plot"),
         ]),
