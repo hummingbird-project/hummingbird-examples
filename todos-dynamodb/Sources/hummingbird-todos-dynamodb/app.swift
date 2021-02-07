@@ -8,9 +8,13 @@ func runApp(_ arguments: HummingbirdArguments) throws {
     // set encoder and decoder
     app.encoder = JSONEncoder()
     app.decoder = JSONDecoder()
-    
-    app.middleware.add(DebugMiddleware())
-    app.middleware.add(CORSMiddleware())
+    // middleware
+    app.middleware.add(HBLogRequestsMiddleware(.debug))
+    app.middleware.add(HBCORSMiddleware(
+        allowOrigin: .originBased,
+        allowHeaders: ["Content-Type"],
+        allowMethods: [.GET, .OPTIONS, .POST, .DELETE, .PATCH]
+    ))
 
     app.aws.client = AWSClient(httpClientProvider: .createNewWithEventLoopGroup(app.eventLoopGroup))
     app.aws.dynamoDB = DynamoDB(client: app.aws.client, region: .euwest1)
