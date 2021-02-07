@@ -9,7 +9,14 @@ func runApp(_ arguments: HummingbirdArguments) throws {
     // set encoder and decoder
     app.encoder = JSONEncoder()
     app.decoder = JSONDecoder()
-    
+    // middleware
+    app.middleware.add(HBLogRequestsMiddleware(.debug))
+    app.middleware.add(HBCORSMiddleware(
+        allowOrigin: .originBased,
+        allowHeaders: ["Content-Type"],
+        allowMethods: [.GET, .OPTIONS, .POST, .DELETE]
+    ))
+
     // add Fluent
     app.addFluent()
     // add sqlite database
@@ -21,8 +28,6 @@ func runApp(_ arguments: HummingbirdArguments) throws {
         try app.fluent.migrate().wait()
     }
 
-    app.middleware.add(DebugMiddleware())
-    app.middleware.add(CORSMiddleware())
 
     app.router.get("/") { _ in
         return "Hello"
