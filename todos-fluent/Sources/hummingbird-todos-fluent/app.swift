@@ -14,7 +14,7 @@ func runApp(_ arguments: HummingbirdArguments) throws {
     app.middleware.add(HBCORSMiddleware(
         allowOrigin: .originBased,
         allowHeaders: ["Content-Type"],
-        allowMethods: [.GET, .OPTIONS, .POST, .DELETE]
+        allowMethods: [.GET, .OPTIONS, .POST, .DELETE, .PATCH]
     ))
 
     // add Fluent
