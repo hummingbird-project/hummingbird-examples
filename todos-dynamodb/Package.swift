@@ -10,9 +10,9 @@ let package = Package(
     ],
     products: [
         .executable(name: "hummingbird-todos-dynamodb", targets: ["hummingbird-todos-dynamodb"]),
-    ], 
+    ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", .branch("main")),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.2.0"),
         .package(url: "https://github.com/soto-project/soto.git", from: "5.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0")
     ],

@@ -9,7 +9,7 @@ let package = Package(
         .executable(name: "hummingbird-hello", targets: ["hummingbird-hello"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", .branch("main")),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.2.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0")
     ],
     targets: [
