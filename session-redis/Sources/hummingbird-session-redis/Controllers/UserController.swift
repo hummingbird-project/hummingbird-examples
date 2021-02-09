@@ -38,8 +38,7 @@ struct UserController {
         guard let user = request.auth.get(User.self),
               let userId = user.id else { return request.failure(.unauthorized) }
         // create session lasting 1 hour
-        let session = HBRequest.SessionData(userId: userId, expires: Date(timeIntervalSinceNow: 3600))
-        return request.session.save(session: session)
+        return request.session.save(userId: userId, expiresIn: .seconds(60))
             .map { .ok }
     }
 

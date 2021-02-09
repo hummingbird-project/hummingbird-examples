@@ -6,7 +6,7 @@ import ExtrasBase64
 private let sessionCookieName = "SESSION_ID"
 
 extension HBRequest {
-    struct SessionData: Codable {
+/*    struct SessionData: Codable {
         var userId: UUID
         var expires: Date
 
@@ -14,22 +14,27 @@ extension HBRequest {
             self.userId = userId
             self.expires = expires
         }
-    }
+    }*/
 
     struct Session {
         /// save session
-        func save(session: SessionData) -> EventLoopFuture<Void> {
+        func save(userId: UUID, expiresIn: TimeAmount) -> EventLoopFuture<Void> {
             let sessionId = Self.createSessionId()
             // prefix with "hbs."
-            return request.redis.set("hbs.\(sessionId)", toJSON: session)
-                .map { _ in setId(sessionId) }
+            // Use setex to create expiring session id
+            return request.redis.setex(
+                "hbs.\(sessionId)",
+                to: userId.uuidString,
+                expirationInSeconds: Int(expiresIn.nanoseconds / 1_000_000_000)
+            ).map { _ in setId(sessionId) }
         }
 
         /// load session
-        func load() -> EventLoopFuture<SessionData?> {
+        func load() -> EventLoopFuture<UUID?> {
             guard let sessionId = getId() else { return request.success(nil) }
             // prefix with "hbs."
-            return request.redis.get("hbs.\(sessionId)", asJSON: SessionData.self)
+            return request.redis.get("hbs.\(sessionId)", as: String.self)
+                .map { $0.map { UUID($0) } ?? nil }
         }
 
         /// Get session id gets id from request
