@@ -14,11 +14,22 @@ struct SessionAuthenticator: HBAuthenticator {
             .first()
             .map { session -> Void in
                 guard let session = session else { return }
+                // has session expired
                 if session.expires.timeIntervalSinceNow > 0 {
                     request.auth.login(session.user)
                 }
             }
             // hop back to request eventloop
             .hop(to: request.eventLoop)
+    }
+
+    /// Add repeating task to cleanup expired session entries
+    static func scheduleTidyUp(application: HBApplication) {
+        let eventLoop = application.eventLoopGroup.next()
+        eventLoop.scheduleRepeatedAsyncTask(initialDelay: .seconds(1), delay: .hours(1)) { _ in
+            return Session.query(on: application.db)
+                .filter(\.$expires < Date())
+                .delete()
+        }
     }
 }

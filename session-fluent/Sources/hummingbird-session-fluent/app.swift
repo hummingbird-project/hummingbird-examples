@@ -22,6 +22,9 @@ func runApp(_ arguments: HummingbirdArguments) throws {
         try app.fluent.migrate().wait()
     }
 
+    // add scheduled task
+    SessionAuthenticator.scheduleTidyUp(application: app)
+    
     // add logging middleware
     app.middleware.add(HBLogRequestsMiddleware(.debug))
 
