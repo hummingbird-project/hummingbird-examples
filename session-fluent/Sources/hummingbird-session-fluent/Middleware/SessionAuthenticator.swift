@@ -14,7 +14,7 @@ struct SessionAuthenticator: HBAuthenticator {
             .first()
             .map { session -> Void in
                 guard let session = session else { return }
-                if Date() < session.expires {
+                if session.expires.timeIntervalSinceNow > 0 {
                     request.auth.login(session.user)
                 }
             }
