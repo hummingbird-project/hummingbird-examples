@@ -4,8 +4,11 @@ import HummingbirdAuth
 
 struct BasicAuthenticator: HBAuthenticator {
     func authenticate(request: HBRequest) -> EventLoopFuture<Void> {
+        // does request have basic authentication info in the "Authorization" header
         guard let basic = request.auth.basic else { return request.success(()) }
-        
+
+        // check if user exists in the database and then verify the entered password
+        // against the one stored in the database. If it is correct then login in user
         return User.query(on: request.db)
             .filter(\.$name == basic.username)
             .first()
@@ -15,6 +18,7 @@ struct BasicAuthenticator: HBAuthenticator {
                     request.auth.login(user)
                 }
             }
+            // hop back to request eventloop
             .hop(to: request.eventLoop)
     }
     

@@ -3,6 +3,7 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 
+/// Database description of a user
 final class User: Model {
     static let schema = "user"
 
@@ -30,6 +31,7 @@ final class User: Model {
     }
 }
 
+/// Create user request object decoded from HTTP body
 struct CreateUserRequest: Decodable {
     let name: String
     let password: String
@@ -40,6 +42,7 @@ struct CreateUserRequest: Decodable {
     }
 }
 
+/// User encoded into HTTP response
 struct UserResponse: HBResponseCodable {
     let id: UUID?
     let name: String

@@ -5,7 +5,8 @@ import HummingbirdFoundation
 
 func runApp(_ arguments: HummingbirdArguments) throws {
     let app = HBApplication(configuration: .init(address: .hostname(arguments.hostname, port: arguments.port)))
-    
+
+    // add JSON encoder/decoder as we are reading and writing JSON
     app.encoder = JSONEncoder()
     app.decoder = JSONDecoder()
     
@@ -20,13 +21,14 @@ func runApp(_ arguments: HummingbirdArguments) throws {
         try app.fluent.migrate().wait()
     }
 
-    // middleware
+    // add logging middleware
     app.middleware.add(HBLogRequestsMiddleware(.debug))
 
     // routes
     app.router.get("/") { _ in
         return "Hello"
     }
+    
     let userController = UserController()
     userController.addRoutes(to: app.router.group("user"))
     
