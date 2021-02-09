@@ -6,6 +6,16 @@ import ExtrasBase64
 private let sessionCookieName = "SESSION_ID"
 
 extension HBRequest {
+    struct SessionData: Codable {
+        var userId: UUID
+        var expires: Date
+
+        internal init(userId: UUID, expires: Date) {
+            self.userId = userId
+            self.expires = expires
+        }
+    }
+
     struct Session {
         /// save session
         func save(session: SessionData) -> EventLoopFuture<Void> {
