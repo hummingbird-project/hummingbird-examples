@@ -37,14 +37,7 @@ struct UserController {
         // get authenticated user and return
         guard let user = request.auth.get(User.self),
               let userId = user.id else { return request.failure(.unauthorized) }
-        // create session lasting 1 hour
-        let session = Session(userId: userId, expires: Date(timeIntervalSinceNow: 3600))
-        return session.save(on: request.db)
-            .flatMapThrowing {
-                guard let id = session.id else { throw HBHTTPError(.internalServerError) }
-                request.session.setId(id)
-                return .ok
-            }
+        return request.session.save(userId: userId, expiresIn: .hours(1)).map { .ok }
     }
 
     /// Get current logged in user

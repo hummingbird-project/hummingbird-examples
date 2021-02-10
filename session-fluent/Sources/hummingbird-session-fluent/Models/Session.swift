@@ -4,7 +4,7 @@ import Hummingbird
 import HummingbirdAuth
 
 /// Database description of a session
-final class Session: Model {
+final class SessionData: Model {
     static let schema = "session"
 
     @ID(key: .id)
