@@ -4,20 +4,21 @@ import Hummingbird
 import HummingbirdAuth
 
 struct SessionAuthenticator: HBAuthenticator {
-    func authenticate(request: HBRequest) -> EventLoopFuture<Void> {
+    func authenticate(request: HBRequest) -> EventLoopFuture<User?> {
         // does request have session cookie
-        guard let sessionId = request.session.getId() else { return request.success(()) }
+        guard let sessionId = request.session.getId() else { return request.success(nil) }
 
         // check if session exists in the database. If it is login related user
         return Session.query(on: request.db).with(\.$user)
             .filter(\.$id == sessionId)
             .first()
-            .map { session -> Void in
-                guard let session = session else { return }
+            .map { session -> User? in
+                guard let session = session else { return nil }
                 // has session expired
                 if session.expires.timeIntervalSinceNow > 0 {
-                    request.auth.login(session.user)
+                    return session.user
                 }
+                return nil
             }
             // hop back to request eventloop
             .hop(to: request.eventLoop)

@@ -4,7 +4,7 @@ import Hummingbird
 import HummingbirdAuth
 
 /// Database description of a user
-final class User: Model {
+final class User: Model, HBAuthenticatable {
     static let schema = "user"
 
     @ID(key: .id)
