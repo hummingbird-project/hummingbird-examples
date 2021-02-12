@@ -34,20 +34,6 @@ jobs:
       run: |
         yum -y update
         yum -y install sqlite-devel
-    - name: Build Hello
+    - name: Build Examples
       run: |
-        cd hello
-        swift build
-    - name: Build HTTP2
-      run: |
-        cd http2
-        swift build
-    - name: Build Todos
-      run: |
-        cd todos-fluent
-        swift build
-    - name: Build HTML form
-      run: |
-        cd html-form
-        swift build
-
+        ./scripts/build-all.sh
