@@ -21,3 +21,4 @@ build_example session-fluent
 build_example session-redis
 build_example todos-dynamodb
 build_example todos-fluent
+build_example todos-lambda
