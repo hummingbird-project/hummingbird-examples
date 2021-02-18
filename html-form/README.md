@@ -1,6 +1,6 @@
 # Hummingbird HTML Form
 
-Uses John Sundells [Plot](https://github.com/JohnSundell/Plot) library to generate the HTML.
+Application demonstrating working with HTML forms. The HTML form is generated using John Sundell's [Plot](https://github.com/JohnSundell/Plot) library. 
 
 HTML type from Plot has been extended to conform to `HBResponseGenerator` so it can be used as a return type from route handlers.
 
