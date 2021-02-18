@@ -9,3 +9,4 @@ Examples include
 - [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB
 - [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
 - [todos-lambda](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-lambda) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB and running on AWS Lambda.
+- [websocket-chat](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-chat) - Simple chat application using WebSockets
