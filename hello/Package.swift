@@ -16,7 +16,6 @@ let package = Package(
         .target(name: "hummingbird-hello",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ],
             swiftSettings: [
