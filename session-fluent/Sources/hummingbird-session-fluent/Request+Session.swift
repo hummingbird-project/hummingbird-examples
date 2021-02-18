@@ -22,7 +22,7 @@ extension HBRequest {
         /// load session
         func load() -> EventLoopFuture<User?> {
             guard let sessionId = getId() else { return request.success(nil) }
-            // check if session exists in the database. If it is login related user
+            // check if session exists in the database. If it is return related user
             return SessionData.query(on: request.db).with(\.$user)
                 .filter(\.$id == sessionId)
                 .first()

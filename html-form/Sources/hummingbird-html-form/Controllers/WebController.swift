@@ -15,7 +15,7 @@ struct WebController {
                 .div(
                     .h1("Please enter your details"),
                     .form(
-                        .action("/index.html"),
+                        .action("/"),
                         .method(.post),
                         .label(.for("name"), .text("Name")),
                         .br(),

@@ -5,8 +5,8 @@ func runApp(_ arguments: HummingbirdArguments) {
     app.decoder = RequestDecoder()
 
     let webController = WebController()
-    app.router.get("/index.html", use: webController.input)
-    app.router.post("/index.html", use: webController.post)
+    app.router.get("/", use: webController.input)
+    app.router.post("/", use: webController.post)
 
     app.start()
     app.wait()
