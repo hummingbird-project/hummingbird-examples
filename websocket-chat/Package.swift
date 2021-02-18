@@ -10,7 +10,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.2.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-websocket.git", .branch("main")),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-websocket.git", from: "0.1.0"),
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.20.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0")
     ],
