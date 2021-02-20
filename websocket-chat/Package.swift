@@ -4,18 +4,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "hummingbird-hello",
+    name: "websocket-chat",
     products: [
-        .executable(name: "hummingbird-hello", targets: ["hummingbird-hello"]),
+        .executable(name: "websocket-chat", targets: ["websocket-chat"]),
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.2.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-websocket.git", from: "0.1.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.20.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0")
     ],
     targets: [
-        .target(name: "hummingbird-hello",
+        .target(name: "websocket-chat",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdWebSocket", package: "hummingbird-websocket"),
+                .product(name: "NIOConcurrencyHelpers", package: "swift-nio"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ],
             swiftSettings: [
