@@ -20,7 +20,7 @@ func runApp(_ arguments: HummingbirdArguments) {
             // close websocket if no username parameter
             guard let username = request.uri.queryParameters["username"] else {
                 ws.close(promise: nil)
-                throw HBHTTPError(.badRequest)
+                return
             }
             // if username is already connected output this info and close the connection
             guard request.application.connectionMgr.get(name: String(username)) == nil else {
