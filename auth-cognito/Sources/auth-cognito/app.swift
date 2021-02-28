@@ -25,9 +25,6 @@ func runApp(_ arguments: HummingbirdArguments) {
     )
     app.cognito.authenticatable = CognitoAuthenticatable(configuration: config)
 
-    // middleware
-    app.middleware.add(ErrorLoggingMiddleware())
-    
     let userController = UserController()
     userController.addRoutes(to: app.router.group("user"))
 
