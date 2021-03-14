@@ -1,0 +1,30 @@
+name: Swift nightly build
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: ['nightly-5.4-bionic', 'nightly-5.4-focal', 'nightly-5.4-centos8', 'nightly-5.4-amazonlinux2']
+    container:
+      image: swiftlang/swift:${{ matrix.tag }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Install dependencies (Ubuntu)
+      if: ${{ matrix.image == 'swift:5.3-bionic' || matrix.image == 'swift:5.3-focal'}}
+      run: |
+        apt-get update -qq
+        apt-get install -q -y libsqlite3-dev
+    - name: Install dependencies (Amazon Linux2/CentOS8)
+      if: ${{ matrix.image == 'swift:5.3-amazonlinux2' || matrix.image == 'swift:5.3-centos8'}}
+      run: |
+        yum -y update
+        yum -y install sqlite-devel
+    - name: Build Examples
+      run: |
+        ./scripts/build-all.sh
