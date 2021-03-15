@@ -1,60 +1,23 @@
-import Plot
 import Hummingbird
 
-struct WebController {
-    var head: Node<HTML.DocumentContext> {
-        .head(
-            .title("My website")
-        )
-    }
+struct HTML: HBResponseGenerator {
+    let html: String
 
+    public func response(from request: HBRequest) throws -> HBResponse {
+        let buffer = request.allocator.buffer(string: self.html)
+        return .init(status: .ok, headers: ["content-type": "text/html"], body: .byteBuffer(buffer))
+    }
+}
+
+struct WebController {
     func input(request: HBRequest) -> HTML {
-        return HTML(
-            self.head,
-            .body(
-                .div(
-                    .h1("Please enter your details"),
-                    .form(
-                        .action("/"),
-                        .method(.post),
-                        .label(.for("name"), .text("Name")),
-                        .br(),
-                        .input(.type(.text), .id("name"), .name("name")),
-                        .br(),
-                        .label(.for("age"), .text("Age")),
-                        .br(),
-                        .input(.type(.text), .id("age"), .name("age")),
-                        .br(),
-                        .input(.type(.submit), .value("Submit"))
-                    )
-                )
-            )
-        )
+        let html = request.mustache.render((), withTemplate: "enter-details")!
+        return HTML(html: html)
     }
 
     func post(request: HBRequest) throws -> HTML {
-        if let user = try? request.decode(as: User.self) {
-            return HTML(
-                self.head,
-                .body(
-                    .div(
-                        .h1("You entered"),
-                        .ul(
-                            .li(.text("Name: \(user.name)")),
-                            .li(.text("Age: \(user.age)"))
-                        )
-                    )
-                )
-            )
-        } else {
-            return HTML(
-                self.head,
-                .body(
-                    .div(
-                        .h1("You entered invalid data")
-                    )
-                )
-            )
-        }
+        guard let user = try? request.decode(as: User.self) else { throw HBHTTPError(.badRequest) }
+        let html = request.mustache.render(user, withTemplate: "details-entered")!
+        return HTML(html: html)
     }
 }

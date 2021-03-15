@@ -10,15 +10,15 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.2.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-mustache.git", .branch("main")),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
-        .package(url: "https://github.com/JohnSundell/Plot.git", from: "0.8.0")
     ],
     targets: [
         .target(name: "hummingbird-html-form", dependencies: [
             .product(name: "Hummingbird", package: "hummingbird"),
             .product(name: "HummingbirdFoundation", package: "hummingbird"),
+            .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
             .product(name: "ArgumentParser", package: "swift-argument-parser"),
-            .product(name: "Plot", package: "Plot"),
         ]),
     ]
 )
