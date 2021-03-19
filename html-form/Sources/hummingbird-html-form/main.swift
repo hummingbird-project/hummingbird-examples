@@ -8,7 +8,11 @@ struct HummingbirdArguments: ParsableCommand {
     var port: Int = 8080
 
     func run() {
-        runApp(self)
+        do {
+            try runApp(self)
+        } catch {
+            print("\(error)")
+        }
     }
 }
 
