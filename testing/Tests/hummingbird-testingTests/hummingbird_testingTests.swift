@@ -10,7 +10,7 @@ final class HummingbirdTests: XCTestCase {
     var app: HBApplication!
     
     override func setUpWithError() throws {
-        app = HBApplication(testing: .embedded)
+        app = HBApplication(testing: .live)
         try Boot.configureRoutes(&app)
         app.XCTStart()
     }

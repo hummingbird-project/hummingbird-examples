@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "hummingbird-testing",
     products: [
-        .executable(name: "Run", targets: ["Run"]),
+        .executable(name: "server", targets: ["server"]),
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", .upToNextMajor(from: "0.8.1")),
@@ -19,7 +19,7 @@ let package = Package(
             swiftSettings: [
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
         ]),
-        .target(name: "Run",
+        .target(name: "server",
                 dependencies: [
                     .product(name: "ArgumentParser", package: "swift-argument-parser"),
                     .target(name: "hummingbird-testing"),
