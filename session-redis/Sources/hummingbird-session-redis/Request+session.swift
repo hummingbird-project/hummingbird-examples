@@ -1,20 +1,34 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Hummingbird server framework project
+//
+// Copyright (c) 2021-2021 the Hummingbird authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
+import ExtrasBase64
 import Foundation
 import Hummingbird
 import HummingbirdFoundation
-import ExtrasBase64
 
 private let sessionCookieName = "SESSION_ID"
 
 extension HBRequest {
-/*    struct SessionData: Codable {
-        var userId: UUID
-        var expires: Date
+    /*    struct SessionData: Codable {
+         var userId: UUID
+         var expires: Date
 
-        internal init(userId: UUID, expires: Date) {
-            self.userId = userId
-            self.expires = expires
-        }
-    }*/
+         internal init(userId: UUID, expires: Date) {
+             self.userId = userId
+             self.expires = expires
+         }
+     }*/
 
     struct Session {
         /// save session
@@ -22,7 +36,7 @@ extension HBRequest {
             let sessionId = Self.createSessionId()
             // prefix with "hbs."
             // Use setex to create expiring session id
-            return request.redis.setex(
+            return self.request.redis.setex(
                 "hbs.\(sessionId)",
                 to: userId.uuidString,
                 expirationInSeconds: Int(expiresIn.nanoseconds / 1_000_000_000)
@@ -31,9 +45,9 @@ extension HBRequest {
 
         /// load session
         func load() -> EventLoopFuture<UUID?> {
-            guard let sessionId = getId() else { return request.success(nil) }
+            guard let sessionId = getId() else { return self.request.success(nil) }
             // prefix with "hbs."
-            return request.redis.get("hbs.\(sessionId)", as: String.self)
+            return self.request.redis.get("hbs.\(sessionId)", as: String.self)
                 .map { $0.map { UUID($0) } ?? nil }
         }
 
@@ -45,7 +59,7 @@ extension HBRequest {
 
         /// set session id on response
         func setId(_ id: String) {
-            request.response.setCookie(.init(name: sessionCookieName, value: String(describing: id)))
+            self.request.response.setCookie(.init(name: sessionCookieName, value: String(describing: id)))
         }
 
         static func createSessionId() -> String {
@@ -59,4 +73,3 @@ extension HBRequest {
     /// access session info
     var session: Session { return Session(request: self) }
 }
-

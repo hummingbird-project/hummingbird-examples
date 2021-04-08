@@ -1,3 +1,17 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Hummingbird server framework project
+//
+// Copyright (c) 2021-2021 the Hummingbird authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
 import FluentKit
 import Foundation
 import Hummingbird
@@ -6,11 +20,11 @@ import NIO
 struct UserController {
     /// Add routes for user controller
     func addRoutes(to group: HBRouterGroup) {
-        group.put(use: create)
+        group.put(use: self.create)
         group.group("login").add(middleware: BasicAuthenticator())
-            .post(use: login)
+            .post(use: self.login)
         group.add(middleware: SessionAuthenticator())
-            .get(use: current)
+            .get(use: self.current)
     }
 
     /// Create new user

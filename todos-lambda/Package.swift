@@ -8,7 +8,7 @@ let package = Package(
         .macOS(.v10_13),
     ],
     products: [
-        .executable(name: "HummingbirdTodosLambda", targets: ["Run"])
+        .executable(name: "HummingbirdTodosLambda", targets: ["Run"]),
     ],
     dependencies: [
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", from: "0.2.0"),
@@ -18,7 +18,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "Run", dependencies: [
-            .byName(name: "App")
+            .byName(name: "App"),
         ]),
         .target(name: "App", dependencies: [
             .product(name: "AWSLambdaRuntime", package: "swift-aws-lambda-runtime"),
@@ -26,9 +26,8 @@ let package = Package(
             .product(name: "Hummingbird", package: "hummingbird"),
             .product(name: "HummingbirdFoundation", package: "hummingbird"),
             .product(name: "HummingbirdLambda", package: "hummingbird-lambda"),
-            .product(name: "SotoDynamoDB", package: "soto")
+            .product(name: "SotoDynamoDB", package: "soto"),
         ]),
-        .testTarget(name: "AppTests", dependencies: ["App"])
+        .testTarget(name: "AppTests", dependencies: ["App"]),
     ]
 )
-

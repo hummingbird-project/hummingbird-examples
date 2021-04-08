@@ -1,3 +1,17 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Hummingbird server framework project
+//
+// Copyright (c) 2021-2021 the Hummingbird authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
 import Hummingbird
 import HummingbirdWebSocket
 import NIOConcurrencyHelpers
@@ -12,7 +26,7 @@ extension HBApplication {
         /// Called when a new user joins
         func newUser(name: String, ws: HBWebSocket) {
             // add to list of connections
-            add(name: name, ws: ws)
+            self.add(name: name, ws: ws)
             // output joined text
             self.textOutput("\(name) has joined")
             // send ping and wait for pong and repeat every 60 seconds
@@ -23,7 +37,7 @@ extension HBApplication {
                 self.textOutput("\(name) has left")
             }
             // on reading input from websocket output to all websockets, with tag indicating who input is from
-            ws.onRead { data, ws in
+            ws.onRead { data, _ in
                 switch data {
                 case .text(let text):
                     self.textOutput("[\(name)]: \(text)")
@@ -35,7 +49,7 @@ extension HBApplication {
 
         /// output text to all connections
         func textOutput(_ text: String) {
-            let webSockets = lock.withLock {
+            let webSockets = self.lock.withLock {
                 map.values
             }
             webSockets.forEach {
@@ -44,21 +58,21 @@ extension HBApplication {
         }
 
         func get(name: String) -> HBWebSocket? {
-            lock.withLock {
+            self.lock.withLock {
                 map[name]
             }
         }
 
         /// Add to list of connections
         private func add(name: String, ws: HBWebSocket) {
-            lock.withLock {
+            self.lock.withLock {
                 map[name] = ws
             }
         }
 
         /// Remove from list of connections
         private func remove(name: String) {
-            lock.withLock {
+            self.lock.withLock {
                 map[name] = nil
             }
         }

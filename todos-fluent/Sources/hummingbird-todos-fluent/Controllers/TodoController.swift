@@ -1,28 +1,42 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Hummingbird server framework project
+//
+// Copyright (c) 2021-2021 the Hummingbird authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
+import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdFluent
-import FluentKit
 import NIO
 
 struct TodoController {
     func addRoutes(to group: HBRouterGroup) {
         group
-            .get(use: list)
-            .get(":id", use: get)
-            .post(use: create)
-            .delete(use: deleteAll)
-            .patch(use: update)
-            .patch(":id", use: updateId)
-            .delete(":id", use: deleteId)
+            .get(use: self.list)
+            .get(":id", use: self.get)
+            .post(use: self.create)
+            .delete(use: self.deleteAll)
+            .patch(use: self.update)
+            .patch(":id", use: self.updateId)
+            .delete(":id", use: self.deleteId)
     }
-    
+
     func list(_ request: HBRequest) -> EventLoopFuture<[Todo]> {
         return Todo.query(on: request.db).all()
     }
 
     func create(_ request: HBRequest) -> EventLoopFuture<Todo> {
         guard let todo = try? request.decode(as: Todo.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        guard let host = request.headers["host"].first else { return request.failure(HBHTTPError(.badRequest, message: "No host header"))}
+        guard let host = request.headers["host"].first else { return request.failure(HBHTTPError(.badRequest, message: "No host header")) }
         return todo.save(on: request.db)
             .flatMap { _ in
                 todo.completed = false

@@ -1,27 +1,40 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Hummingbird server framework project
+//
+// Copyright (c) 2021-2021 the Hummingbird authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
 import Foundation
 import Hummingbird
 import NIO
 import SotoDynamoDB
 
-extension UUID : LosslessStringConvertible {
+extension UUID: LosslessStringConvertible {
     public init?(_ description: String) {
         self.init(uuidString: description)
     }
 }
 
-
 struct TodoController {
     let tableName = "hummingbird-todos"
     func addRoutes(to group: HBRouterGroup) {
         group
-            .get(use: list)
-            .post(use: create)
-            .delete(use: deleteAll)
-            .get(":id", use: get)
-            .patch(":id", use: updateId)
-            .delete(":id", use: deleteId)
+            .get(use: self.list)
+            .post(use: self.create)
+            .delete(use: self.deleteAll)
+            .get(":id", use: self.get)
+            .patch(":id", use: self.updateId)
+            .delete(":id", use: self.deleteId)
     }
-    
+
     func list(_ request: HBRequest) -> EventLoopFuture<[Todo]> {
         let input = DynamoDB.ScanInput(tableName: self.tableName)
         return request.aws.dynamoDB.scan(input, type: Todo.self, logger: request.logger, on: request.eventLoop)
@@ -30,7 +43,7 @@ struct TodoController {
 
     func create(_ request: HBRequest) -> EventLoopFuture<Todo> {
         guard var todo = try? request.decode(as: Todo.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        guard let host = request.headers["host"].first else { return request.failure(HBHTTPError(.badRequest, message: "No host header"))}
+        guard let host = request.headers["host"].first else { return request.failure(HBHTTPError(.badRequest, message: "No host header")) }
         let path = request.apiGatewayRequest.requestContext.path
 
         todo.id = UUID()
@@ -41,7 +54,7 @@ struct TodoController {
             .map { _ in
                 request.response.status = .created
                 return todo
-        }
+            }
     }
 
     func get(_ request: HBRequest) -> EventLoopFuture<Todo?> {
@@ -83,7 +96,7 @@ struct TodoController {
     func deleteAll(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
         let input = DynamoDB.ScanInput(tableName: self.tableName)
         return request.aws.dynamoDB.scan(input, logger: request.logger, on: request.eventLoop)
-            .map { $0.items }
+            .map(\.items)
             .unwrap(orReplace: [])
             .flatMap { items -> EventLoopFuture<Void> in
                 let requestItems: [DynamoDB.WriteRequest] = items.compactMap { item in
