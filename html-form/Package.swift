@@ -4,21 +4,41 @@
 import PackageDescription
 
 let package = Package(
-    name: "hummingbird-html-form",
+    name: "html-form",
+    platforms: [.macOS(.v10_14)],
     products: [
-        .executable(name: "hummingbird-html-form", targets: ["hummingbird-html-form"]),
+        .executable(name: "Server", targets: ["Server"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.2.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-mustache.git", from: "0.2.0"),
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.9.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-mustache.git", from: "0.5.0"),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0")
     ],
     targets: [
-        .target(name: "hummingbird-html-form", dependencies: [
-            .product(name: "Hummingbird", package: "hummingbird"),
-            .product(name: "HummingbirdFoundation", package: "hummingbird"),
-            .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
-            .product(name: "ArgumentParser", package: "swift-argument-parser"),
-        ]),
+        .target(name: "App",
+            dependencies: [
+                .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdFoundation", package: "hummingbird"),
+                .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
+            ],
+            swiftSettings: [
+                // Enable better optimizations when building in Release configuration. Despite the use of
+                // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
+                // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
+                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
+            ]
+        ),
+        .target(name: "Server",
+            dependencies: [
+                .byName(name: "App"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser")
+            ]
+        ),
+        .testTarget(name: "AppTests",
+            dependencies: [
+                .byName(name: "App"),
+                .product(name: "HummingbirdXCT", package: "hummingbird")
+            ]
+        )
     ]
 )
