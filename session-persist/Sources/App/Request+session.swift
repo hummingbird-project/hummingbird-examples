@@ -20,26 +20,15 @@ import HummingbirdFoundation
 private let sessionCookieName = "SESSION_ID"
 
 extension HBRequest {
-    /*    struct SessionData: Codable {
-         var userId: UUID
-         var expires: Date
-
-         internal init(userId: UUID, expires: Date) {
-             self.userId = userId
-             self.expires = expires
-         }
-     }*/
-
     struct Session {
         /// save session
         func save(userId: UUID, expiresIn: TimeAmount) -> EventLoopFuture<Void> {
             let sessionId = Self.createSessionId()
             // prefix with "hbs."
-            // Use setex to create expiring session id
-            return self.request.redis.setex(
-                "hbs.\(sessionId)",
-                to: userId.uuidString,
-                expirationInSeconds: Int(expiresIn.nanoseconds / 1_000_000_000)
+            return self.request.persist.set(
+                key: "hbs.\(sessionId)",
+                value: userId,
+                expires: expiresIn
             ).map { _ in setId(sessionId) }
         }
 
@@ -47,8 +36,7 @@ extension HBRequest {
         func load() -> EventLoopFuture<UUID?> {
             guard let sessionId = getId() else { return self.request.success(nil) }
             // prefix with "hbs."
-            return self.request.redis.get("hbs.\(sessionId)", as: String.self)
-                .map { $0.map { UUID($0) } ?? nil }
+            return self.request.persist.get(key: "hbs.\(sessionId)", as: UUID.self)
         }
 
         /// Get session id gets id from request
