@@ -18,7 +18,7 @@ build_example hello
 build_example html-form
 build_example http2
 build_example session-fluent
-build_example session-redis
+build_example session-persist
 build_example todos-dynamodb
 build_example todos-fluent
 build_example todos-lambda
