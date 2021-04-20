@@ -12,21 +12,20 @@
 //
 //===----------------------------------------------------------------------===//
 
-import ArgumentParser
+import FluentKit
+import Foundation
+import Hummingbird
+import HummingbirdAuth
 
-struct HummingbirdArguments: ParsableCommand {
-    @Option(name: .shortAndLong)
-    var hostname: String = "127.0.0.1"
-
-    @Option(name: .shortAndLong)
-    var port: Int = 8080
-
-    @Flag(name: .shortAndLong)
-    var migrate: Bool = false
-
-    func run() throws {
-        try runApp(self)
+struct SessionAuthenticator: HBAuthenticator {
+    func authenticate(request: HBRequest) -> EventLoopFuture<User?> {
+        // check if session exists.
+        return request.session.load().flatMap { userId in
+            guard let userId = userId else {
+                return request.success(nil)
+            }
+            // find user from userId
+            return User.find(userId, on: request.db)
+        }
     }
 }
-
-HummingbirdArguments.main()
