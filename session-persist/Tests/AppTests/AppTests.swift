@@ -8,7 +8,7 @@ final class AppTests: XCTestCase {
         let app = HBApplication(testing: .live)
         try app.configure()
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/health", method: .GET) { response in

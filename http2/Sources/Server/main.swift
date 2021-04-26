@@ -23,7 +23,7 @@ struct HummingbirdArguments: ParsableCommand, AppArguments {
             )
         )
         try app.configure(self)
-        app.start()
+        try app.start()
         app.wait()
     }
 }

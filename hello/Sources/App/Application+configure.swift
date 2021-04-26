@@ -6,7 +6,7 @@ extension HBApplication {
     /// add middleware
     /// setup the encoder/decoder
     /// add your routes
-    public func configure() {
+    public func configure() throws {
         middleware.add(HBFileMiddleware(application: self))
         router.get("/") { _ in
             return "Hello"

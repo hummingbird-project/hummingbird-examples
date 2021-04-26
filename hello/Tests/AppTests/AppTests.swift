@@ -1,14 +1,14 @@
-@testable import App
+import App
 import Hummingbird
 import HummingbirdXCT
 import XCTest
 
 final class AppTests: XCTestCase {
-    func testApp() {
+    func testApp() throws {
         let app = HBApplication(testing: .live)
-        app.configure()
+        try app.configure()
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         app.XCTExecute(uri: "/", method: .GET) { response in

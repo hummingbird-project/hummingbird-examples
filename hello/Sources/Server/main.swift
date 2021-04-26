@@ -9,15 +9,15 @@ struct HummingbirdArguments: ParsableCommand {
     @Option(name: .shortAndLong)
     var port: Int = 8080
 
-    func run() {
+    func run() throws {
         let app = HBApplication(
             configuration: .init(
                 address: .hostname(self.hostname, port: self.port),
                 serverName: "Hummingbird"
             )
         )
-        app.configure()
-        app.start()
+        try app.configure()
+        try app.start()
         app.wait()
     }
 }

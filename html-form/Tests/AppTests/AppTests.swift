@@ -8,7 +8,7 @@ final class AppTests: XCTestCase {
         let app = HBApplication(testing: .live)
         try app.configure()
 
-        app.XCTStart()
+        try app.XCTStart()
         defer { app.XCTStop() }
 
         let urlencoded = "name=Adam&age=34"

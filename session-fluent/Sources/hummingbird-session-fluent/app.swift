@@ -50,6 +50,6 @@ func runApp(_ arguments: HummingbirdArguments) throws {
     let userController = UserController()
     userController.addRoutes(to: app.router.group("user"))
 
-    app.start()
+    try app.start()
     app.wait()
 }

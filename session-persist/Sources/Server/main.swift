@@ -23,7 +23,7 @@ struct HummingbirdArguments: ParsableCommand {
         if self.migrate {
             try app.fluent.migrate().wait()
         }
-        app.start()
+        try app.start()
         app.wait()
     }
 }
