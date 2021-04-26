@@ -48,6 +48,6 @@ func runApp(_ arguments: HummingbirdArguments) throws {
     let todoController = TodoController()
     todoController.addRoutes(to: app.router.group("todos"))
 
-    app.start()
+    try app.start()
     app.wait()
 }

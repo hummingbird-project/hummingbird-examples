@@ -12,8 +12,8 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", from: "0.2.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.2.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-lambda.git", from: "0.1.1"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.11.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-lambda.git", from: "0.3.0"),
         .package(url: "https://github.com/soto-project/soto.git", from: "5.0.0"),
     ],
     targets: [

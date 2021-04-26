@@ -8,7 +8,7 @@ extension HBApplication {
     /// configure your application
     /// add middleware
     /// setup the encoder/decoder
-    /// add your routes
+    /// add your routes 
     public func configure() throws {
         // add JSON encoder/decoder as we are reading and writing JSON
         self.encoder = JSONEncoder()

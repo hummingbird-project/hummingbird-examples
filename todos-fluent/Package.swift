@@ -12,7 +12,7 @@ let package = Package(
         .executable(name: "hummingbird-todos-fluent", targets: ["hummingbird-todos-fluent"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.2.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.11.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "0.1.0"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
