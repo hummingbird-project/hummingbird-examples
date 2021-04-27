@@ -21,6 +21,7 @@
 import Logging
 import SwiftUI
 
+/// Custom log handler that appends log entries to a `Binding<String>`
 public struct StringLogHandler: LogHandler {
     private let string: Binding<String>
     private let label: String

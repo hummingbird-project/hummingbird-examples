@@ -16,6 +16,8 @@ import ExtrasBase64
 import Hummingbird
 import HummingbirdFoundation
 
+/// Basic authentication middleware that checks for the existence of a cookie. If it is does not exist or if it is the wrong value
+/// it will forward the user back to the login page
 struct AuthenticationMiddleware: HBMiddleware {
     let token: String
 

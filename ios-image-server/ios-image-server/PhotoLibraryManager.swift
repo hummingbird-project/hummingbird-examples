@@ -17,6 +17,7 @@ import NIO
 import Photos
 import UIKit
 
+/// Loads photos from the iOS photo library
 class PhotoLibraryManager {
     enum Error: Swift.Error {
         case noPhotos
@@ -44,6 +45,7 @@ class PhotoLibraryManager {
         }
     }
 
+    /// fetch contents of photo library
     func fetchLibrary() {
         self.requestAuthorization {
             let fetchOptions = PHFetchOptions()
@@ -52,6 +54,11 @@ class PhotoLibraryManager {
         }
     }
 
+    /// Load photo and create Jpeg from image
+    /// - Parameters:
+    ///   - index: Index of image
+    ///   - targetSize: target size of image
+    ///   - cb: Callback to call when image is ready
     func loadPhoto(index: Int, targetSize: CGSize = CGSize(width: 1024, height: 1024), _ cb: @escaping (Result<Data, Swift.Error>) -> Void) {
         self.photosPromise.futureResult.whenSuccess { photos in
             guard index < photos.count else {

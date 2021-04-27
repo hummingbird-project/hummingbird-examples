@@ -60,6 +60,7 @@ extension HBApplication {
     }
 }
 
+// extend `HBApplication` to hold references to the photolibrary, mustache library and login token
 extension HBApplication {
     var photoLibrary: PhotoLibraryManager {
         get { self.extensions.get(\.photoLibrary) }

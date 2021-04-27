@@ -26,8 +26,11 @@ struct ContentView: View {
         TextView(text: $logText, textStyle: $logTextStyle)
             .padding()
             .onAppear {
+                // setup logging
                 LoggingSystem.bootstrap { label in StringLogHandler(label: label, string: $logText) }
+                // create server app
                 let app = HBApplication.run()
+                // if app has a login token then display dialog
                 if let loginToken = app.loginToken {
                     self.alertText = Text("Please enter \"\(loginToken)\" to view images")
                     self.showingAlert = true

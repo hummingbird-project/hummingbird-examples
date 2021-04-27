@@ -15,6 +15,9 @@
 import Hummingbird
 import HummingbirdMustache
 
+/// Add routes for generating HTML for image viewing
+/// GET /image/:index displays image given an index into the library
+/// GET /image/:index/:count displays a grid of images of starting at index
 struct WebController {
     func addRoutes(to router: HBRouterMethods) {
         router.get("/image/:index", use: ImageRequest.self)

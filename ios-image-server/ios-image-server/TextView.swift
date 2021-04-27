@@ -14,6 +14,7 @@
 
 import SwiftUI
 
+/// Wrap UITextView to make it usable in SwiftUI
 struct TextView: UIViewRepresentable {
     @Binding var text: String
     @Binding var textStyle: UIFont.TextStyle

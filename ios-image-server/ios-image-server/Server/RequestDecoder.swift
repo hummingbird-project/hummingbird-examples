@@ -15,6 +15,7 @@
 import Hummingbird
 import HummingbirdFoundation
 
+/// Custom `HBRequestDecoder` that will decode URL encoded forms when the content-type is set as such
 struct RequestDecoder: HBRequestDecoder {
     let decoder = URLEncodedFormDecoder()
 

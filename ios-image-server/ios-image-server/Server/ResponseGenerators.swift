@@ -15,6 +15,7 @@
 import Foundation
 import Hummingbird
 
+/// Generate `HBResponse` with correct headers for HTML data
 struct HTML: HBResponseGenerator {
     let html: String
     func response(from request: HBRequest) throws -> HBResponse {
@@ -23,9 +24,9 @@ struct HTML: HBResponseGenerator {
     }
 }
 
-struct ImageData: HBResponseGenerator {
+/// Generate `HBResponse` with correct headers for Jpeg data
+struct JpegData: HBResponseGenerator {
     let data: Data
-
     func response(from request: HBRequest) throws -> HBResponse {
         let body = request.allocator.buffer(data: self.data)
         return .init(status: .ok, headers: ["content-type": HBMediaType.imageJpeg.description], body: .byteBuffer(body))

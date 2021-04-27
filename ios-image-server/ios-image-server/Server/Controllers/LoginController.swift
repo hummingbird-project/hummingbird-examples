@@ -15,6 +15,9 @@
 import Hummingbird
 import HummingbirdMustache
 
+/// Add routes for server login
+/// GET / return login form
+/// POST / will set login token and forward to first page of image server
 struct LoginController {
     func addRoutes(to router: HBRouter) {
         router.get("/", use: self.index)
