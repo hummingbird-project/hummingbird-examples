@@ -1,9 +1,16 @@
+//===----------------------------------------------------------------------===//
 //
-//  PhotoLibraryManager.swift
-//  ios-image-server
+// This source file is part of the Hummingbird server framework project
 //
-//  Created by Adam Fowler on 26/04/2021.
+// Copyright (c) 2021-2021 the Hummingbird authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
 
 import Hummingbird
 import NIO
@@ -19,10 +26,10 @@ class PhotoLibraryManager {
 
     init(eventLoop: EventLoop) {
         self.photosPromise = eventLoop.makePromise()
-        fetchLibrary()
+        self.fetchLibrary()
     }
 
-    func requestAuthorization(_ authorized: @escaping ()->(), denied: @escaping ()->() = {}) {
+    func requestAuthorization(_ authorized: @escaping () -> Void, denied: @escaping () -> Void = {}) {
         PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
             switch status {
             case .authorized:
@@ -38,14 +45,14 @@ class PhotoLibraryManager {
     }
 
     func fetchLibrary() {
-        requestAuthorization {
+        self.requestAuthorization {
             let fetchOptions = PHFetchOptions()
-            fetchOptions.sortDescriptors = [NSSortDescriptor(key:"creationDate", ascending:false)]
+            fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
             self.photosPromise.succeed(PHAsset.fetchAssets(with: fetchOptions))
         }
     }
 
-    func loadPhoto(index: Int, targetSize: CGSize = CGSize(width: 1024, height: 1024), _ cb: @escaping (Result<Data, Swift.Error>) -> ()) {
+    func loadPhoto(index: Int, targetSize: CGSize = CGSize(width: 1024, height: 1024), _ cb: @escaping (Result<Data, Swift.Error>) -> Void) {
         self.photosPromise.futureResult.whenSuccess { photos in
             guard index < photos.count else {
                 cb(.failure(Error.invalidIndex))
@@ -58,7 +65,7 @@ class PhotoLibraryManager {
             option.resizeMode = .exact
             option.deliveryMode = .highQualityFormat
 
-            manager.requestImage(for: photo, targetSize: targetSize, contentMode: .aspectFit, options: option, resultHandler: { result, info in
+            manager.requestImage(for: photo, targetSize: targetSize, contentMode: .aspectFit, options: option, resultHandler: { result, _ in
                 guard let image = result else {
                     cb(.failure(Error.loadFailed))
                     return

@@ -1,9 +1,16 @@
+//===----------------------------------------------------------------------===//
 //
-//  WebController.swift
-//  ios-image-server
+// This source file is part of the Hummingbird server framework project
 //
-//  Created by Adam Fowler on 27/04/2021.
+// Copyright (c) 2021-2021 the Hummingbird authors
+// Licensed under Apache License v2.0
 //
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
 
 import Hummingbird
 import HummingbirdMustache
@@ -29,8 +36,8 @@ struct WebController {
                 let prev: Int?
                 let next: Int?
             }
-            let data = RenderData(index: index, prev: index > 0 ? index-1: nil , next: index + 1)
-            let html = template.render(data)
+            let data = RenderData(index: index, prev: index > 0 ? self.index - 1 : nil, next: self.index + 1)
+            let html = self.template.render(data)
             return .init(html: html)
         }
     }
@@ -51,19 +58,20 @@ struct WebController {
                 struct Image {
                     let index: Int
                 }
+
                 let images: [Image]
                 let prev: Int?
                 let next: Int?
                 let count: Int
             }
-            let images = (index..<(index+count)).map { RenderData.Image(index: $0) }
+            let images = (index..<(index + self.count)).map { RenderData.Image(index: $0) }
             let data = RenderData(
                 images: images,
-                prev: index - count >= 0 ? index - count: nil ,
-                next: index + count,
-                count: count
+                prev: index - self.count >= 0 ? self.index - self.count : nil,
+                next: self.index + self.count,
+                count: self.count
             )
-            let html = template.render(data)
+            let html = self.template.render(data)
             return .init(html: html)
         }
     }
