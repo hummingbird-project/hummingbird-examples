@@ -32,7 +32,7 @@ struct ContentView: View {
                 let app = HBApplication.run()
                 // if app has a login token then display dialog
                 if let loginToken = app.loginToken {
-                    self.alertText = Text("Please enter \"\(loginToken)\" to view images")
+                    self.alertText = Text("Your login token is \"\(loginToken)\"")
                     self.showingAlert = true
                 }
             }
