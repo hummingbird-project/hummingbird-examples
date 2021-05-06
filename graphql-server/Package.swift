@@ -13,7 +13,6 @@ let package = Package(
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.11.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
         .package(url: "https://github.com/GraphQLSwift/Graphiti.git", .upToNextMinor(from: "0.23.0")),
-        .package(url: "https://github.com/rexmas/JSONValue.git", .upToNextMajor(from: "7.0.0")),
     ],
     targets: [
         .target(name: "App",
@@ -21,7 +20,6 @@ let package = Package(
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "Graphiti", package: "Graphiti"),
-                .product(name: "JSONValueRX", package: "JSONValue"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of

@@ -1,7 +1,7 @@
 # ================================
 # Build image
 # ================================
-FROM swift:5.3-focal as build
+FROM swift:5.4-focal as build
 
 # Install OS updates
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
@@ -38,7 +38,7 @@ RUN [ -d /build/Public ] && { mv /build/Public ./Public && chmod -R a-w ./Public
 # ================================
 # Run image
 # ================================
-FROM swift:5.3-focal-slim
+FROM swift:5.4-slim
 
 # Make sure all system packages are up to date.
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true && \

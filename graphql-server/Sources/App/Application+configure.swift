@@ -1,7 +1,6 @@
 import Foundation
 import Hummingbird
 import HummingbirdFoundation
-import JSONValueRX
 import GraphQL
 
 extension HBApplication {
@@ -15,15 +14,15 @@ extension HBApplication {
         
         // MARK: - Routes
         router.post("/graphql", body: .collate) { request -> EventLoopFuture<GraphQLResult> in
-            guard let json = try? request.decode(as: JSONValue.self),
-                  let queryPath: JSONValue = json["query"] else {
-                return request.eventLoop.makeSucceededFuture(GraphQLResult.invalidRequest)
+            guard let query = try? request.decode(as: Map.self)
+                    .dictionaryValue()["query"] else {
+                return request.success(GraphQLResult.invalidRequest)
             }
-            switch queryPath {
+            switch query {
             case .string(let text):
                 return graphQLHandler.handle(query: text)
             default:
-                return request.eventLoop.makeSucceededFuture(GraphQLResult.invalidQuery)
+                return request.success(GraphQLResult.invalidQuery)
             }
         }
     }
