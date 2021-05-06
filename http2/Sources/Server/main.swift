@@ -9,6 +9,9 @@ struct HummingbirdArguments: ParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var port: Int = 8080
 
+    @Option(name: .shortAndLong, help: "PEM file containing trust root")
+    var trustRoot: String
+
     @Option(name: .shortAndLong, help: "PEM file containing certificate chain")
     var certificateChain: String
 
