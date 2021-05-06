@@ -7,11 +7,11 @@ The HTTP2 upgrade is done via TLS so for this to work you need to supply valid c
 Run `./scripts/generate-certs.sh`. This wil create all the require files in the root folder of the example. If running in Xcode set the working directory for your the project to be the root folder.  
 
 The sample requires you provide the paths to the various certificates
-```swift
+```
 swift run Server --ca-cert ca.crt --certificate-chain server.crt --private-key server.key
 ```
 
 To test the sample you can use `curl`. You need to provide the root trust certificate that the server certificate and key were generated from.
-```swift
+```
 curl --cacert ca.crt https://localhost:8080/http
 ```

@@ -1,6 +1,6 @@
 # Sessions with Redis
 
-Demonstrating a simple user/session authentication setup. The application has three routes. 
+Demonstrating a simple user/session authentication setup. The application has three routes.
 - PUT /user: Creates a new user. Requires JSON input {"name": <username>, "password: <password>}
 - POST /user/login: Uses Basic authentication to login user and create a session
 - GET /user: Returns current user
@@ -12,3 +12,5 @@ For this example to work you need a running Redis instance.
 docker run -p 6379:6379 redis
 ```
 The first time you run it you should also run it with the `--migrate` command line parameter to setup the database.
+
+This example comes with a [PAW](https://paw.cloud/) file you can use to test the various endpoints.
