@@ -16,13 +16,13 @@ extension HBApplication {
         router.post("/graphql", body: .collate) { request -> EventLoopFuture<GraphQLResult> in
             guard let query = try? request.decode(as: Map.self)
                     .dictionaryValue()["query"] else {
-                return request.success(GraphQLResult.invalidRequest)
+                return request.failure(GraphQLError(message: "Syntax Error"))
             }
             switch query {
             case .string(let text):
                 return graphQLHandler.handle(query: text)
             default:
-                return request.success(GraphQLResult.invalidQuery)
+                return request.failure(GraphQLError(message: "Invalid Request"))
             }
         }
     }
