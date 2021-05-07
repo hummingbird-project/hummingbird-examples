@@ -1,7 +1,7 @@
 # GraphQL Server 
 
-This example recreates the GraphQLSwift [Graphiti getting started guide](https://github.com/GraphQLSwift/Graphiti#getting-started) using Hummingbird as the server framework.
+This example uses the GraphQLSwift [Graphiti](https://github.com/GraphQLSwift/Graphiti#getting-started) hosted with Hummingbird as the server framework with theh [Graphiti StarWars API example](https://github.com/GraphQLSwift/Graphiti/tree/master/Tests/GraphitiTests).
 
 ## Ideas to extend use
 
-- Replace the `Context` with `Fluent` or another persistance/query layer
+- Replace the `StarWarsContext` with `Fluent` or another persistance layer

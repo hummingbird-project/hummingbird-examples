@@ -13,12 +13,12 @@ final class AppTests: XCTestCase {
 
         let testQuery = """
             {
-                "query": "{message{content}}",
+                "query": "{hero(episode:NEWHOPE){name}}",
                 "variables": {}
             }
             """
         let testBody = ByteBuffer(string: testQuery)
-        let expectedResult = #"{"data":{"message":{"content":"Hello, world!"}}}"#
+        let expectedResult = #"{"data":{"hero":{"name":"R2-D2"}}}"#
         app.XCTExecute(uri: "/graphql",
                        method: .POST,
                        headers: .init(dictionaryLiteral: ("Content-Type", "application/json; charset=utf-8")),

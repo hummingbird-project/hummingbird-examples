@@ -2,15 +2,14 @@ import NIO
 import Graphiti
 import GraphQL
 
+// https://github.com/GraphQLSwift/Graphiti#querying
 public struct GraphQLHandler {
-    let context = Context()
-    let api: GraphQLAPI
+    let context = StarWarsContext()
+    let api = StarWarsAPI()
     let group: EventLoopGroup
     
     init(group: EventLoopGroup) throws {
         self.group = group
-        let resolver = Resolver(group: group)
-        self.api = try GraphQLAPI(resolver: resolver)
     }
     
     /// Executes queries
