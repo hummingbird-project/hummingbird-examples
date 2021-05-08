@@ -1,7 +1,35 @@
 import Graphiti
-import NIO
 
-/// https://github.com/GraphQLSwift/Graphiti#defining-the-graphql-api-resolver
+extension Character {
+    public var secretBackstory: String? {
+        nil
+    }
+    
+    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> [Character] {
+        []
+    }
+}
+
+extension Human {
+    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> [Character] {
+        context.getFriends(of: self)
+    }
+    
+    public func getSecretBackstory(context: StarWarsContext, arguments: NoArguments) throws -> String? {
+        try context.getSecretBackStory()
+    }
+}
+
+extension Droid {
+    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> [Character] {
+        context.getFriends(of: self)
+    }
+    
+    public func getSecretBackstory(context: StarWarsContext, arguments: NoArguments) throws -> String? {
+        try context.getSecretBackStory()
+    }
+}
+
 public struct StarWarsResolver {
     public init() {}
     
@@ -35,35 +63,5 @@ public struct StarWarsResolver {
     
     public func search(context: StarWarsContext, arguments: SearchArguments) -> [SearchResult] {
         context.search(query: arguments.query)
-    }
-}
-
-extension Character {
-    public var secretBackstory: String? {
-        nil
-    }
-    
-    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> [Character] {
-        []
-    }
-}
-
-extension Human {
-    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> [Character] {
-        context.getFriends(of: self)
-    }
-    
-    public func getSecretBackstory(context: StarWarsContext, arguments: NoArguments) throws -> String? {
-        try context.getSecretBackStory()
-    }
-}
-
-extension Droid {
-    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> [Character] {
-        context.getFriends(of: self)
-    }
-    
-    public func getSecretBackstory(context: StarWarsContext, arguments: NoArguments) throws -> String? {
-        try context.getSecretBackStory()
     }
 }

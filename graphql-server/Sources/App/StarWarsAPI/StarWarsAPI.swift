@@ -1,6 +1,5 @@
 import Graphiti
 
-/// https://github.com/GraphQLSwift/Graphiti/blob/master/Tests/GraphitiTests/StarWarsAPI/StarWarsAPI.swift
 public struct StarWarsAPI : API {
     public let resolver = StarWarsResolver()
     public let context = StarWarsContext()
