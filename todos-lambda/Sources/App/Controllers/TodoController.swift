@@ -14,6 +14,7 @@
 
 import Foundation
 import Hummingbird
+import HummingbirdLambda
 import NIO
 import SotoDynamoDB
 
