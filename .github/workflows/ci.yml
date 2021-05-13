@@ -18,19 +18,19 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ['swift:5.3-bionic', 'swift:5.3-focal', 'swift:5.3-amazonlinux2', 'swift:5.3-centos8']
+        image: ['swift:5.4-bionic', 'swift:5.4-focal', 'swift:5.4-amazonlinux2', 'swift:5.4-centos8']
     container:
       image: ${{ matrix.image }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Install dependencies (Ubuntu)
-      if: ${{ matrix.image == 'swift:5.3-bionic' || matrix.image == 'swift:5.3-focal'}}
+      if: ${{ matrix.image == 'swift:5.4-bionic' || matrix.image == 'swift:5.4-focal'}}
       run: |
         apt-get update -qq
         apt-get install -q -y libsqlite3-dev
     - name: Install dependencies (Amazon Linux2/CentOS8)
-      if: ${{ matrix.image == 'swift:5.3-amazonlinux2' || matrix.image == 'swift:5.3-centos8'}}
+      if: ${{ matrix.image == 'swift:5.4-amazonlinux2' || matrix.image == 'swift:5.4-centos8'}}
       run: |
         yum -y update
         yum -y install sqlite-devel

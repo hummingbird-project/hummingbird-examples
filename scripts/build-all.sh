@@ -14,6 +14,7 @@ build_example()
 }
 
 # Test latest code against for examples
+build_example graphql-server
 build_example hello
 build_example html-form
 build_example http2
