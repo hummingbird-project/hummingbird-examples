@@ -1,4 +1,11 @@
 /**
+ * StarWars API Example
+ * Graphiti
+ * This example comes from the [Graphiti StarWarsAPI](https://github.com/GraphQLSwift/Graphiti/tree/master/Tests/GraphitiTests/StarWarsAPI) example
+ *
+ * The Graphiti [README](https://github.com/GraphQLSwift/Graphiti#getting-started) is also a helpful reference.
+ */
+/**
  * This defines a basic set of data for our Star Wars Schema.
  *
  * This data is hard coded for the sake of the demo, but you could imagine
