@@ -12,10 +12,12 @@
     <script type="text/javascript">
 
         function bignum(event) {
-            let b = new BigInteger("1000000000000", 256)
-            console.log(b.toString())
+            event.preventDefault();
+
+            let b = new BigInteger("100000df00000", 16)
+            console.log(b.toString(16))
             let verifyData = {
-                "num": btoa(b)
+                "num": b.toString(16)
             }
             $.ajax({
                 url: '/api/user/bignum',
@@ -50,7 +52,7 @@
 
               // 2. The client sends A to the server.
               let data = {
-                  "A": btoa(A),
+                  "A": A.toString(16),
                   "name": username
               }
               console.log("Input: " + JSON.stringify(data))
@@ -63,7 +65,7 @@
                   processData: false,
                   success: function(data) {
                       console.log(data)
-                      var B = BigInteger(atob(data.B))
+                      var B = new BigInteger(data.B, 16)
                       var salt = data.salt
                       // 4. The client and the server both calculate U.
                       var u = srp.calculateU(A, B)
@@ -73,7 +75,7 @@
 
                       // 2. The client sends A to the server.
                       let verifyData = {
-                          "proof": btoa(Sc),
+                          "proof": Sc.toString(16),
                           "sessionId": data.sessionId
                       }
                       $.ajax({
@@ -108,7 +110,7 @@
     <label for="password">Password</label><br/>
     <input type="text" id="password" name="password"/><br/>
     <br>
-    <input type="submit" value="Submit" onclick="bignum(event)"/>
+    <input type="submit" value="Submit" onclick="login(event)"/>
     </form>
 </body>
 </html>

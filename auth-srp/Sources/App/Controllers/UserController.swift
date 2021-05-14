@@ -35,37 +35,22 @@ struct UserController {
             .get(use: CurrentUser.self)
     }
 
+    /// SRP session. All keys are stored as base64
     struct SRPSession: Codable {
         let userId: UUID
         let name: String
         let salt: String
-        let A: String
-        let B: String
-        let serverSharedSecret: String
+        let A: String // base64
+        let B: String // base64
+        let serverSharedSecret: String // base64
     }
 
-    struct Bignum: HBRouteHandler {
-        struct Input: Decodable {
-            let num: String
-        }
-        let input: Input
-
-        init(from request: HBRequest) throws {
-            self.input = try request.decode(as: Input.self)
-        }
-
-        func handle(request: HBRequest) -> HTTPResponseStatus {
-            guard let num = try? SRPKey(input.num.base64decoded()) else { return .badRequest }
-            print(num)
-            return .ok
-        }
-    }
     /// Create new user
     struct CreateUser: HBRouteHandler {
         struct Input: Decodable {
             let name: String
             let salt: String
-            let verifier: String
+            let verifier: String // hex format
         }
         struct Output: HBResponseEncodable {
             let name: String
@@ -77,7 +62,8 @@ struct UserController {
         }
 
         func handle(request: HBRequest) -> EventLoopFuture<Output> {
-            let user = User(name: input.name, salt: input.salt, verifier: input.verifier)
+            guard let verifier = SRPKey(hex: input.verifier) else { return request.failure(.badRequest) }
+            let user = User(name: input.name, salt: input.salt, verifier: String(base64Encoding: verifier.bytes))
             // check if user exists and if they don't then add new user
             return User.query(on: request.db)
                 .filter(\.$name == user.name)
@@ -116,12 +102,15 @@ struct UserController {
                 .first()
                 .flatMap { user -> EventLoopFuture<Output> in
                     do {
+                        // get data
                         guard let user = user else { throw HBHTTPError(.unauthorized) }
+                        guard let A = SRPKey(hex: input.A) else { throw HBHTTPError(.badRequest) }
                         let verifier = try SRPKey(user.verifier.base64decoded())
-                        guard let A = try? SRPKey(input.A.base64decoded())
-                              else { throw HBHTTPError(.badRequest) }
+                        // calculate server keys
                         let serverKeys = UserController.srp.generateKeys(verifier: verifier)
+                        // calculate secret
                         let serverSharedSecret = try UserController.srp.calculateSharedSecret(clientPublicKey: A, serverKeys: serverKeys, verifier: verifier)
+                        // create session key and pass public server key and salt back to client
                         let sessionKey = HBRequest.Session.createSessionId()
                         let session = try SRPSession(
                             userId: user.requireID(),
@@ -131,12 +120,13 @@ struct UserController {
                             B: String(base64Encoding: serverKeys.public.bytes),
                             serverSharedSecret: String(base64Encoding: serverSharedSecret.bytes)
                         )
-                        return request.persist.create(key: "srp.\(sessionKey)", value: session, expires: .minutes(10))
+                        let sessionId = "srp.\(sessionKey)"
+                        return request.persist.create(key: sessionId, value: session, expires: .minutes(10))
                             .map { _ in
                                 return .init(
-                                    B: String(base64Encoding: serverKeys.public.bytes),
+                                    B: serverKeys.public.hex,
                                     salt: user.salt,
-                                    sessionId: sessionKey
+                                    sessionId: sessionId
                                 )
                             }
                     } catch {
@@ -174,8 +164,8 @@ struct UserController {
                             serverPublicKey: SRPKey(session.B.base64decoded()),
                             sharedSecret: SRPKey(session.serverSharedSecret.base64decoded())
                         )*/
-                        let clientSecret = try input.proof.base64decoded()
-                        guard try clientSecret == session.serverSharedSecret.base64decoded() else {
+                        let clientSecret = SRPKey(hex: input.proof)
+                        guard try clientSecret?.bytes == session.serverSharedSecret.base64decoded() else {
                             throw HBHTTPError(.unauthorized)
                         }
                         return request.session.save(userId: session.userId, expiresIn: .hours(1)).map { _ in

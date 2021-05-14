@@ -31,7 +31,7 @@
             let data = {
                 "name": username,
                 "salt": salt,
-                "verifier": btoa(verifier)
+                "verifier": verifier.toString(16)
             }
             $.ajax({
                 url: '/api/user',
@@ -41,7 +41,8 @@
                 dataType: 'json',
                 processData: false,
                 success: function(data) {
-                    alert("User created")
+                    alert("User created");
+                    window.location.href = 'login.html';
                 },
                 error: function(data) {
                     alert("Failed to create user")

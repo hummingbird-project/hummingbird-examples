@@ -15,11 +15,13 @@ let package = Package(
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "0.3.0"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
-        .package(url: "https://github.com/adam-fowler/swift-srp.git", from: "0.2.0")
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "1.1.0"),
+        .package(url: "https://github.com/adam-fowler/swift-srp.git", from: "0.3.0")
     ],
     targets: [
         .target(name: "App",
             dependencies: [
+                .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
