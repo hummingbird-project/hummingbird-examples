@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SRP Test</title>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript" src="js/jsbn.js"></script>
+    <script type="text/javascript" src="js/sha1.js"></script>
+    <script type="text/javascript" src="js/sjcl.js"></script>
+    <script type="text/javascript" src="js/srp-client.js"></script>
+
+    <script type="text/javascript">
+
+        function createUser(event) {
+            event.preventDefault();
+            
+            var bits     =  2048;
+            var username = $("#name").val();
+            var password = $("#password").val();
+
+            var srp = new SRPClient(username, password, bits);
+
+            // 1. The client generates a random hex salt.
+            var salt = srp.randomHexSalt();
+
+            // 2. The client calculates its verifier value.
+            var verifier = srp.calculateV(salt);
+
+            // 3. The client sends the username, salt and
+            // verifier to the server, which stores all three.
+            let data = {
+                "name": username,
+                "salt": salt,
+                "verifier": btoa(verifier)
+            }
+            $.ajax({
+                url: '/api/user',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                dataType: 'json',
+                processData: false,
+                success: function(data) {
+                    alert("User created")
+                },
+                error: function(data) {
+                    alert("Failed to create user")
+                }
+            })
+        }
+    </script>
+</head>
+<body>
+    <h1>Create user</h1>
+    <form action="#">
+    <label for="name">Name</label><br/>
+    <input type="text" id="name" name="name"/><br/>
+    <label for="password">Password</label><br/>
+    <input type="text" id="password" name="password"/><br/>
+    <br>
+    <input type="submit" value="Submit" onclick="createUser(event)"/>
+    </form>
+</body>
+</html>
