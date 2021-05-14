@@ -28,7 +28,6 @@ struct UserController {
     /// Add routes for user controller
     func addRoutes(to group: HBRouterGroup) {
         group.post(use: CreateUser.self)
-        group.post("bignum", use: Bignum.self)
         group.post("login", use: InitLogin.self)
         group.post("verify", use: FinalizeLogin.self)
         group.add(middleware: SessionAuthenticator())
@@ -116,7 +115,7 @@ struct UserController {
                             userId: user.requireID(),
                             name: user.name,
                             salt: user.salt,
-                            A: input.A,
+                            A: String(base64Encoding: A.bytes),
                             B: String(base64Encoding: serverKeys.public.bytes),
                             serverSharedSecret: String(base64Encoding: serverSharedSecret.bytes)
                         )
@@ -155,21 +154,16 @@ struct UserController {
                 .flatMap { session in
                     do {
                         guard let session = session else { throw HBHTTPError(.badRequest) }
-/*                        let clientProof = try input.proof.base64decoded()
-                        let serverProof = try srp.verifyClientProof(
+                        try print(SRPKey(session.serverSharedSecret.base64decoded()).hex)
+                        let clientProof = try input.proof.base64decoded()
+                        let serverProof = try srp.verifySimpleClientProof(
                             proof: clientProof,
-                            username: session.name,
-                            salt: session.salt.base64decoded(),
                             clientPublicKey: SRPKey(session.A.base64decoded()),
                             serverPublicKey: SRPKey(session.B.base64decoded()),
                             sharedSecret: SRPKey(session.serverSharedSecret.base64decoded())
-                        )*/
-                        let clientSecret = SRPKey(hex: input.proof)
-                        guard try clientSecret?.bytes == session.serverSharedSecret.base64decoded() else {
-                            throw HBHTTPError(.unauthorized)
-                        }
+                        )
                         return request.session.save(userId: session.userId, expiresIn: .hours(1)).map { _ in
-                            return .init(proof: session.serverSharedSecret)
+                            return .init(proof: String(base64Encoding: serverProof))
                         }
                     } catch {
                         return request.failure(error)

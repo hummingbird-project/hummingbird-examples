@@ -4,38 +4,13 @@
     <title>SRP Login Test</title>
     <meta charset="UTF-8">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- Using JS library https://github.com/symeapp/srp-client -->
     <script type="text/javascript" src="js/jsbn.js"></script>
     <script type="text/javascript" src="js/sha1.js"></script>
     <script type="text/javascript" src="js/sjcl.js"></script>
     <script type="text/javascript" src="js/srp-client.js"></script>
 
     <script type="text/javascript">
-
-        function bignum(event) {
-            event.preventDefault();
-
-            let b = new BigInteger("100000df00000", 16)
-            console.log(b.toString(16))
-            let verifyData = {
-                "num": b.toString(16)
-            }
-            $.ajax({
-                url: '/api/user/bignum',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(verifyData),
-                dataType: 'json',
-                processData: false,
-                success: function(data) {
-                    console.log(data)
-                    alert("Login success")
-                },
-                error: function(data) {
-                    alert("Login failed")
-                }
-            })
-
-        }
 
         function login(event) {
             event.preventDefault();
@@ -73,11 +48,15 @@
                       // 5. The client generates its premaster secret.
                       var Sc = srp.calculateS(B, salt, u, a);
 
+                      // 6. Calculate proof
+                      var M = srp.calculateM(A, B, Sc)
+                      
                       // 2. The client sends A to the server.
                       let verifyData = {
-                          "proof": Sc.toString(16),
+                          "proof": btoa(srp.pack(M.toString(16))),
                           "sessionId": data.sessionId
                       }
+                      console.log(verifyData)
                       $.ajax({
                           url: '/api/user/verify',
                           type: 'POST',
