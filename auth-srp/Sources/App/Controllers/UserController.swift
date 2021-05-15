@@ -113,7 +113,6 @@ struct UserController {
                         // calculate secret
                         let serverSharedSecret = try UserController.srp.calculateSharedSecret(clientPublicKey: A, serverKeys: serverKeys, verifier: verifier)
                         // create session key and pass public server key and salt back to client
-                        let sessionKey = UserController.createSessionId()
                         let session = try SRPSession(
                             userId: user.requireID(),
                             name: user.name,
@@ -122,7 +121,8 @@ struct UserController {
                             B: String(base64Encoding: serverKeys.public.bytes),
                             serverSharedSecret: String(base64Encoding: serverSharedSecret.bytes)
                         )
-                        let sessionId = "srp.\(sessionKey)"
+                        let sessionId = "srp.\(UserController.createSessionId())"
+                        // store session data and return server public key, salt and session id
                         return request.persist.create(key: sessionId, value: session, expires: .minutes(10))
                             .map { _ in
                                 return .init(
@@ -138,7 +138,7 @@ struct UserController {
         }
     }
 
-    /// Login user and create session
+    /// Verify login secret from client and return server proof of secret
     struct VerifyLogin: HBRouteHandler {
         struct Input: Decodable {
             let sessionId: String
@@ -159,8 +159,10 @@ struct UserController {
             return request.persist.get(key: self.input.sessionId, as: SRPSession.self)
                 .flatMapThrowing { session in
                     do {
+                        // get data
                         guard let session = session else { throw HBHTTPError(.badRequest) }
                         guard let clientProof = SRPKey(hex: input.proof)?.bytes else { throw HBHTTPError(.badRequest) }
+                        // verify client proof is correct and generate server proof
                         let serverProof = try srp.verifySimpleClientProof(
                             proof: clientProof,
                             clientPublicKey: SRPKey(session.A.base64decoded()),
