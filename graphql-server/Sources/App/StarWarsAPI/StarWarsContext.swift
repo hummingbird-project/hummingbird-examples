@@ -12,7 +12,11 @@
  * fetching this data from a backend service rather than from hardcoded
  * values in a more complex demo.
  */
+import Hummingbird
+
 public final class StarWarsContext {
+    let request: HBRequest
+    
     private static var tatooine = Planet(
         id:"10001",
         name: "Tatooine",
@@ -105,7 +109,9 @@ public final class StarWarsContext {
         "2001": r2d2,
     ]
     
-    public init() {}
+    public init(request: HBRequest) {
+        self.request = request
+    }
     
     /**
      * Helper function to get a character by ID.

@@ -9,8 +9,7 @@ extension HBApplication {
         decoder = JSONDecoder()
         
         // MARK: - GraphQL Hummingbird Extension
-        let graphQLHandler = try GraphQLHandler(group: self.eventLoopGroup)
-        extensions.set(\.graphQLHandler, value: graphQLHandler)
+        self.graphQLHandler = .init()
         
         // MARK: - Routes
         router.post("/graphql", body: .collate) { request -> EventLoopFuture<GraphQLResult> in
@@ -20,7 +19,7 @@ extension HBApplication {
             }
             switch query {
             case .string(let text):
-                return graphQLHandler.handle(query: text)
+                return self.graphQLHandler.handle(query: text, request: request)
             default:
                 return request.failure(GraphQLError(message: "Invalid Request"))
             }
