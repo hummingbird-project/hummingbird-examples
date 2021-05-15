@@ -6,7 +6,7 @@ Secure Remote Password (SRP) is a method to authenticate with your server applic
 
 The authentication works by the client demonstrating to the server they know the password without sending the password. Furthermore the server then has to demonstrate to the client it knows enough about the password, to avoid phishing attacks. More can be found out about SRP [here](https://datatracker.ietf.org/doc/html/rfc2945). Wikipedia also have a detailed description of the method [here](https://en.wikipedia.org/wiki/Secure_Remote_Password_protocol).
 
-Because this example serves a couple of web pages, you will need to make sure you have set the working directory to the root folder of this example before running. Also the example uses Fluent to store data in a database. The first time you run it you should include the command line argument `--migrate`.
+Because this example serves a couple of web pages, you will need to make sure you have set the working directory to the root folder of the example before running. Also the example uses Fluent to store data in a database. The first time you run it you should include the command line argument `--migrate`.
 
 Once the application is running use your browser to visit `http://localhost:8080/index.html`. From here you will be able to create a new user. Once the user is created you will be redirected to a login page where you can then test the login process. The client side Javascript SRP code uses the library https://github.com/symeapp/srp-client. This library is licensed under the Mozilla Public License 2.0 license. 
 
@@ -24,4 +24,4 @@ The login process found in `login.html` has a number of stages.
 8) The server verifies the proof and then replies with its own proof that it knows the shared secret.
 9) If the server proof is verified then the client can be considered authenticated.
 
-If at any stage any of these fail, then the process should be aborted.
+If at any stage any of these fail, then the process is aborted.
