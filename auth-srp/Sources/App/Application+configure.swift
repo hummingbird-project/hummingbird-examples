@@ -26,8 +26,8 @@ extension HBApplication {
         // add migrations
         self.fluent.migrations.add(CreateUser())
 
-        // add persist, must be done before migrate is called
-        self.addPersist(using: .memory)
+        // add persist, must be done before migrate is called if fluent is used
+        self.addPersist(using: .fluent)
 
         // migrate
         if arguments.migrate || arguments.inMemoryDatabase == true {

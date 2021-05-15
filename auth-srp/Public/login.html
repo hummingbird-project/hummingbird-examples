@@ -21,63 +21,67 @@
 
             var srp = new SRPClient(username, password, 2048);
 
-              // 1. The client generates and stores A.
-              var a = srp.srpRandom();
-              var A = srp.calculateA(a);
+            // 1. The client generates and stores A.
+            var a = srp.srpRandom();
+            var A = srp.calculateA(a);
 
-              // 2. The client sends A to the server.
-              let data = {
-                  "A": A.toString(16),
-                  "name": username
-              }
-              console.log("Input: " + JSON.stringify(data))
-              $.ajax({
-                  url: '/api/user/login',
-                  type: 'POST',
-                  contentType: 'application/json',
-                  data: JSON.stringify(data),
-                  dataType: 'json',
-                  processData: false,
-                  success: function(data) {
-                      console.log(data)
-                      var B = new BigInteger(data.B, 16)
-                      var salt = data.salt
-                      // 4. The client and the server both calculate U.
-                      var u = srp.calculateU(A, B)
+            // 2. The client sends A to the server.
+            let data = {
+                "A": A.toString(16),
+                "name": username
+            }
+            $.ajax({
+                url: '/api/user/login',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                dataType: 'json',
+                processData: false,
+                success: function(data) {
+                    var B = new BigInteger(data.B, 16)
+                    var salt = data.salt
+                    // 4. The client and the server both calculate U.
+                    var u = srp.calculateU(A, B)
 
-                      // 5. The client generates its premaster secret.
-                      var Sc = srp.calculateS(B, salt, u, a);
+                    // 5. The client generates its premaster secret.
+                    var Sc = srp.calculateS(B, salt, u, a);
 
-                      // 6. Calculate proof
-                      var M = srp.calculateM(A, B, Sc)
-                      
-                      // 2. The client sends A to the server.
-                      let verifyData = {
-                          "proof": btoa(srp.pack(M.toString(16))),
-                          "sessionId": data.sessionId
-                      }
-                      console.log(verifyData)
-                      $.ajax({
-                          url: '/api/user/verify',
-                          type: 'POST',
-                          contentType: 'application/json',
-                          data: JSON.stringify(verifyData),
-                          dataType: 'json',
-                          processData: false,
-                          success: function(data) {
-                              console.log(data)
-                              alert("Login success")
-                          },
-                          error: function(data) {
-                              alert("Login failed")
-                          }
-                      })
+                    // 6. Calculate proof
+                    var M = srp.calculateM(A, B, Sc)
+                    
+                    // 7. The client sends proof to the server.
+                    let verifyData = {
+                        "proof": M.toString(16),
+                        "sessionId": data.sessionId
+                    }
+                    $.ajax({
+                        url: '/api/user/verify',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(verifyData),
+                        dataType: 'json',
+                        processData: false,
+                        success: function(data) {
+                            // 8. Calculate server proof
+                            var M2 = srp.calculateM(A, M, Sc)
 
-                  },
-                  error: function(data) {
-                      alert("Login failed")
-                  }
-              })
+                            // 9. Compare server proofs
+                            if (data.proof == M2.toString(16)) {
+                                alert("Login success")
+                            } else {
+                                alert("Login failed, server failed to prove it has secret")
+                            }
+                        },
+                        error: function(data) {
+                            alert("Login failed, client failed to prove it has secret")
+                        }
+                    })
+
+                },
+                error: function(data) {
+                    alert("Login failed, user does not exist")
+                }
+            })
         }
     </script>
 </head>

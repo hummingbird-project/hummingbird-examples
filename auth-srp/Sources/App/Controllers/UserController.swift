@@ -29,9 +29,7 @@ struct UserController {
     func addRoutes(to group: HBRouterGroup) {
         group.post(use: CreateUser.self)
         group.post("login", use: InitLogin.self)
-        group.post("verify", use: FinalizeLogin.self)
-        group.add(middleware: SessionAuthenticator())
-            .get(use: CurrentUser.self)
+        group.post("verify", use: VerifyLogin.self)
     }
 
     /// SRP session. All keys are stored as base64
@@ -110,7 +108,7 @@ struct UserController {
                         // calculate secret
                         let serverSharedSecret = try UserController.srp.calculateSharedSecret(clientPublicKey: A, serverKeys: serverKeys, verifier: verifier)
                         // create session key and pass public server key and salt back to client
-                        let sessionKey = HBRequest.Session.createSessionId()
+                        let sessionKey = UserController.createSessionId()
                         let session = try SRPSession(
                             userId: user.requireID(),
                             name: user.name,
@@ -136,7 +134,7 @@ struct UserController {
     }
 
     /// Login user and create session
-    struct FinalizeLogin: HBRouteHandler {
+    struct VerifyLogin: HBRouteHandler {
         struct Input: Decodable {
             let sessionId: String
             let proof: String
@@ -151,38 +149,26 @@ struct UserController {
         }
         func handle(request: HBRequest) -> EventLoopFuture<Output> {
             return request.persist.get(key: input.sessionId, as: SRPSession.self)
-                .flatMap { session in
+                .flatMapThrowing { session in
                     do {
                         guard let session = session else { throw HBHTTPError(.badRequest) }
-                        try print(SRPKey(session.serverSharedSecret.base64decoded()).hex)
-                        let clientProof = try input.proof.base64decoded()
+                        guard let clientProof = SRPKey(hex: input.proof)?.bytes else { throw HBHTTPError(.badRequest) }
                         let serverProof = try srp.verifySimpleClientProof(
                             proof: clientProof,
                             clientPublicKey: SRPKey(session.A.base64decoded()),
                             serverPublicKey: SRPKey(session.B.base64decoded()),
                             sharedSecret: SRPKey(session.serverSharedSecret.base64decoded())
                         )
-                        return request.session.save(userId: session.userId, expiresIn: .hours(1)).map { _ in
-                            return .init(proof: String(base64Encoding: serverProof))
-                        }
-                    } catch {
-                        return request.failure(error)
+                        return .init(proof: SRPKey(serverProof).hex)
+                    } catch SRPServerError.invalidClientProof {
+                        throw HBHTTPError(.unauthorized)
                     }
                 }
         }
     }
 
-    /// Get current logged in user
-    struct CurrentUser: HBRouteHandler {
-        struct Output: HBResponseEncodable {
-            let name: String
-        }
-        let user: User
-        init(from request: HBRequest) throws {
-            self.user = try request.auth.require(User.self)
-        }
-        func handle(request: HBRequest) -> Output {
-            return Output(name: user.name)
-        }
+    static func createSessionId() -> String {
+        let bytes: [UInt8] = (0..<32).map { _ in UInt8.random(in: 0...255) }
+        return String(base64Encoding: bytes)
     }
 }
