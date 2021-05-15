@@ -49,9 +49,11 @@ struct UserController {
             let salt: String
             let verifier: String // hex format
         }
+
         struct Output: HBResponseEncodable {
             let name: String
         }
+
         let input: Input
 
         init(from request: HBRequest) throws {
@@ -60,7 +62,7 @@ struct UserController {
 
         func handle(request: HBRequest) -> EventLoopFuture<Output> {
             guard let verifier = SRPKey(hex: input.verifier) else { return request.failure(.badRequest) }
-            let user = User(name: input.name, salt: input.salt, verifier: String(base64Encoding: verifier.bytes))
+            let user = User(name: input.name, salt: self.input.salt, verifier: String(base64Encoding: verifier.bytes))
             // check if user exists and if they don't then add new user
             return User.query(on: request.db)
                 .filter(\.$name == user.name)
@@ -83,19 +85,22 @@ struct UserController {
             let name: String
             let A: String
         }
+
         struct Output: HBResponseEncodable {
             let B: String
             let salt: String
             let sessionId: String
         }
+
         let input: Input
 
         init(from request: HBRequest) throws {
             self.input = try request.decode(as: Input.self)
         }
+
         func handle(request: HBRequest) -> EventLoopFuture<Output> {
             return User.query(on: request.db)
-                .filter(\.$name == input.name)
+                .filter(\.$name == self.input.name)
                 .first()
                 .flatMap { user -> EventLoopFuture<Output> in
                     do {
@@ -139,16 +144,19 @@ struct UserController {
             let sessionId: String
             let proof: String
         }
+
         struct Output: HBResponseEncodable {
             let proof: String
         }
+
         let input: Input
 
         init(from request: HBRequest) throws {
             self.input = try request.decode(as: Input.self)
         }
+
         func handle(request: HBRequest) -> EventLoopFuture<Output> {
-            return request.persist.get(key: input.sessionId, as: SRPSession.self)
+            return request.persist.get(key: self.input.sessionId, as: SRPSession.self)
                 .flatMapThrowing { session in
                     do {
                         guard let session = session else { throw HBHTTPError(.badRequest) }

@@ -41,4 +41,3 @@ final class User: Model, HBAuthenticatable {
         self.verifier = verifier
     }
 }
-
