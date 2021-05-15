@@ -2,6 +2,7 @@
 
 Examples include
 - [hello](https://github.com/hummingbird-project/hummingbird-examples/tree/main/hello) - Basic application setup
+- [auth-srp](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-srp) - Application demonstrating Secure Remote Password authentication.
 - [graphql-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/graphql-server) - GraphQL server using [Graphiti](https://github.com/GraphQLSwift/Graphiti)
 - [html-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/html-form) - Link HTML form to Hummingbird application
 - [http2](https://github.com/hummingbird-project/hummingbird-examples/tree/main/http2) - Basic application with HTTP2 upgrade added
