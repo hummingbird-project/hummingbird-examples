@@ -13,16 +13,14 @@ extension HBApplication {
         
         // MARK: - Routes
         router.post("/graphql", body: .collate) { request -> EventLoopFuture<GraphQLResult> in
-            guard let query = try? request.decode(as: Map.self)
-                    .dictionaryValue()["query"] else {
+            struct GraphQLQuery: Decodable {
+                let query: String
+                let variables: [String: Map]?
+            }
+            guard let graphqlQuery = try? request.decode(as: GraphQLQuery.self) else {
                 return request.failure(GraphQLError(message: "Syntax Error"))
             }
-            switch query {
-            case .string(let text):
-                return self.graphQLHandler.handle(query: text, request: request)
-            default:
-                return request.failure(GraphQLError(message: "Invalid Request"))
-            }
+            return self.graphQLHandler.handle(query: graphqlQuery.query, variables: graphqlQuery.variables, request: request)
         }
     }
 }

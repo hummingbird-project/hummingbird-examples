@@ -11,8 +11,8 @@ public struct GraphQLHandler {
     /// - Parameter query: a String with a valid GraphQL query. Like `{ message { context }}`
     /// - Returns: `EventLoopFuture<GraphQLResult>` which might contain results or be a failure
     /// Note that Graphiti fails internally on invalid queries like `{ FAIL` returning a `500 Internal Server Error`
-    func handle(query: String, request: HBRequest) -> EventLoopFuture<GraphQLResult> {
+    func handle(query: String, variables: [String: Map]?, request: HBRequest) -> EventLoopFuture<GraphQLResult> {
         let context = StarWarsContext(request: request)
-        return api.execute(request: query, context: context, on: request.eventLoop)
+        return api.execute(request: query, context: context, on: request.eventLoop, variables: variables ?? [:])
     }
 }
