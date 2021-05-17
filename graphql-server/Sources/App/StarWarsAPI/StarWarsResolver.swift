@@ -1,4 +1,5 @@
 import Graphiti
+import NIO
 
 extension Character {
     public var secretBackstory: String? {
@@ -11,12 +12,12 @@ extension Character {
 }
 
 extension Human {
-    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> [Character] {
+    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> EventLoopFuture<[Character]> {
         context.getFriends(of: self)
     }
     
-    public func getSecretBackstory(context: StarWarsContext, arguments: NoArguments) throws -> String? {
-        try context.getSecretBackStory()
+    public func getSecretBackstory(context: StarWarsContext, arguments: NoArguments) -> EventLoopFuture<String?> {
+        context.getSecretBackStory()
     }
 }
 
@@ -28,12 +29,12 @@ extension Human {
  * The Graphiti [README](https://github.com/GraphQLSwift/Graphiti#getting-started) is also a helpful reference.
  */
 extension Droid {
-    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> [Character] {
+    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> EventLoopFuture<[Character]> {
         context.getFriends(of: self)
     }
     
-    public func getSecretBackstory(context: StarWarsContext, arguments: NoArguments) throws -> String? {
-        try context.getSecretBackStory()
+    public func getSecretBackstory(context: StarWarsContext, arguments: NoArguments) -> EventLoopFuture<String?> {
+        context.getSecretBackStory()
     }
 }
 
@@ -44,7 +45,7 @@ public struct StarWarsResolver {
         public let episode: Episode?
     }
 
-    public func hero(context: StarWarsContext, arguments: HeroArguments) -> Character {
+    public func hero(context: StarWarsContext, arguments: HeroArguments) -> EventLoopFuture<Character> {
         context.getHero(of: arguments.episode)
     }
 
@@ -52,7 +53,7 @@ public struct StarWarsResolver {
         public let id: String
     }
     
-    public func human(context: StarWarsContext, arguments: HumanArguments) -> Human? {
+    public func human(context: StarWarsContext, arguments: HumanArguments) -> EventLoopFuture<Human?> {
         context.getHuman(id: arguments.id)
     }
 
@@ -60,7 +61,7 @@ public struct StarWarsResolver {
         public let id: String
     }
 
-    public func droid(context: StarWarsContext, arguments: DroidArguments) -> Droid? {
+    public func droid(context: StarWarsContext, arguments: DroidArguments) -> EventLoopFuture<Droid?> {
         context.getDroid(id: arguments.id)
     }
     
@@ -68,7 +69,7 @@ public struct StarWarsResolver {
         public let query: String
     }
     
-    public func search(context: StarWarsContext, arguments: SearchArguments) -> [SearchResult] {
+    public func search(context: StarWarsContext, arguments: SearchArguments) -> EventLoopFuture<[SearchResult]> {
         context.search(query: arguments.query)
     }
 }
