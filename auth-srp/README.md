@@ -17,7 +17,7 @@ The login process found in `login.html` has a number of stages.
 1) The client creates a random private key, and derived public key. 
 2) The public key is sent to the server along with the username. 
 3) The server looks up the salt and verifier associated with the username.
-4) The server then generates its own public/private key pair and returns its public key, the salt associated with the username and a session key. It will store the data required to finished the authentication in an SRP session object and this is then stored alongside the session key using the persist framework.
+4) The server then generates its own public/private key pair and returns its public key, the salt associated with the username and a session key. It will store the data required to finished the authentication in an SRP session object and this is then stored alongside the session key using the [persist](https://github.com/hummingbird-project/hummingbird/blob/main/Sources/Hummingbird/Storage/Application%2BPersist.swift) framework.
 5) The client creates a shared secret from its own public/private key pair, the public server key, the username, password and salt. 
 6) The server is also able to create this shared secret using its own public/private key pair, the public client key and the verifier associated with the username.
 7) At this point the client could send the secret to the server and they could be compared, but instead the client sends a proof (derived from the data both client and server have) that it knows the shared secret, along with the session key so the server can find SRP session data it stored from the previous call.
