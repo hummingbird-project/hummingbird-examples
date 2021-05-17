@@ -31,84 +31,96 @@ public final class StarWarsContext {
     /**
      * Allows us to query for a character"s friends.
      */
-    public func getFriends(of character: Character) -> [Character] {
-        character.friends.compactMap { id in
-            getCharacter(id: id)
-        }
+    public func getFriends(of character: Character) -> EventLoopFuture<[Character]> {
+        request.success(
+            character.friends.compactMap { id in
+                getCharacter(id: id)
+            }
+        )
     }
     
     /**
      * Allows us to fetch the undisputed hero of the Star Wars trilogy, R2-D2.
      */
-    public func getHero(of episode: Episode?) -> Character {
+    public func getHero(of episode: Episode?) -> EventLoopFuture<Character> {
         if episode == .empire {
             // Luke is the hero of Episode V.
-            return Self.luke
+            return request.success(Self.luke)
         }
         // R2-D2 is the hero otherwise.
-        return Self.r2d2
+        return request.success(Self.r2d2)
     }
     
     /**
      * Allows us to query for the human with the given id.
      */
-    public func getHuman(id: String) -> Human? {
-        Self.humanData[id]
+    public func getHuman(id: String) -> EventLoopFuture<Human?> {
+        request.success(Self.humanData[id])
     }
     
     /**
      * Allows us to query for the droid with the given id.
      */
-    public func getDroid(id: String) -> Droid? {
-        Self.droidData[id]
+    public func getDroid(id: String) -> EventLoopFuture<Droid?> {
+        request.success(Self.droidData[id])
     }
     
     /**
      * Allows us to get the secret backstory, or not.
      */
-    public func getSecretBackStory() throws -> String? {
+    public func getSecretBackStory() -> EventLoopFuture<String?> {
         struct Secret : Error, CustomStringConvertible {
             let description: String
         }
         
-        throw Secret(description: "secretBackstory is secret.")
+        return request.failure(Secret(description: "secretBackstory is secret."))
     }
     
     /**
      * Allows us to query for a Planet.
      */
-    public func getPlanets(query: String) -> [Planet] {
-        Self.planetData
-            .sorted(by: { $0.key < $1.key })
-            .map({ $1 })
-            .filter({ $0.name.lowercased().contains(query.lowercased()) })
+    public func getPlanets(query: String) -> EventLoopFuture<[Planet]> {
+        request.success(
+            Self.planetData
+                .sorted(by: { $0.key < $1.key })
+                .map({ $1 })
+                .filter({ $0.name.lowercased().contains(query.lowercased()) })
+        )
     }
     
     /**
      * Allows us to query for a Human.
      */
-    public func getHumans(query: String) -> [Human] {
-        Self.humanData
-            .sorted(by: { $0.key < $1.key })
-            .map({ $1 })
-            .filter({ $0.name.lowercased().contains(query.lowercased()) })
+    public func getHumans(query: String) -> EventLoopFuture<[Human]> {
+        request.success(
+            Self.humanData
+                .sorted(by: { $0.key < $1.key })
+                .map({ $1 })
+                .filter({ $0.name.lowercased().contains(query.lowercased()) })
+        )
     }
     
     /**
      * Allows us to query for a Droid.
      */
-    public func getDroids(query: String) -> [Droid] {
-        Self.droidData
-            .sorted(by: { $0.key < $1.key })
-            .map({ $1 })
-            .filter({ $0.name.lowercased().contains(query.lowercased()) })
+    public func getDroids(query: String) -> EventLoopFuture<[Droid]> {
+        request.success(
+            Self.droidData
+                .sorted(by: { $0.key < $1.key })
+                .map({ $1 })
+                .filter({ $0.name.lowercased().contains(query.lowercased()) })
+        )
     }
 
     /**
      * Allows us to query for either a Human, Droid, or Planet.
      */
-    public func search(query: String) -> [SearchResult] {
-        return getPlanets(query: query) + getHumans(query: query) + getDroids(query: query)
+    public func search(query: String) -> EventLoopFuture<[SearchResult]> {
+        return getPlanets(query: query)
+            .and(getHumans(query: query))
+            .map { $0 + $1}
+            .and(getDroids(query: query))
+            .map { $0 + $1 }
     }
 
     private static var tatooine = Planet(
