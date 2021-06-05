@@ -118,7 +118,7 @@ public final class StarWarsContext {
     public func search(query: String) -> EventLoopFuture<[SearchResult]> {
         return getPlanets(query: query)
             .and(getHumans(query: query))
-            .map { $0 + $1}
+            .map { [SearchResult]() + $0 + $1}
             .and(getDroids(query: query))
             .map { $0 + $1 }
     }

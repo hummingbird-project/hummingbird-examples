@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -12,7 +12,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.11.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
-        .package(url: "https://github.com/GraphQLSwift/Graphiti.git", .upToNextMinor(from: "0.24.0")),
+        .package(url: "https://github.com/GraphQLSwift/Graphiti.git", .upToNextMinor(from: "0.25.0")),
     ],
     targets: [
         .target(name: "App",
@@ -28,7 +28,7 @@ let package = Package(
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
             ]
         ),
-        .target(name: "Server",
+        .executableTarget(name: "Server",
             dependencies: [
                 .byName(name: "App"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
