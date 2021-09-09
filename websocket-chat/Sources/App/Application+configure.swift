@@ -1,4 +1,5 @@
 import Hummingbird
+import HummingbirdFoundation
 
 extension HBApplication {
     /// configure your application
@@ -6,6 +7,7 @@ extension HBApplication {
     /// setup the encoder/decoder
     /// add your routes
     public func configure() throws {
+        self.middleware.add(HBFileMiddleware(application: self))
         // add HTTP to WebSocket upgrade
         self.ws.addUpgrade()
         // add middleware to websocket initial requests

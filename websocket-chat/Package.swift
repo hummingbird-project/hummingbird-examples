@@ -18,6 +18,7 @@ let package = Package(
         .target(name: "App",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "HummingbirdWebSocket", package: "hummingbird-websocket"),
             ],
             swiftSettings: [
