@@ -32,7 +32,6 @@ jobs:
     - name: Install dependencies (Amazon Linux2/CentOS8)
       if: ${{ matrix.image == 'swift:5.4-amazonlinux2' || matrix.image == 'swift:5.4-centos8'}}
       run: |
-        yum -y update
         yum -y install sqlite-devel
     - name: Build Examples
       run: |
