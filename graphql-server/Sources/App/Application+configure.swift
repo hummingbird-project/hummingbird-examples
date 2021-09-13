@@ -12,7 +12,7 @@ extension HBApplication {
         self.graphQLHandler = .init()
         
         // MARK: - Routes
-        router.post("/graphql", body: .collate) { request -> EventLoopFuture<GraphQLResult> in
+        router.post("/graphql") { request -> EventLoopFuture<GraphQLResult> in
             struct GraphQLQuery: Decodable {
                 let query: String
                 let variables: [String: Map]?

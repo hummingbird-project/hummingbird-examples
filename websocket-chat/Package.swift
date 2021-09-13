@@ -11,7 +11,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.11.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-websocket.git", from: "0.3.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-websocket.git", .branch("request-struct")),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0")
     ],
     targets: [

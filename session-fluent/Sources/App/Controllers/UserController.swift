@@ -22,7 +22,7 @@ struct UserController {
     func addRoutes(to group: HBRouterGroup) {
         group.put(use: self.create)
         group.group("login").add(middleware: BasicAuthenticator())
-            .post(use: self.login)
+            .post(options: .editResponse, use: self.login)
         group.add(middleware: SessionAuthenticator())
             .get(use: self.current)
     }
@@ -49,7 +49,7 @@ struct UserController {
     /// Login user and create session
     func login(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
         // get authenticated user and return
-        guard let user = request.auth.get(User.self),
+        guard let user = request.authGet(User.self),
               let userId = user.id else { return request.failure(.unauthorized) }
         return request.session.save(userId: userId, expiresIn: .hours(1)).map { .ok }
     }
@@ -57,7 +57,7 @@ struct UserController {
     /// Get current logged in user
     func current(_ request: HBRequest) throws -> UserResponse {
         // get authenticated user and return
-        guard let user = request.auth.get(User.self) else { throw HBHTTPError(.unauthorized) }
+        guard let user = request.authGet(User.self) else { throw HBHTTPError(.unauthorized) }
         return UserResponse(from: user)
     }
 }
