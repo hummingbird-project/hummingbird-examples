@@ -10,8 +10,8 @@ let package = Package(
         .executable(name: "Server", targets: ["Server"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.11.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "0.4.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", .branch("main")),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", .branch("request-struct")),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "0.3.0"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
