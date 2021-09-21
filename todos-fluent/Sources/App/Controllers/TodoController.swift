@@ -23,7 +23,7 @@ struct TodoController {
         group
             .get(use: self.list)
             .get(":id", use: self.get)
-            .post(use: self.create)
+            .post(options: .editResponse, use: self.create)
             .delete(use: self.deleteAll)
             .patch(use: self.update)
             .patch(":id", use: self.updateId)

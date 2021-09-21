@@ -21,7 +21,7 @@ import HummingbirdMustache
 struct LoginController {
     func addRoutes(to router: HBRouter) {
         router.get("/", use: self.index)
-        router.post("/", use: LoginHandler.self)
+        router.post("/", options: .editResponse, use: LoginHandler.self)
     }
 
     func index(_ request: HBRequest) -> HTML {

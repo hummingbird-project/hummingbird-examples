@@ -441,8 +441,8 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/hummingbird-project/hummingbird.git";
 			requirement = {
-				kind = upToNextMinorVersion;
-				minimumVersion = 0.11.0;
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.13.0;
 			};
 		};
 		D1A630B62637EE7100A2FB59 /* XCRemoteSwiftPackageReference "hummingbird-mustache" */ = {

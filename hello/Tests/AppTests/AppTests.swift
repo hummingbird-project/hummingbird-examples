@@ -13,6 +13,7 @@ final class AppTests: XCTestCase {
 
         app.XCTExecute(uri: "/", method: .GET) { response in
             XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(response.body.map { String(buffer: $0) }, "Hello")
         }
     }
 }

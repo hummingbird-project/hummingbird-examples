@@ -29,7 +29,7 @@ struct TodoController {
     func addRoutes(to group: HBRouterGroup) {
         group
             .get(use: self.list)
-            .post(use: self.create)
+            .post(options: .editResponse, use: self.create)
             .delete(use: self.deleteAll)
             .get(":id", use: self.get)
             .patch(":id", use: self.updateId)

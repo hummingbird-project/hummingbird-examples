@@ -30,7 +30,7 @@ struct AuthenticationMiddleware: HBMiddleware {
         guard request.cookies["token"]?.value == self.token else {
             do {
                 // redirect to index page if unauthenticated
-                let response = try HTML(html: #"<html><head><meta http-equiv="refresh" content="0; url=/" /></head></html>"#).response(from: request)
+                var response = try HTML(html: #"<html><head><meta http-equiv="refresh" content="0; url=/" /></head></html>"#).response(from: request)
                 response.status = .unauthorized
                 return request.success(response)
             } catch {
