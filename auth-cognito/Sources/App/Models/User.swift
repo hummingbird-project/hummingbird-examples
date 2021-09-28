@@ -14,7 +14,6 @@ struct User: HBResponseCodable & HBAuthenticatable {
 
 struct SignUp : Decodable {
     var username : String
-    var password : String
     var email : String
 }
 

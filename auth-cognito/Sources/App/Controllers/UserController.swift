@@ -10,6 +10,7 @@ extension CognitoCreateUserResponse: HBResponseEncodable {}
 final class UserController {
     func addRoutes(to group: HBRouterGroup) {
         group.put(use: create)
+            .patch(use: resend)
             .post("respond", use: respond)
             .post("respond/password", use: respondNewPassword)
             .post("respond/mfa", use: respondSoftwareMfa)
@@ -34,6 +35,14 @@ final class UserController {
         var attributes: [String: String] = [:]
         attributes["email"] = user.email
         return request.cognito.authenticatable.createUser(username: user.username, attributes: attributes, on: request.eventLoop)
+    }
+
+    /// resend email
+    func resend(_ request: HBRequest) -> EventLoopFuture<CognitoCreateUserResponse> {
+        guard let user = try? request.decode(as: SignUp.self) else { return request.failure(.badRequest) }
+        var attributes: [String: String] = [:]
+        attributes["email"] = user.email
+        return request.cognito.authenticatable.createUser(username: user.username, attributes: attributes, messageAction: .resend, on: request.eventLoop)
     }
 
     /// Logs a user in, returning a token for accessing protected endpoints.
