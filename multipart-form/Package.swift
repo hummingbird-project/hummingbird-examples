@@ -10,7 +10,7 @@ let package = Package(
         .executable(name: "Server", targets: ["Server"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", .branch("main")),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.13.2"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-mustache.git", from: "1.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
         .package(url: "https://github.com/swift-extras/swift-extras-base64.git", .upToNextMinor(from: "0.7.0")),
