@@ -14,6 +14,7 @@ build_example()
 }
 
 # Test latest code against for examples
+build_example auth-cognito
 build_example auth-srp
 build_example graphql-server
 build_example hello
