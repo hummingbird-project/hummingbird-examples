@@ -7,6 +7,7 @@ Examples include
 - [html-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/html-form) - Link HTML form to Hummingbird application
 - [http2](https://github.com/hummingbird-project/hummingbird-examples/tree/main/http2) - Basic application with HTTP2 upgrade added
 - [ios-image-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/ios-image-server) - iOS web server that provides access to iPhone photo library.
+- [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit
 - [session-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-fluent) - Username/password and session authentication, using Fluent. 
 - [session-persist](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-persist) - Username/password and session authentication, using persist module. 
 - [session-persist-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-persist-async) - Version of session-persist sample using new swift concurrency. 
