@@ -10,10 +10,10 @@ extension HBApplication {
     public func configure() throws {
         self.decoder = RequestDecoder()
 
-        self.mustache = try .init(directory: "templates")
-        assert(self.mustache.getTemplate(named: "head") != nil, "Set your working directory to the root folder of this example to get it to work")
+        let library = try HBMustacheLibrary(directory: "templates")
+        assert(library.getTemplate(named: "head") != nil, "Set your working directory to the root folder of this example to get it to work")
 
-        let webController = WebController()
+        let webController = WebController(mustacheLibrary: library)
         self.router.get("/", use: webController.input)
         self.router.post("/", use: webController.post)
     }

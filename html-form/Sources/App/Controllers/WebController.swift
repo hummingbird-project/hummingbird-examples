@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import HummingbirdMustache
 
 struct HTML: HBResponseGenerator {
     let html: String
@@ -24,14 +25,16 @@ struct HTML: HBResponseGenerator {
 }
 
 struct WebController {
+    let mustacheLibrary: HBMustacheLibrary
+
     func input(request: HBRequest) -> HTML {
-        let html = request.mustache.render((), withTemplate: "enter-details")!
+        let html = mustacheLibrary.render((), withTemplate: "enter-details")!
         return HTML(html: html)
     }
 
     func post(request: HBRequest) throws -> HTML {
         guard let user = try? request.decode(as: User.self) else { throw HBHTTPError(.badRequest) }
-        let html = request.mustache.render(user, withTemplate: "details-entered")!
+        let html = mustacheLibrary.render(user, withTemplate: "details-entered")!
         return HTML(html: html)
     }
 }
