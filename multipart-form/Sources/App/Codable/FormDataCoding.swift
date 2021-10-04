@@ -41,14 +41,13 @@ extension FormDataDecoder: HBRequestDecoder {
     ///   - type: Type to decode
     ///   - request: Request to decode from
     public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest) throws -> T {
-        guard var buffer = request.body.buffer,
+        guard let buffer = request.body.buffer,
               let contentType = request.headers["content-type"].first,
               let mediaType = HBMediaType(from: contentType),
               let parameter = mediaType.parameter,
               parameter.name == "boundary" else {
                   throw HBHTTPError(.badRequest)
               }
-        let bytes = buffer.readBytes(length: buffer.readableBytes)!
-        return try self.decode(T.self, from: bytes, boundary: parameter.value)
+        return try self.decode(T.self, from: buffer, boundary: parameter.value)
     }
 }
