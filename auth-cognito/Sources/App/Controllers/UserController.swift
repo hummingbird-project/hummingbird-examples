@@ -2,6 +2,7 @@ import Hummingbird
 import HummingbirdAuth
 import SotoCognitoAuthenticationKit
 import SotoCognitoAuthenticationSRP
+import ExtrasBase64
 
 extension CognitoAccessToken: HBResponseEncodable {}
 extension CognitoAuthenticateResponse: HBResponseEncodable {}
@@ -134,13 +135,15 @@ final class UserController {
     //MARK: MFA
 
     func mfaGetSecretCode(_ request: HBRequest) -> EventLoopFuture<MfaGetTokenResponse> {
+        guard let token = request.authGet(CognitoAccessToken.self) else { return request.failure(.unauthorized) }
         guard let accessToken = request.authBearer else { return request.failure(.unauthorized) }
         return request.aws.cognitoIdentityProvider.associateSoftwareToken(.init(accessToken: accessToken.token))
             .flatMapThrowing { response in
                 guard let secretCode = response.secretCode else {
                     throw HBHTTPError(.internalServerError)
                 }
-                return MfaGetTokenResponse(secretCode: secretCode, session: response.session)
+                let url = "otpauth://totp/\(token.username)?secret=\(secretCode)&issuer=hb-auth-cognito"
+                return MfaGetTokenResponse(authenticatorURL: url, session: response.session)
             }
     }
 

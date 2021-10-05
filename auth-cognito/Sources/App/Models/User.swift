@@ -38,6 +38,6 @@ struct SignUpResponse: HBResponseEncodable {
 }
 
 struct MfaGetTokenResponse: HBResponseEncodable {
-    let secretCode: String
+    let authenticatorURL: String
     let session: String?
 }
