@@ -9,7 +9,7 @@ extension CognitoAccessToken: HBAuthenticatable {}
 struct CognitoBasicAuthenticator: HBAuthenticator {
     func authenticate(request: HBRequest) -> EventLoopFuture<CognitoAuthenticateResponse?> {
         guard let basic = request.authBasic else { return request.success(nil) }
-        return request.cognito.authenticatable.authenticate(username: basic.username, password: basic.password, on: request.eventLoop)
+        return request.cognito.authenticatable.authenticate(username: basic.username, password: basic.password, context: request, on: request.eventLoop)
             .map { $0 }
             .recover { _ in nil }
     }
@@ -19,7 +19,7 @@ struct CognitoBasicAuthenticator: HBAuthenticator {
 struct CognitoBasicSRPAuthenticator: HBAuthenticator {
     func authenticate(request: HBRequest) -> EventLoopFuture<CognitoAuthenticateResponse?> {
         guard let basic = request.authBasic else { return request.success(nil) }
-        return request.cognito.authenticatable.authenticateSRP(username: basic.username, password: basic.password, on: request.eventLoop)
+        return request.cognito.authenticatable.authenticateSRP(username: basic.username, password: basic.password, context: request, on: request.eventLoop)
             .map { $0 }
             .recover { _ in nil }
     }
