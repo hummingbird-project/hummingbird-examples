@@ -37,24 +37,20 @@ final class UserController {
     func create(_ request: HBRequest) -> EventLoopFuture<CognitoCreateUserResponse> {
         struct CreateUserRequest : Decodable {
             var username : String
-            var email : String
+            var attributes: [String: String]
         }
         guard let user = try? request.decode(as: CreateUserRequest.self) else { return request.failure(.badRequest) }
-        var attributes: [String: String] = [:]
-        attributes["email"] = user.email
-        return request.cognito.authenticatable.createUser(username: user.username, attributes: attributes, on: request.eventLoop)
+        return request.cognito.authenticatable.createUser(username: user.username, attributes: user.attributes, on: request.eventLoop)
     }
 
     /// resend email
     func resend(_ request: HBRequest) -> EventLoopFuture<CognitoCreateUserResponse> {
         struct ResendRequest : Decodable {
             var username : String
-            var email : String
+            var attributes: [String: String]
         }
         guard let user = try? request.decode(as: ResendRequest.self) else { return request.failure(.badRequest) }
-        var attributes: [String: String] = [:]
-        attributes["email"] = user.email
-        return request.cognito.authenticatable.createUser(username: user.username, attributes: attributes, messageAction: .resend, on: request.eventLoop)
+        return request.cognito.authenticatable.createUser(username: user.username, attributes: user.attributes, messageAction: .resend, on: request.eventLoop)
     }
 
     /// response
@@ -66,13 +62,11 @@ final class UserController {
     func signUp(_ request: HBRequest) -> EventLoopFuture<SignUpResponse> {
         struct SignUpRequest : Decodable {
             var username: String
-            var email: String
             var password: String
+            var attributes: [String: String]
         }
         guard let user = try? request.decode(as: SignUpRequest.self) else { return request.failure(.badRequest) }
-        var attributes: [String: String] = [:]
-        attributes["email"] = user.email
-        return request.cognito.authenticatable.signUp(username: user.username, password: user.password, attributes: attributes, on: request.eventLoop)
+        return request.cognito.authenticatable.signUp(username: user.username, password: user.password, attributes: user.attributes, on: request.eventLoop)
             .map { .init(confirmed: $0.userConfirmed, userSub: $0.userSub)}
     }
 
@@ -83,8 +77,6 @@ final class UserController {
             var code: String
         }
         guard let user = try? request.decode(as: ConfirmSignUpRequest.self) else { return request.failure(.badRequest) }
-        //var attributes: [String: String] = [:]
-        //attributes["email"] = user.email
         return request.cognito.authenticatable.confirmSignUp(username: user.username, confirmationCode: user.code, on: request.eventLoop)
             .map { .ok }
     }
