@@ -12,6 +12,9 @@ final class UserController {
     func addRoutes(to group: HBRouterGroup) {
         group.put(use: create)
             .patch(use: resend)
+            .post("signup", use: signUp)
+            .post("confirm", use: confirmSignUp)
+            .post("refresh", use: refresh)
             .post("respond", use: respond)
             .post("respond/password", use: respondNewPassword)
             .post("respond/mfa", use: respondSoftwareMfa)
@@ -32,7 +35,11 @@ final class UserController {
 
     /// create
     func create(_ request: HBRequest) -> EventLoopFuture<CognitoCreateUserResponse> {
-        guard let user = try? request.decode(as: SignUp.self) else { return request.failure(.badRequest) }
+        struct CreateUserRequest : Decodable {
+            var username : String
+            var email : String
+        }
+        guard let user = try? request.decode(as: CreateUserRequest.self) else { return request.failure(.badRequest) }
         var attributes: [String: String] = [:]
         attributes["email"] = user.email
         return request.cognito.authenticatable.createUser(username: user.username, attributes: attributes, on: request.eventLoop)
@@ -40,10 +47,46 @@ final class UserController {
 
     /// resend email
     func resend(_ request: HBRequest) -> EventLoopFuture<CognitoCreateUserResponse> {
-        guard let user = try? request.decode(as: SignUp.self) else { return request.failure(.badRequest) }
+        struct ResendRequest : Decodable {
+            var username : String
+            var email : String
+        }
+        guard let user = try? request.decode(as: ResendRequest.self) else { return request.failure(.badRequest) }
         var attributes: [String: String] = [:]
         attributes["email"] = user.email
         return request.cognito.authenticatable.createUser(username: user.username, attributes: attributes, messageAction: .resend, on: request.eventLoop)
+    }
+
+    /// response
+    struct SignUpResponse : HBResponseEncodable {
+        var confirmed : Bool
+        var userSub: String
+    }
+    /// sign up instead of create user
+    func signUp(_ request: HBRequest) -> EventLoopFuture<SignUpResponse> {
+        struct SignUpRequest : Decodable {
+            var username: String
+            var email: String
+            var password: String
+        }
+        guard let user = try? request.decode(as: SignUpRequest.self) else { return request.failure(.badRequest) }
+        var attributes: [String: String] = [:]
+        attributes["email"] = user.email
+        return request.cognito.authenticatable.signUp(username: user.username, password: user.password, attributes: attributes, on: request.eventLoop)
+            .map { .init(confirmed: $0.userConfirmed, userSub: $0.userSub)}
+    }
+
+    /// sign up instead of create user
+    func confirmSignUp(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
+        struct ConfirmSignUpRequest : Decodable {
+            var username : String
+            var code: String
+        }
+        guard let user = try? request.decode(as: ConfirmSignUpRequest.self) else { return request.failure(.badRequest) }
+        //var attributes: [String: String] = [:]
+        //attributes["email"] = user.email
+        return request.cognito.authenticatable.confirmSignUp(username: user.username, confirmationCode: user.code, on: request.eventLoop)
+            .map { .ok }
     }
 
     /// Logs a user in, returning a token for accessing protected endpoints.
@@ -134,6 +177,10 @@ final class UserController {
 
     //MARK: MFA
 
+    struct MfaGetTokenResponse: HBResponseEncodable {
+        let authenticatorURL: String
+        let session: String?
+    }
     func mfaGetSecretCode(_ request: HBRequest) -> EventLoopFuture<MfaGetTokenResponse> {
         guard let token = request.authGet(CognitoAccessToken.self) else { return request.failure(.unauthorized) }
         guard let accessToken = request.authBearer else { return request.failure(.unauthorized) }
