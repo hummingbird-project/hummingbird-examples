@@ -1,9 +1,11 @@
 # Hello
 
-Simple app that will responds with the word "hello". This example is here just to demonstrate how to start up a server.
+Simple app demonstrating the HummingbirdJobs job queues
 
-You can test the sample as follows
+The app uses redis to store the job queue so you need a copy of redis running
+```swift
+docker run -p 6379:6379 redis
 ```
-curl localhost:8080/
-```
-It should return a response with status 200 and the body text "Hello".
+This demonstrates an HTTP server writing to a job queue. If another version of the app is running with the command line argument `--process-jobs` it will pick up these jobs and execute them. The example demonstrates how to offload work to another server.
+
+The job is defined in `SendMessageJob.swift`. It is a simple job that prints a message to the console.
