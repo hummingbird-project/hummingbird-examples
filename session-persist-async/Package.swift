@@ -13,12 +13,14 @@ let package = Package(
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.13.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "0.7.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "0.3.0"),
+        .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.16.0"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0")
     ],
     targets: [
         .target(name: "App",
             dependencies: [
+                .product(name: "FluentKit", package: "fluent-kit"),
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),

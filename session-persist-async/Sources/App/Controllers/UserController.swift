@@ -30,20 +30,16 @@ struct UserController {
     /// Create new user
     func create(_ request: HBRequest) async throws -> UserResponse {
         guard let createUser = try? request.decode(as: CreateUserRequest.self) else { throw HBHTTPError(.badRequest) }
-        let user = User(from: createUser)
         // check if user exists and if they don't then add new user
-        _ = try await User.query(on: request.db)
-            .filter(\.$name == user.name)
+        let existingUser = try await User.query(on: request.db)
+            .filter(\.$name == createUser.name)
             .first()
-            .flatMapThrowing { user -> Void in
-                // if user already exist throw conflict
-                guard user == nil else { throw HBHTTPError(.conflict) }
-                return
-            }
-            .flatMap { _ in
-                return user.save(on: request.db)
-            }
-            .get()
+        // if user already exist throw conflict
+        guard existingUser == nil else { throw HBHTTPError(.conflict) }
+        
+        let user = User(from: createUser)
+        try await user.save(on: request.db)
+        
         return UserResponse(from: user)
     }
 

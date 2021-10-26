@@ -25,6 +25,6 @@ struct SessionAuthenticator: HBAsyncAuthenticator {
             return nil
         }
         // find user from userId
-        return try await User.find(userId, on: request.db).get()
+        return try await User.find(userId, on: request.db)
     }
 }
