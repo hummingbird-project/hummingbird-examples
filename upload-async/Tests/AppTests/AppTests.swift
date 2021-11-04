@@ -11,8 +11,26 @@ final class AppTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/health", method: .GET) { response in
+        let textString = "Hello, World!"
+        let testFileName = "Hello.txt"
+        let buffer = ByteBufferAllocator().buffer(string: textString)
+
+        app.XCTExecute(uri: "/upload",
+                       method: .POST,
+                       headers: ["File-Name" : testFileName],
+                       body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
+            guard let body = response.body else {
+                XCTFail("Response should contain a valid body")
+                return
+            }
+            XCTAssertTrue(body.contains(string: testFileName))
         }
+    }
+}
+
+fileprivate extension ByteBuffer {
+    func contains(string: String) -> Bool {
+        return String(buffer: self).contains(string)
     }
 }

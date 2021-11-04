@@ -24,9 +24,6 @@ struct HummingbirdArguments: ParsableCommand {
             )
         )
         try app.configure()
-        if self.migrate {
-            try app.fluent.migrate().wait()
-        }
         try app.start()
         app.wait()
     }

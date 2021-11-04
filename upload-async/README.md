@@ -15,6 +15,6 @@ Also noteworthy is that we’ve updaed the Application.configure
 
 ## Routes 
 
-- POST /upload: Uploads bytes. If the `File-Name` header is set, then that stringn will be used as the file name, otherwise a UUID will be used instead
+- POST /upload: Uploads bytes. If the `File-Name` header is set, then that string will be used as the file name, otherwise a UUID will be used instead
 
 This example comes with a [PAW](https://paw.cloud/) file you can use.
