@@ -25,7 +25,11 @@ extension HBApplication {
         self.router.get("/") { _ in
             return "Hello"
         }
-        let todoController = TodoController()
-        todoController.addRoutes(to: self.router.group("todos"))
+        if #available(macOS 12.0, iOS 15.0, watchOS 8.0, tvOS 15.0, *) {
+            let todoController = TodoController()
+            todoController.addRoutes(to: self.router.group("todos"))
+        } else {
+            preconditionFailure("DynamoDB todos sample requires macOS 12 or later")
+        }
     }
 }
