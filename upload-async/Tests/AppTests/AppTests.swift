@@ -13,9 +13,14 @@ final class AppTests: XCTestCase {
 
         let textString = "Hello, World!"
         let testFileName = "Hello.txt"
+        let testUpload = UploadModel(filename: testFileName)
+        let uploadURL = try testUpload.destinationURL(allowsOverwrite: true)
+        defer {
+            try? FileManager.default.removeItem(at: uploadURL)
+        }
         let buffer = ByteBufferAllocator().buffer(string: textString)
 
-        app.XCTExecute(uri: "/upload",
+        app.XCTExecute(uri: "/files",
                        method: .POST,
                        headers: ["File-Name" : testFileName],
                        body: buffer) { response in
@@ -25,6 +30,15 @@ final class AppTests: XCTestCase {
                 return
             }
             XCTAssertTrue(body.contains(string: testFileName))
+        }
+        
+        app.XCTExecute(uri: "/files/\(testFileName)", method: .GET) { response in
+            guard let body = response.body else {
+                XCTFail("Response should contain a valid body")
+                return
+            }
+            let downloadString = String(buffer: body)
+            XCTAssertEqual(downloadString, textString, "Downloaded bytes should match uploaded bytes")
         }
     }
 }

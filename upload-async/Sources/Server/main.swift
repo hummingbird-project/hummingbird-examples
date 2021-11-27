@@ -12,9 +12,6 @@ struct HummingbirdArguments: ParsableCommand {
     @Option(name: .long)
     var maxsize: Int = 10_000_000_000 // 10 GB
 
-    @Flag(name: .shortAndLong)
-    var migrate: Bool = false
-
     func run() throws {
         let app = HBApplication(
             configuration: .init(
