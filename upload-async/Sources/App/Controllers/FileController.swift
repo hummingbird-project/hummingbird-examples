@@ -27,7 +27,9 @@ struct FileController {
     
     /// Handles raw bytes by saving them to disk. Note that a good practice
     /// would be to save a reference to the bytes in a database and return
-    /// that object’s ID. That way the system can locate the file later
+    /// that object’s ID. That way the system can locate the file later or 
+    /// store any associated metadata like `Content-Type` or authorization
+    /// data.
     /// - Parameter request: `HBRequest`. If the `File-Name` header is set,
     /// then that name will be used as the file name on disk, otherwise
     /// a UUID will be used.
