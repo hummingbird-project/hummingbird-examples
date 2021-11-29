@@ -23,7 +23,7 @@ public struct HTTPProxyServer: HBHTTPResponder {
         logger.info("\(request.head.uri)")
         do {
             // create request
-            let request = try request.ahcRequest(host: targetServer, on: context.eventLoop)
+            let request = try request.ahcRequest(host: targetServer, eventLoop: context.eventLoop)
             // create response body streamer
             let streamer = HBByteBufferStreamer(eventLoop: context.eventLoop, maxSize: 2048*1024)
             // delegate for streaming bytebuffers from AsyncHTTPClient
@@ -47,8 +47,7 @@ public struct HTTPProxyServer: HBHTTPResponder {
 
 extension HBHTTPRequest {
     /// create AsyncHTTPClient request from Hummingbird Request
-    func ahcRequest(host: String, on eventLoop: EventLoop) throws -> HTTPClient.Request {
-        // TODO: Need to add Proxy forwarding headers
+    func ahcRequest(host: String, eventLoop: EventLoop) throws -> HTTPClient.Request {
         switch self.body {
         case .byteBuffer(let buffer):
             return try HTTPClient.Request(
@@ -59,11 +58,12 @@ extension HBHTTPRequest {
             )
 
         case .stream(let stream):
+            let contentLength = self.head.headers["content-length"].first.map { Int($0) } ?? nil
             return try HTTPClient.Request(
                 url: host + self.head.uri,
                 method: self.head.method,
                 headers: self.head.headers,
-                body: .stream(length: nil) { writer in
+                body: .stream(length: contentLength) { writer in
                     return stream.consumeAll(on: eventLoop) { byteBuffer in
                         writer.write(.byteBuffer(byteBuffer))
                     }
