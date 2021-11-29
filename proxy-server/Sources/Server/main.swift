@@ -17,6 +17,7 @@ struct ProxyServer: ParsableCommand {
     var target: String = "http://localhost:8080"
 
     func run() throws {
+        // setup proxy server responder
         let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
         var logger = Logger(label: "proxy")
@@ -26,6 +27,7 @@ struct ProxyServer: ParsableCommand {
             httpClient: httpClient,
             logger: logger
         )
+        // create server and start it
         let server = HBHTTPServer(group: eventLoopGroup, configuration: .init(address: .hostname(self.hostname, port: self.port)))
         try server.start(responder: responder).wait()
         try server.wait()

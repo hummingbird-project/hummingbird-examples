@@ -22,15 +22,20 @@ public struct HTTPProxyServer: HBHTTPResponder {
     public func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
         logger.info("\(request.head.uri)")
         do {
+            // create request
             let request = try request.ahcRequest(host: targetServer, on: context.eventLoop)
+            // create response body streamer
             let streamer = HBByteBufferStreamer(eventLoop: context.eventLoop, maxSize: 2048*1024)
+            // delegate for streaming bytebuffers from AsyncHTTPClient
             let delegate = StreamingResponseDelegate(on: context.eventLoop, streamer: streamer)
+            // execute request
             _ = httpClient.execute(
                 request: request,
                 delegate: delegate,
                 eventLoop: .delegateAndChannel(on: context.eventLoop),
                 logger: logger
             )
+            // when delegate receives header then single completion
             delegate.responsePromise.futureResult.whenComplete { result in
                 onComplete(result)
             }
@@ -41,7 +46,9 @@ public struct HTTPProxyServer: HBHTTPResponder {
 }
 
 extension HBHTTPRequest {
+    /// create AsyncHTTPClient request from Hummingbird Request
     func ahcRequest(host: String, on eventLoop: EventLoop) throws -> HTTPClient.Request {
+        // TODO: Need to add Proxy forwarding headers
         switch self.body {
         case .byteBuffer(let buffer):
             return try HTTPClient.Request(
