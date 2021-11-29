@@ -10,7 +10,7 @@ let package = Package(
         .executable(name: "Server", targets: ["Server"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", from: "0.11.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", .branch("main")),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.6.0"),
     ],
