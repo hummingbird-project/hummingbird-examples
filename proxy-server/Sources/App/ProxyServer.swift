@@ -23,15 +23,15 @@ public struct HTTPProxyServer: HBHTTPResponder {
         logger.info("\(request.head.uri)")
         do {
             let request = try request.ahcRequest(host: targetServer, on: context.eventLoop)
-            let streamer = ResponseBodyStreamFeeder(on: context.eventLoop)
-            let delegate = ResponseStreamingDelegate(on: context.eventLoop, streamer: streamer)
+            let streamer = HBByteBufferStreamer(eventLoop: context.eventLoop, maxSize: 2048*1024)
+            let delegate = StreamingResponseDelegate(on: context.eventLoop, streamer: streamer)
             _ = httpClient.execute(
                 request: request,
                 delegate: delegate,
                 eventLoop: .delegateAndChannel(on: context.eventLoop),
                 logger: logger
             )
-            delegate.promise.futureResult.whenComplete { result in
+            delegate.responsePromise.futureResult.whenComplete { result in
                 onComplete(result)
             }
         } catch {
@@ -63,14 +63,5 @@ extension HBHTTPRequest {
                 }
             )
         }
-    }
-}
-
-extension HTTPClient.Response {
-    var hbResponse: HBHTTPResponse {
-        return .init(
-            head: .init(version: .init(major: 1, minor: 1), status: self.status, headers: self.headers),
-            body: self.body.map { .byteBuffer($0) } ?? .empty
-        )
     }
 }
