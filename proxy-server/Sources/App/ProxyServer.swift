@@ -48,12 +48,14 @@ public struct HTTPProxyServer: HBHTTPResponder {
 extension HBHTTPRequest {
     /// create AsyncHTTPClient request from Hummingbird Request
     func ahcRequest(host: String, eventLoop: EventLoop) throws -> HTTPClient.Request {
+        var headers = self.head.headers
+        headers.remove(name: "host")
         switch self.body {
         case .byteBuffer(let buffer):
             return try HTTPClient.Request(
                 url: host + self.head.uri,
                 method: self.head.method,
-                headers: self.head.headers,
+                headers: headers,
                 body: buffer.map { .byteBuffer($0) }
             )
 
@@ -62,7 +64,7 @@ extension HBHTTPRequest {
             return try HTTPClient.Request(
                 url: host + self.head.uri,
                 method: self.head.method,
-                headers: self.head.headers,
+                headers: headers,
                 body: .stream(length: contentLength) { writer in
                     return stream.consumeAll(on: eventLoop) { byteBuffer in
                         writer.write(.byteBuffer(byteBuffer))
