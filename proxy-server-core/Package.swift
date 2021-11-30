@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "proxy-server",
+    name: "proxy-server-core",
     platforms: [.macOS(.v10_14)],
     products: [
         .executable(name: "Server", targets: ["Server"]),
