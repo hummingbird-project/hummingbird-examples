@@ -55,7 +55,7 @@ public struct HBProxyServerMiddleware: HBMiddleware {
             request.logger.info("\(request.uri) -> \(ahcRequest.url)")
 
             // create response body streamer
-            let streamer = HBByteBufferStreamer(eventLoop: request.eventLoop, maxSize: 2048*1024)
+            let streamer = HBByteBufferStreamer(eventLoop: request.eventLoop, maxSize: 2048*1024, maxStreamingBufferSize: 128*1024)
             // delegate for streaming bytebuffers from AsyncHTTPClient
             let delegate = StreamingResponseDelegate(on: request.eventLoop, streamer: streamer)
             // execute request

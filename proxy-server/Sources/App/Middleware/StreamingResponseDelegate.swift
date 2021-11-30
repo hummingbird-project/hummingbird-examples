@@ -40,7 +40,7 @@ final class StreamingResponseDelegate: HTTPClientResponseDelegate {
     func didReceiveBodyPart(task: HTTPClient.Task<Response>, _ buffer: ByteBuffer) -> EventLoopFuture<Void> {
         switch self.state {
         case .head:
-            streamer.feed(.byteBuffer(buffer))
+            return streamer.feed(buffer: buffer)
         case .error:
             break
         default:
