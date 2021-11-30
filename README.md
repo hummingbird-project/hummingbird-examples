@@ -10,6 +10,9 @@ Examples include
 - [ios-image-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/ios-image-server) - iOS web server that provides access to iPhone photo library.
 - [jobs](https://github.com/hummingbird-project/hummingbird-examples/tree/main/jobs) - Demonstrating offloading of jobs to another server.
 - [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit
+- [proxy-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server) - Using AsyncHTTPClient to build a proxy server
+- [proxy-server-core](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server-core) - Version of proxy server only using HummingbirdCore
+- [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit
 - [session-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-fluent) - Username/password and session authentication, using Fluent. 
 - [session-persist](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-persist) - Username/password and session authentication, using persist module. 
 - [session-persist-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-persist-async) - Async/Await version of session-persist sample using new swift concurrency. 
