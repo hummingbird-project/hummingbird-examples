@@ -18,20 +18,42 @@ import Logging
 
 /// Middleware forwarding requests onto another server
 public struct HBProxyServerMiddleware: HBMiddleware {
+    public struct Proxy {
+        let location: String
+        let target: String
+        
+        init(location: String, target: String) {
+            self.location = location.dropSuffix("/")
+            self.target = target.dropSuffix("/")
+        }
+    }
+
     let httpClient: HTTPClient
-    let targetServer: String
+    let proxy: Proxy
     
-    public init(httpClient: HTTPClient, targetServer: String) {
+    public init(httpClient: HTTPClient, proxy: Proxy) {
         self.httpClient = httpClient
-        self.targetServer = targetServer
+        self.proxy = proxy
     }
     
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        request.logger.info("\(request.uri)")
-
+        guard let responseFuture = forward(request: request, to: proxy) else {
+            return next.respond(to: request)
+        }
+        return responseFuture
+    }
+    
+    func forward(request: HBRequest, to proxy: Proxy) -> EventLoopFuture<HBResponse>? {
+        guard request.uri.description.hasPrefix(proxy.location) else { return nil }
+        let newURI = request.uri.description.dropFirst(proxy.location.count)
+        guard newURI.first == nil || newURI.first == "/" else { return nil }
+        
         do {
             // create request
-            let ahcRequest = try request.ahcRequest(host: targetServer, eventLoop: request.eventLoop)
+            let ahcRequest = try request.ahcRequest(uri: String(newURI), host: proxy.target, eventLoop: request.eventLoop)
+
+            request.logger.info("\(request.uri) -> \(ahcRequest.url)")
+
             // create response body streamer
             let streamer = HBByteBufferStreamer(eventLoop: request.eventLoop, maxSize: 2048*1024)
             // delegate for streaming bytebuffers from AsyncHTTPClient
@@ -53,13 +75,13 @@ public struct HBProxyServerMiddleware: HBMiddleware {
 
 extension HBRequest {
     /// create AsyncHTTPClient request from Hummingbird Request
-    func ahcRequest(host: String, eventLoop: EventLoop) throws -> HTTPClient.Request {
+    func ahcRequest(uri: String, host: String, eventLoop: EventLoop) throws -> HTTPClient.Request {
         var headers = self.headers
         headers.remove(name: "host")
         switch self.body {
         case .byteBuffer(let buffer):
             return try HTTPClient.Request(
-                url: host + self.uri.description,
+                url: host + uri,
                 method: self.method,
                 headers: headers,
                 body: buffer.map { .byteBuffer($0) }
@@ -68,7 +90,7 @@ extension HBRequest {
         case .stream(let stream):
             let contentLength = self.headers["content-length"].first.map { Int($0) } ?? nil
             return try HTTPClient.Request(
-                url: host + self.uri.description,
+                url: host + uri,
                 method: self.method,
                 headers: headers,
                 body: .stream(length: contentLength) { writer in
@@ -77,6 +99,24 @@ extension HBRequest {
                     }
                 }
             )
+        }
+    }
+}
+
+extension String {
+    fileprivate func addSuffix(_ suffix: String) -> String {
+        if hasSuffix(suffix) {
+            return self
+        } else {
+            return self + suffix
+        }
+    }
+
+    fileprivate func dropSuffix(_ suffix: String) -> String {
+        if hasSuffix(suffix) {
+            return String(self.dropLast(suffix.count))
+        } else {
+            return self
         }
     }
 }

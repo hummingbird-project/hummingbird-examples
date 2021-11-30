@@ -10,6 +10,9 @@ struct ProxyServer: ParsableCommand, AppArguments {
     var port: Int = 8081
 
     @Option(name: .shortAndLong)
+    var location: String = ""
+
+    @Option(name: .shortAndLong)
     var target: String = "http://localhost:8080"
 
     func run() throws {

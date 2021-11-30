@@ -3,6 +3,7 @@ import Hummingbird
 import Foundation
 
 public protocol AppArguments {
+    var location: String { get }
     var target: String { get }
 }
 
@@ -13,7 +14,12 @@ extension HBApplication {
     /// add your routes
     public func configure(_ args: AppArguments) throws {
         self.httpClient = HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup))
-        self.middleware.add(HBProxyServerMiddleware(httpClient: httpClient, targetServer: args.target))
+        self.middleware.add(
+            HBProxyServerMiddleware(
+                httpClient: httpClient,
+                proxy: .init(location: args.location, target: args.target)
+            )
+        )
     }
 }
 
