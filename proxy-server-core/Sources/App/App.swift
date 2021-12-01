@@ -1,4 +1,3 @@
-import App
 import ArgumentParser
 import AsyncHTTPClient
 import HummingbirdCore
@@ -6,6 +5,7 @@ import Logging
 import NIOCore
 import NIOPosix
 
+@main
 struct ProxyServer: ParsableCommand {
     @Option(name: .shortAndLong)
     var hostname: String = "127.0.0.1"
@@ -33,5 +33,3 @@ struct ProxyServer: ParsableCommand {
         try server.wait()
     }
 }
-
-ProxyServer.main()
