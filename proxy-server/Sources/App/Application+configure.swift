@@ -1,6 +1,5 @@
 import AsyncHTTPClient
 import Hummingbird
-import Foundation
 
 public protocol AppArguments {
     var location: String { get }
@@ -12,7 +11,7 @@ extension HBApplication {
     /// add middleware
     /// setup the encoder/decoder
     /// add your routes
-    public func configure(_ args: AppArguments) throws {
+    func configure(_ args: AppArguments) throws {
         self.httpClient = HTTPClient(eventLoopGroupProvider: .shared(self.eventLoopGroup))
         self.middleware.add(
             HBProxyServerMiddleware(

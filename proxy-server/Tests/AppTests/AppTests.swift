@@ -1,9 +1,9 @@
-import App
+@testable import App
 import Hummingbird
 import HummingbirdXCT
 import XCTest
 
-final class ProxyServerTests: XCTestCase {
+final class AppTests: XCTestCase {
     func createProxy(port: Int) throws -> HBApplication {
         struct Arguments: AppArguments {
             var location: String
@@ -31,7 +31,7 @@ final class ProxyServerTests: XCTestCase {
         }
         try app.start()
         defer { app.stop() }
-        
+
         let proxy = try createProxy(port: app.server.port!)
         try proxy.XCTStart()
         defer { proxy.XCTStop() }
@@ -49,7 +49,7 @@ final class ProxyServerTests: XCTestCase {
         }
         try app.start()
         defer { app.stop() }
-        
+
         let proxy = try createProxy(port: app.server.port!)
         try proxy.XCTStart()
         defer { proxy.XCTStop() }
@@ -68,7 +68,7 @@ final class ProxyServerTests: XCTestCase {
         }
         try app.start()
         defer { app.stop() }
-        
+
         let proxy = try createProxy(port: app.server.port!)
         try proxy.XCTStart()
         defer { proxy.XCTStop() }

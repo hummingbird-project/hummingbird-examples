@@ -1,8 +1,8 @@
-import App
 import ArgumentParser
 import Hummingbird
 
-struct ProxyServer: ParsableCommand, AppArguments {
+@main
+struct HummingbirdArguments: ParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var hostname: String = "127.0.0.1"
 
@@ -27,5 +27,3 @@ struct ProxyServer: ParsableCommand, AppArguments {
         app.wait()
     }
 }
-
-ProxyServer.main()
