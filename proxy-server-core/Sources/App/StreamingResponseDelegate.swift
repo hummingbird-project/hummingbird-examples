@@ -41,7 +41,7 @@ final class StreamingResponseDelegate: HTTPClientResponseDelegate {
     func didReceiveBodyPart(task: HTTPClient.Task<HBHTTPResponse>, _ buffer: ByteBuffer) -> EventLoopFuture<Void> {
         switch self.state {
         case .head:
-            streamer.feed(.byteBuffer(buffer))
+            return streamer.feed(buffer: buffer)
         case .error:
             break
         default:
@@ -65,6 +65,7 @@ final class StreamingResponseDelegate: HTTPClientResponseDelegate {
 
     func didReceiveError(task: HTTPClient.Task<HBHTTPResponse>, _ error: Error) {
         streamer.feed(.error(error))
+        responsePromise.fail(error)
         self.state = .error(error)
     }
 }
