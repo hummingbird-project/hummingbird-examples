@@ -19,7 +19,7 @@ struct HummingbirdArguments: ParsableCommand, AppArguments {
         let app = HBApplication(
             configuration: .init(
                 address: .hostname(self.hostname, port: self.port),
-                serverName: "Hummingbird"
+                serverName: "ProxyServer"
             )
         )
         try app.configure(self)

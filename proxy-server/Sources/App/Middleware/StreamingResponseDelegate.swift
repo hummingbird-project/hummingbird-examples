@@ -64,6 +64,7 @@ final class StreamingResponseDelegate: HTTPClientResponseDelegate {
 
     func didReceiveError(task: HTTPClient.Task<Response>, _ error: Error) {
         streamer.feed(.error(error))
+        responsePromise.fail(error)
         self.state = .error(error)
     }
 }
