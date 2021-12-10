@@ -4,6 +4,8 @@ import HummingbirdFoundation
 
 extension HBApplication {
   public func configure() throws {
+    let env = HBEnvironment()
+    
     self.encoder = JSONEncoder()
     self.decoder = JSONDecoder()
 
@@ -12,10 +14,13 @@ extension HBApplication {
       HBCORSMiddleware(
         allowOrigin: .all,
         allowHeaders: ["accept", "authorization", "content-type", "origin"],
-        allowMethods: [.GET, .OPTIONS, .POST, .DELETE, .PATCH]
+        allowMethods: [.GET, .OPTIONS]
       ))
 
-    middleware.add(HBFileMiddleware(application: self))
+    self.middleware.add(BearerAuthenticator(
+      auth0Domain: env.get("AUTH0_DOMAIN")
+    ))
+    
     router.get("/") { _ in
       return "Hello"
     }

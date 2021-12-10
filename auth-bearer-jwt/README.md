@@ -1,9 +1,22 @@
-# Hello
+# Auth Bearer Token (JWT)
 
-Simple app that will responds with the word "hello". This example is here just to demonstrate how to start up a server.
+You can test the sample as follows:
 
-You can test the sample as follows
 ```
-curl localhost:8080/
+curl \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c" \
+  localhost:8080/
 ```
-It should return a response with status 200 and the body text "Hello".
+
+It should return a response with status 200 and the body text "John Doe".
+
+Token data (from [jwt.io](https://jwt.io):
+
+```json
+{
+  "sub": "1234567890",
+  "name": "John Doe",
+  "iat": 1516239022
+}
+```
