@@ -7,16 +7,21 @@ extension HBApplication {
     let env = HBEnvironment()
     self.encoder = JSONEncoder()
     self.decoder = JSONDecoder()
-
-    let testing = env.get("jwks_url")
-    print(testing)
-
-    guard let jwksUrl = env.get("jwks_url") else { preconditionFailure("jwks config missing") }
+    
+    self.middleware.add(HBLogRequestsMiddleware(.debug))
+    self.middleware.add(
+      HBCORSMiddleware(
+        allowOrigin: .originBased,
+        allowHeaders: ["Accept", "Authorization", "Content-Type", "Origin"],
+        allowMethods: [.GET, .OPTIONS]
+      ))
+    
+    guard let jwksUrl = env.get("JWKS_URL") else { preconditionFailure("jwks config missing") }
     self.middleware.add(
       BearerAuthenticator(
         jwksUrl: jwksUrl
       ))
-
+    
     router.get("/") { _ in
       return "Hello"
     }

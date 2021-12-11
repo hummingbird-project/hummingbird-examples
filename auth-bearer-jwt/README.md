@@ -2,21 +2,18 @@
 
 You can test the sample as follows:
 
+Add `JWKS_URL` to your environment (`Product->Scheme->Edit->Run` or `JWKS_URL=https://... swift run Server`). If you're using Auth0, you can find the jwks url in the Application Settings -> Advanced Settings -> "Endpoints", it should look like this:
+
+```
+JWKS_URL="https://<your-account-name>.<region>.auth0.com/.well-known/jwks.json"
+```
+
+Point your web app to your server with the `Authorization` header, or copy the access token into `cURL`:
+
 ```
 curl \
-  -H "Accept: application/json" \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c" \
-  localhost:8080/
+  -H "Authorization: Bearer ey..." \
+  localhost:8080
 ```
 
-It should return a response with status 200 and the body text "John Doe".
-
-Token data (from [jwt.io](https://jwt.io):
-
-```json
-{
-  "sub": "1234567890",
-  "name": "John Doe",
-  "iat": 1516239022
-}
-```
+It should return a response with status 200 and the body text "Hello".
