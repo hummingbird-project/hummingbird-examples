@@ -5,22 +5,18 @@ import HummingbirdFoundation
 extension HBApplication {
   public func configure() throws {
     let env = HBEnvironment()
-    
     self.encoder = JSONEncoder()
     self.decoder = JSONDecoder()
 
-    self.middleware.add(HBLogRequestsMiddleware(.debug))
+    let testing = env.get("jwks_url")
+    print(testing)
+
+    guard let jwksUrl = env.get("jwks_url") else { preconditionFailure("jwks config missing") }
     self.middleware.add(
-      HBCORSMiddleware(
-        allowOrigin: .all,
-        allowHeaders: ["accept", "authorization", "content-type", "origin"],
-        allowMethods: [.GET, .OPTIONS]
+      BearerAuthenticator(
+        jwksUrl: jwksUrl
       ))
 
-    self.middleware.add(BearerAuthenticator(
-      auth0Domain: env.get("AUTH0_DOMAIN")
-    ))
-    
     router.get("/") { _ in
       return "Hello"
     }

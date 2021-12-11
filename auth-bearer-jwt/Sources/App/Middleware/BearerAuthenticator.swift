@@ -3,18 +3,16 @@ import Hummingbird
 import HummingbirdAuth
 import JWTKit
 
-struct AccessToken: HBAuthenticatable {
-  var token = ""
-  var name = ""
-}
+struct TokenPayload: HBAuthenticatable {}
+
+protocol DataProtocol {}
 
 struct BearerAuthenticator: HBAsyncAuthenticator, DataProtocol {
-  var token: String
-  var auth0Domain: String
+  var jwksUrl: String
 
-  func authenticate(request: HBRequest) async throws -> AccessToken? {
-    guard let bearer = request.authBearer else { return nil }
-
+  func authenticate(request: HBRequest) async throws -> TokenPayload? {
+    guard let jwtToken = request.authBearer else { throw HBHTTPError(.unauthorized) }
+    print(jwtToken)
     struct TestPayload: JWTPayload, Equatable {
       enum CodingKeys: String, CodingKey {
         case subject = "sub"
@@ -34,15 +32,17 @@ struct BearerAuthenticator: HBAsyncAuthenticator, DataProtocol {
     }
 
     let jwksData = try Data(
-      contentsOf: URL(string: "https://" + auth0Domain + ".auth0.com/.well-known/jwks.json")!
+      contentsOf: URL(string: jwksUrl)!
     )
 
     let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
     let signers = JWTSigners()
     try signers.use(jwks: jwks)
-    let payload = try signers.verify(bearer, as: TestPayload.self)
+    let payload = try signers.verify(jwtToken.token, as: TestPayload.self)
     print(payload)
-    let token = AccessToken()
+
+    // for testing only
+    let token = TokenPayload()
     return token
   }
   // func authenticate(request: HBRequest) -> EventLoopFuture<User?> {

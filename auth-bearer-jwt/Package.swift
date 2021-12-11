@@ -23,6 +23,7 @@ let package = Package(
         .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
         .product(name: "HummingbirdFoundation", package: "hummingbird"),
         .product(name: "JWTKit", package: "jwt-kit"),
+        .product(name: "ArgumentParser", package: "swift-argument-parser"),
       ],
       swiftSettings: [
         // Enable better optimizations when building in Release configuration. Despite the use of
@@ -35,7 +36,7 @@ let package = Package(
       name: "Server",
       dependencies: [
         .target(name: "App"),
-        .product(name: "ArgumentParser", package: "swift-argument-parser"),
+        .product(name: "Hummingbird", package: "hummingbird"),
       ]
     ),
     .testTarget(
