@@ -4,7 +4,7 @@
 import PackageDescription
 
 let package = Package(
-  name: "auth-bearer-jwt",
+  name: "auth-jwt",
   platforms: [.macOS(.v12)],
   products: [
     .executable(name: "Server", targets: ["Server"])
