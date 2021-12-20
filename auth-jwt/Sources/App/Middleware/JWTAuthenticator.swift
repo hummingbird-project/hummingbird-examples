@@ -4,17 +4,17 @@ import HummingbirdAuth
 import JWTKit
 
 struct TokenPayload: HBAuthenticatable {
-  var subject:String
+  var subject: String
 }
 
 protocol DataProtocol {}
 
-struct BearerAuthenticator: HBAsyncAuthenticator, DataProtocol {
+struct JWTAuthenticator: HBAsyncAuthenticator, DataProtocol {
   var jwksUrl: String
 
   func authenticate(request: HBRequest) async throws -> TokenPayload? {
     guard let jwtToken = request.authBearer?.token else { throw HBHTTPError(.unauthorized) }
-    
+
     struct TestPayload: JWTPayload, Equatable {
       enum CodingKeys: String, CodingKey {
         case subject = "sub"

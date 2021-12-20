@@ -18,7 +18,7 @@ extension HBApplication {
 
     guard let jwksUrl = env.get("JWKS_URL") else { preconditionFailure("jwks config missing") }
     self.middleware.add(
-      BearerAuthenticator(
+      JWTAuthenticator(
         jwksUrl: jwksUrl
       ))
 
