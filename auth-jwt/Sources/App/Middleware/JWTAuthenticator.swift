@@ -7,9 +7,7 @@ struct TokenPayload: HBAuthenticatable {
   var subject: String
 }
 
-protocol DataProtocol {}
-
-struct JWTAuthenticator: HBAsyncAuthenticator, DataProtocol {
+struct JWTAuthenticator: HBAsyncAuthenticator {
   var jwksUrl: String
 
   func authenticate(request: HBRequest) async throws -> TokenPayload? {
