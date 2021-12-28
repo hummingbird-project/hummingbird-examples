@@ -13,7 +13,7 @@ the jwks url in the Application Settings -> Advanced Settings -> "Endpoints", it
 should look like this:
 
 ```
-JWKS_URL="https://<your-account-name>.<region>.auth0.com/.well-known/jwks.json"
+JWKS_URL=https://<your-account-name>.<region>.auth0.com/.well-known/jwks.json
 ```
 
 Point your web app to your server with the `Authorization` header, or copy the

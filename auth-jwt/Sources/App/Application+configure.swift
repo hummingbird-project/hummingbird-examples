@@ -16,14 +16,21 @@ extension HBApplication {
         allowMethods: [.GET, .OPTIONS]
       ))
 
+    let jwtAuthenticator: JWTAuthenticator
     guard let jwksUrl = env.get("JWKS_URL") else { preconditionFailure("jwks config missing") }
+    do {
+      jwtAuthenticator = try JWTAuthenticator(jwksUrl: jwksUrl)
+    } catch {
+      print("JWTAuthenticator initialization failed")
+      throw error
+    }
 
     router.get("/") { _ in
       return "Hello"
     }
 
     router.group("auth")
-      .add(middleware: JWTAuthenticator(jwksUrl: jwksUrl))
+      .add(middleware: jwtAuthenticator)
       .get("/") { _ in
         return "Authenticated"
       }

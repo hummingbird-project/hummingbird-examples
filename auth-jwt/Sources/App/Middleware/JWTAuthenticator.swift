@@ -21,15 +21,11 @@ struct JWTPayloadData: JWTPayload, Equatable, HBAuthenticatable {
 struct JWTAuthenticator: HBAsyncAuthenticator {
   var jwks: JWKS
 
-  init(jwksUrl: String) {
-    do {
-      let jwksKeys = URL(string: jwksUrl)!
-      let jwksData = try Data(contentsOf: jwksKeys)
-      jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
-    } catch {
-      print("middleware initialization failed")
-      return
-    }
+  init(jwksUrl: String) throws {
+    let jwksData = try Data(
+      contentsOf: URL(string: jwksUrl)!
+    )
+    jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
   }
 
   func authenticate(request: HBRequest) async throws -> JWTPayloadData? {
@@ -42,7 +38,7 @@ struct JWTAuthenticator: HBAsyncAuthenticator {
       return payload
     } catch {
       print("couldn't verify token")
-      return nil
+      throw HBHTTPError(.unauthorized)
     }
   }
 }
