@@ -37,7 +37,7 @@ struct JWTAuthenticator: HBAsyncAuthenticator {
       let payload = try signers.verify(jwtToken, as: JWTPayloadData.self)
       return payload
     } catch {
-      print("couldn't verify token")
+      request.logger.debug("couldn't verify token")
       throw HBHTTPError(.unauthorized)
     }
   }
