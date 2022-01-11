@@ -7,3 +7,4 @@ xcuserdata/
 Package.resolved
 .swiftpm/
 *.pem
+.env
