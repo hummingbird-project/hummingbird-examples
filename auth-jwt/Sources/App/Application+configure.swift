@@ -21,7 +21,7 @@ extension HBApplication {
     do {
       jwtAuthenticator = try JWTAuthenticator(jwksUrl: jwksUrl)
     } catch {
-      print("JWTAuthenticator initialization failed")
+      self.logger.error("JWTAuthenticator initialization failed")
       throw error
     }
 
