@@ -6,10 +6,6 @@ struct TodoController {
     let connectionPoolGroup: HBConnectionPoolGroup<PostgresConnectionSource>
     let tableName = "todospostgres"
 
-    @discardableResult func connection<NewValue>(for request: HBRequest, closure: @escaping (PSQLConnection) async throws -> NewValue) async throws -> NewValue {
-        return try await connectionPoolGroup.lease(on: request.eventLoop, logger: request.logger, process: closure)
-    }
-
     func addRoutes(to group: HBRouterGroup) {
         group
             .get(use: self.list)
@@ -20,6 +16,7 @@ struct TodoController {
             .delete(":id", use: self.deleteId)
     }
 
+    // return all todos
     func list(request: HBRequest) async throws -> [Todo] {
         let todos = try await self.connection(for: request) { connection -> [Todo] in
             let stream = try await connection.query(#"SELECT "id", "title", "order", "url", "completed" FROM todospostgres"#, logger: request.logger)
@@ -33,6 +30,7 @@ struct TodoController {
         return todos
     }
 
+    // get todo with id specified in url
     func get(request: HBRequest) async throws -> Todo? {
         let id = try request.parameters.require("id", as: UUID.self)
         return try await self.connection(for: request) { connection -> Todo? in
@@ -49,6 +47,7 @@ struct TodoController {
         }
     }
 
+    // create new todo
     func create(request: HBRequest) async throws -> Todo {
         struct CreateTodo: Decodable {
             let title: String
@@ -69,6 +68,7 @@ struct TodoController {
         return Todo(id: id, title: todo.title, order: todo.order, url: url)
     }
 
+    // delete all todos
     func deleteAll(request: HBRequest) async throws -> HTTPResponseStatus {
         try await self.connection(for: request) { connection in
             _ = try await connection.query("DELETE FROM todospostgres;", logger: request.logger)
@@ -76,6 +76,7 @@ struct TodoController {
         return .ok
     }
 
+    // update todo
     func update(request: HBRequest) async throws -> HTTPResponseStatus {
         struct UpdateTodo: Decodable {
             var title: String?
@@ -94,12 +95,17 @@ struct TodoController {
         return .ok
     }
 
+    // delete todo with id from url
     func deleteId(request: HBRequest) async throws -> HTTPResponseStatus {
         let id = try request.parameters.require("id", as: UUID.self)
         try await self.connection(for: request) { connection in
             _ = try await connection.query("DELETE FROM todospostgres WHERE id = \(id);", logger: request.logger)
         }
         return .ok
+    }
+
+    @discardableResult func connection<NewValue>(for request: HBRequest, closure: @escaping (PSQLConnection) async throws -> NewValue) async throws -> NewValue {
+        return try await connectionPoolGroup.lease(on: request.eventLoop, logger: request.logger, process: closure)
     }
 }
 
