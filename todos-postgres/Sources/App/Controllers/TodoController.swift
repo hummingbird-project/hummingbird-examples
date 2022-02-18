@@ -59,11 +59,10 @@ struct TodoController {
         let id = UUID()
         let url = "http://\(host)/todos/\(id)"
         try await self.connection(for: request) { connection in 
-            var query = PSQLQuery("INSERT INTO todospostgres (id, title, url, \"order\") VALUES ($1, $2, $3, $4);")
-            try query.appendBinding(id, context: .default)
-            try query.appendBinding(todo.title, context: .default)
-            try query.appendBinding(url, context: .default)
-            try query.appendBinding(todo.order, context: .default)
+            let query = try PSQLQuery(
+                "INSERT INTO todospostgres (id, title, url, \"order\") VALUES ($1, $2, $3, $4);",
+                id, todo.title, url, todo.order, context: .default
+            )
             _ = try await connection.query(query, logger: request.logger)
         }
         request.response.status = .created
@@ -86,12 +85,10 @@ struct TodoController {
         let id = try request.parameters.require("id", as: UUID.self)
         let todo = try request.decode(as: UpdateTodo.self)
         try await self.connection(for: request) { connection in
-            let query = #"UPDATE todospostgres SET "title" = $1, "order" = $2, "completed" = $3 WHERE id = $4"#
-            var psqlQuery = PSQLQuery(stringLiteral: query)
-            try psqlQuery.appendBinding(todo.title, context: .default)
-            try psqlQuery.appendBinding(todo.order, context: .default)
-            try psqlQuery.appendBinding(todo.completed, context: .default)
-            try psqlQuery.appendBinding(id, context: .default)
+            let psqlQuery = try PSQLQuery(
+                #"UPDATE todospostgres SET "title" = $1, "order" = $2, "completed" = $3 WHERE id = $4"#,
+                todo.title, todo.order, todo.completed, id, context: .default
+            )
             _ = try await connection.query(psqlQuery, logger: request.logger)
         }
         return .ok
