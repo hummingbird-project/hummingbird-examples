@@ -58,11 +58,10 @@ struct TodoController {
         let id = UUID()
         let url = "http://\(host)/todos/\(id)"
         try await self.connection(for: request) { connection in 
-            let query = try PSQLQuery(
-                "INSERT INTO todospostgres (id, title, url, \"order\") VALUES ($1, $2, $3, $4);",
-                id, todo.title, url, todo.order, context: .default
+            _ = try await connection.query(
+                "INSERT INTO todospostgres (id, title, url, \"order\") VALUES (\(id), \(todo.title), \(url), \(todo.order));", 
+                logger: request.logger
             )
-            _ = try await connection.query(query, logger: request.logger)
         }
         request.response.status = .created
         return Todo(id: id, title: todo.title, order: todo.order, url: url)
@@ -86,11 +85,10 @@ struct TodoController {
         let id = try request.parameters.require("id", as: UUID.self)
         let todo = try request.decode(as: UpdateTodo.self)
         try await self.connection(for: request) { connection in
-            let psqlQuery = try PSQLQuery(
-                #"UPDATE todospostgres SET "title" = $1, "order" = $2, "completed" = $3 WHERE id = $4"#,
-                todo.title, todo.order, todo.completed, id, context: .default
+            _ = try await connection.query(
+                "UPDATE todospostgres SET \"title\" = \(todo.title), \"order\" = \(todo.order), \"completed\" = \(todo.completed) WHERE id = \(id)", 
+                logger: request.logger
             )
-            _ = try await connection.query(psqlQuery, logger: request.logger)
         }
         return .ok
     }
