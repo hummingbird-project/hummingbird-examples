@@ -6,7 +6,7 @@ struct TodoController {
     let connectionPoolGroup: HBConnectionPoolGroup<PostgresConnectionSource>
     let tableName = "todospostgres"
 
-    func connection<NewValue>(for request: HBRequest, closure: @escaping (PSQLConnection) async throws -> NewValue) async throws -> NewValue {
+    @discardableResult func connection<NewValue>(for request: HBRequest, closure: @escaping (PSQLConnection) async throws -> NewValue) async throws -> NewValue {
         return try await connectionPoolGroup.lease(on: request.eventLoop, logger: request.logger, process: closure)
     }
 
@@ -52,19 +52,22 @@ struct TodoController {
     func create(request: HBRequest) async throws -> Todo {
         struct CreateTodo: Decodable {
             let title: String
+            var order: Int?
         }
         guard let host = request.headers["host"].first else { throw HBHTTPError(.badRequest, message: "No host header") }
         let todo = try request.decode(as: CreateTodo.self)
         let id = UUID()
         let url = "http://\(host)/todos/\(id)"
-        _ = try await self.connection(for: request) { connection in 
-            _ = try await connection.query(
-                "INSERT INTO todospostgres (id, title, url) VALUES (\(id), \(todo.title), \(url));",
-                logger: request.logger
-            )
+        try await self.connection(for: request) { connection in 
+            var query = PSQLQuery("INSERT INTO todospostgres (id, title, url, \"order\") VALUES ($1, $2, $3, $4);")
+            try query.appendBinding(id, context: .default)
+            try query.appendBinding(todo.title, context: .default)
+            try query.appendBinding(url, context: .default)
+            try query.appendBinding(todo.order, context: .default)
+            _ = try await connection.query(query, logger: request.logger)
         }
         request.response.status = .created
-        return Todo(id: id, title: todo.title, url: url)
+        return Todo(id: id, title: todo.title, order: todo.order, url: url)
     }
 
     func deleteAll(request: HBRequest) async throws -> HTTPResponseStatus {
@@ -82,39 +85,12 @@ struct TodoController {
         }
         let id = try request.parameters.require("id", as: UUID.self)
         let todo = try request.decode(as: UpdateTodo.self)
-        _ = try await self.connection(for: request) { connection in
-            var index = 1
-            var query = "UPDATE todospostgres SET "
-            if todo.title != nil {
-                query.append("\"title\" = $1")
-                index += 1
-            }
-            if todo.order != nil {
-                if index > 1 {
-                    query.append(", ")
-                }
-                query.append("\"order\" = $\(index)")
-                index += 1
-            }
-            if todo.completed != nil {
-                if index > 1 {
-                    query.append(", ")
-                }
-                query.append("\"completed\" = $\(index)")
-                index += 1
-            }
-            query.append(" WHERE id = $\(index)")
-
+        try await self.connection(for: request) { connection in
+            let query = #"UPDATE todospostgres SET "title" = $1, "order" = $2, "completed" = $3 WHERE id = $4"#
             var psqlQuery = PSQLQuery(stringLiteral: query)
-            if todo.title != nil {
-                try psqlQuery.appendBinding(todo.title, context: .default)
-            }
-            if todo.order != nil {
-                try psqlQuery.appendBinding(todo.order, context: .default)
-            }
-            if todo.completed != nil {
-                try psqlQuery.appendBinding(todo.completed, context: .default)
-            }
+            try psqlQuery.appendBinding(todo.title, context: .default)
+            try psqlQuery.appendBinding(todo.order, context: .default)
+            try psqlQuery.appendBinding(todo.completed, context: .default)
             try psqlQuery.appendBinding(id, context: .default)
             _ = try await connection.query(psqlQuery, logger: request.logger)
         }
