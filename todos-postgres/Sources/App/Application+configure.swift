@@ -30,6 +30,8 @@ extension HBApplication {
         // set encoder and decoder
         self.encoder = JSONEncoder()
         self.decoder = JSONDecoder()
+        // logger
+        self.logger.logLevel = .debug
         // middleware
         self.middleware.add(HBLogRequestsMiddleware(.debug))
         self.middleware.add(HBCORSMiddleware(

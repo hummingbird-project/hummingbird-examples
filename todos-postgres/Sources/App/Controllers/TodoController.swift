@@ -83,20 +83,49 @@ struct TodoController {
         let id = try request.parameters.require("id", as: UUID.self)
         let todo = try request.decode(as: UpdateTodo.self)
         _ = try await self.connection(for: request) { connection in
-            var query = PSQLQuery.Interpolation(literalCapacity: 1, interpolationCount: 1)
-            query.appendLiteral("UPDATE todospostgres SET")
-            if todo.title != nil { 
-                query.appendLiteral(" title = ")
-                try query.appendInterpolation(todo.title)
+            var index = 1
+            var query = "UPDATE todospostgres SET "
+            if todo.title != nil {
+                query.append("\"title\" = $1")
+                index += 1
             }
-            query.appendLiteral(" WHERE id = ")
-            try query.appendInterpolation(id)
-            _ = try await connection.query(PSQLQuery(stringInterpolation: query), logger: request.logger)
+            if todo.order != nil {
+                if index > 1 {
+                    query.append(", ")
+                }
+                query.append("\"order\" = $\(index)")
+                index += 1
+            }
+            if todo.completed != nil {
+                if index > 1 {
+                    query.append(", ")
+                }
+                query.append("\"completed\" = $\(index)")
+                index += 1
+            }
+            query.append(" WHERE id = $\(index)")
+
+            var psqlQuery = PSQLQuery(stringLiteral: query)
+            if todo.title != nil {
+                try psqlQuery.appendBinding(todo.title, context: .default)
+            }
+            if todo.order != nil {
+                try psqlQuery.appendBinding(todo.order, context: .default)
+            }
+            if todo.completed != nil {
+                try psqlQuery.appendBinding(todo.completed, context: .default)
+            }
+            try psqlQuery.appendBinding(id, context: .default)
+            _ = try await connection.query(psqlQuery, logger: request.logger)
         }
         return .ok
     }
 
     func deleteId(request: HBRequest) async throws -> HTTPResponseStatus {
+        let id = try request.parameters.require("id", as: UUID.self)
+        try await self.connection(for: request) { connection in
+            _ = try await connection.query("DELETE FROM todospostgres WHERE id = \(id);", logger: request.logger)
+        }
         return .ok
     }
 }
