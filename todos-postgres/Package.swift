@@ -7,7 +7,7 @@ let package = Package(
     name: "todos-postgres",
     platforms: [.macOS(.v12)],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", .branch("aa-connection-pool-source")),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.16.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
         .package(url: "https://github.com/fabianfett/postgres-nio", .branch("ff-async-all-changes"))
     ],
