@@ -26,5 +26,6 @@ build_example session-persist
 build_example session-persist-async
 build_example todos-dynamodb
 build_example todos-fluent
+build_example todos-postgres
 build_example todos-lambda
 build_example websocket-chat
