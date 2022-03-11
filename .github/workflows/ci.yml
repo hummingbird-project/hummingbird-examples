@@ -19,10 +19,8 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'swiftlang/swift:nightly-5.5-bionic'
-          - 'swiftlang/swift:nightly-5.5-focal'
-          - 'swiftlang/swift:nightly-5.5-amazonlinux2'
-          - 'swiftlang/swift:nightly-5.5-centos8'
+          - 'swift:5.5'
+          - 'swiftlang/swift:nightly-5.6-focal'
     container:
       image: ${{ matrix.image }}
     steps:
