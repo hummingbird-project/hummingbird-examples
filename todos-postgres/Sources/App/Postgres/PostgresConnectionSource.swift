@@ -2,19 +2,19 @@ import Hummingbird
 import Logging
 import PostgresNIO
 
-extension PSQLConnection: HBAsyncConnection {}
+extension PostgresConnection: HBAsyncConnection {}
 
 struct PostgresConnectionSource: HBAsyncConnectionSource {
-    typealias Connection = PSQLConnection
+    typealias Connection = PostgresConnection
     
-    let configuration: PSQLConnection.Configuration
+    let configuration: Connection.Configuration
 
-    init(configuration: PSQLConnection.Configuration) {
+    init(configuration: Connection.Configuration) {
         self.configuration = configuration
     }
 
-    func makeConnection(on eventLoop: EventLoop, logger: Logger) async throws -> PSQLConnection {
-        let connection = try await PSQLConnection.connect(configuration: self.configuration, logger: logger, on: eventLoop)
+    func makeConnection(on eventLoop: EventLoop, logger: Logger) async throws -> Connection {
+        let connection = try await PostgresConnection.connect(on: eventLoop, configuration: self.configuration, id: 0, logger: logger)
         return connection
     }
 }

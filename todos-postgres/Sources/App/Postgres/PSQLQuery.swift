@@ -1,7 +1,7 @@
 import Foundation
 import PostgresNIO
 
-extension PSQLQuery {
+/*extension PSQLQuery {
     init<V1: PSQLEncodable>(_ query: String, _ value1: V1, context: PSQLEncodingContext<JSONEncoder>) throws {
         self.init(stringLiteral: query)
         try appendBinding( value1, context: context)
@@ -27,4 +27,4 @@ extension PSQLQuery {
         try appendBinding(value3, context: context)
         try appendBinding(value4, context: context)
     }
-}
+}*/

@@ -102,7 +102,7 @@ struct TodoController {
         return .ok
     }
 
-    @discardableResult func connection<NewValue>(for request: HBRequest, closure: @escaping (PSQLConnection) async throws -> NewValue) async throws -> NewValue {
+    @discardableResult func connection<NewValue>(for request: HBRequest, closure: @escaping (PostgresConnection) async throws -> NewValue) async throws -> NewValue {
         return try await connectionPoolGroup.lease(on: request.eventLoop, logger: request.logger, process: closure)
     }
 }

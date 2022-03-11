@@ -13,11 +13,9 @@ extension HBApplication {
         self.postgresConnectionGroup = .init(
             source: .init(
                 configuration: .init(
-                    host: "localhost", 
-                    port: 5432, 
-                    username: "hummingbird", 
-                    database: "hummingbird", 
-                    password: "hb-password"
+                    connection: .init(host: "localhost", port: 5432),
+                    authentication: .init(username: "hummingbird", database: "hummingbird", password: "hb-password"),
+                    tls: .disable
                 )
             ), 
             maxConnections: 16, 
