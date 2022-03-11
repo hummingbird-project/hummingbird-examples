@@ -27,7 +27,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Install dependencies (Ubuntu)
-      if: ${{ matrix.image == 'swiftlang/swift:nightly-5.5-bionic' || matrix.image == 'swiftlang/swift:nightly-5.5-focal'}}
+      if: ${{ matrix.image == 'swift:5.5' || matrix.image == 'swiftlang/swift:nightly-5.6-focal'}}
       run: |
         apt-get update -qq
         apt-get install -q -y libsqlite3-dev
