@@ -49,6 +49,10 @@ extension HBApplication {
 extension HBApplication {
     var postgresConnectionGroup: HBConnectionPoolGroup<PostgresConnectionSource> {
         get { self.extensions.get(\.postgresConnectionGroup) }
-        set { self.extensions.set(\.postgresConnectionGroup, value: newValue) }
+        set { 
+            self.extensions.set(\.postgresConnectionGroup, value: newValue) { group in
+                try group.close().wait()
+            }
+        }
     }
 }

@@ -58,7 +58,7 @@ struct TodoController {
         let id = UUID()
         let url = "http://\(host)/todos/\(id)"
         try await self.connection(for: request) { connection in 
-            _ = try await connection.query(
+            try await connection.query(
                 "INSERT INTO todospostgres (id, title, url, \"order\") VALUES (\(id), \(todo.title), \(url), \(todo.order));", 
                 logger: request.logger
             )
@@ -70,7 +70,7 @@ struct TodoController {
     // delete all todos
     func deleteAll(request: HBRequest) async throws -> HTTPResponseStatus {
         try await self.connection(for: request) { connection in
-            _ = try await connection.query("DELETE FROM todospostgres;", logger: request.logger)
+            try await connection.query("DELETE FROM todospostgres;", logger: request.logger)
         }
         return .ok
     }
@@ -85,7 +85,7 @@ struct TodoController {
         let id = try request.parameters.require("id", as: UUID.self)
         let todo = try request.decode(as: UpdateTodo.self)
         try await self.connection(for: request) { connection in
-            _ = try await connection.query(
+            try await connection.query(
                 "UPDATE todospostgres SET \"title\" = \(todo.title), \"order\" = \(todo.order), \"completed\" = \(todo.completed) WHERE id = \(id)", 
                 logger: request.logger
             )
@@ -97,7 +97,7 @@ struct TodoController {
     func deleteId(request: HBRequest) async throws -> HTTPResponseStatus {
         let id = try request.parameters.require("id", as: UUID.self)
         try await self.connection(for: request) { connection in
-            _ = try await connection.query("DELETE FROM todospostgres WHERE id = \(id);", logger: request.logger)
+            try await connection.query("DELETE FROM todospostgres WHERE id = \(id);", logger: request.logger)
         }
         return .ok
     }
