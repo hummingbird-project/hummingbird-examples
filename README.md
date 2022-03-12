@@ -20,5 +20,6 @@ Examples include
 - [todos-dynamodb-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb-async) - Version of DynamoDB Todos application using new swift concurrency.
 - [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
 - [todos-lambda](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-lambda) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB and running on AWS Lambda.
+- [todos-postgres](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-postgres) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using async/await APIs from PostgresNIO.
 - [upload-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload-async) - File uploading and downloading using the async/await APIs
 - [websocket-chat](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-chat) - Simple chat application using WebSockets
