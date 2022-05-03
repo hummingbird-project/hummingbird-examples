@@ -19,26 +19,17 @@ jobs:
     strategy:
       matrix:
         image:
-<<<<<<< HEAD
-          - 'swift:5.5'
-          - 'swiftlang/swift:nightly-5.6-focal'
-=======
           - 'swift:5.6-bionic'
           - 'swift:5.6-focal'
           - 'swift:5.6-amazonlinux2'
           - 'swift:5.6-centos7'
->>>>>>> Latest swift in CI
     container:
       image: ${{ matrix.image }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
     - name: Install dependencies (Ubuntu)
-<<<<<<< HEAD
-      if: ${{ matrix.image == 'swift:5.5' || matrix.image == 'swiftlang/swift:nightly-5.6-focal'}}
-=======
       if: ${{ matrix.image == 'swift:5.6-bionic' || matrix.image == 'swift:5.6-focal'}}
->>>>>>> Latest swift in CI
       run: |
         apt-get update -qq
         apt-get install -q -y libsqlite3-dev
