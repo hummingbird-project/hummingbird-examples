@@ -9,9 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: ['bionic', 'focal', 'centos8', 'amazonlinux2']
+        image: ['bionic', 'focal', 'amazonlinux2']
     container:
-      image: swiftlang/swift:nightly-5.5-${{ matrix.image }}
+      image: swiftlang/swift:nightly-5.7-${{ matrix.image }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
@@ -21,7 +21,7 @@ jobs:
         apt-get update -qq
         apt-get install -q -y libsqlite3-dev
     - name: Install dependencies (Amazon Linux2/CentOS8)
-      if: ${{ matrix.image == 'amazonlinux2' || matrix.image == 'centos8'}}
+      if: ${{ matrix.image == 'amazonlinux2' || matrix.image == 'centos7'}}
       run: |
         yum -y update
         yum -y install sqlite-devel
