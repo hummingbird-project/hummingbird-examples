@@ -3,6 +3,7 @@ name: Swift nightly build
 on:
   schedule:
     - cron: '0 1 * * 1'
+  workflow_dispatch:
 
 jobs:
   linux:
@@ -11,7 +12,7 @@ jobs:
       matrix:
         image: ['bionic', 'focal', 'amazonlinux2']
     container:
-      image: swiftlang/swift:nightly-5.7-${{ matrix.image }}
+      image: swiftlang/swift:nightly-${{ matrix.image }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
