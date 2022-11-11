@@ -77,7 +77,7 @@ extension HBApplication {
             }
         }
 
-        private var lock: Lock
+        private var lock: NIOLock
         private var map: [String: HBWebSocket]
     }
 
