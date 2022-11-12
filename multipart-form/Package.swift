@@ -17,31 +17,34 @@ let package = Package(
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.0.0"),
     ],
     targets: [
-        .target(name: "App",
+        .target(
+            name: "App",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
                 .product(name: "ExtrasBase64", package: "swift-extras-base64"),
-                .product(name: "MultipartKit", package: "multipart-kit")
+                .product(name: "MultipartKit", package: "multipart-kit"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
                 // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
+                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
             ]
         ),
-        .target(name: "Server",
+        .target(
+            name: "Server",
             dependencies: [
                 .byName(name: "App"),
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
-        .testTarget(name: "AppTests",
+        .testTarget(
+            name: "AppTests",
             dependencies: [
                 .byName(name: "App"),
-                .product(name: "HummingbirdXCT", package: "hummingbird")
+                .product(name: "HummingbirdXCT", package: "hummingbird"),
             ]
-        )
+        ),
     ]
 )

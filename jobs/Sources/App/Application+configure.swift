@@ -1,3 +1,17 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Hummingbird server framework project
+//
+// Copyright (c) 2021-2022 the Hummingbird authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
 import Hummingbird
 import HummingbirdJobsRedis
 import HummingbirdRedis
@@ -12,11 +26,13 @@ extension HBApplication {
     /// setup the encoder/decoder
     /// add your routes
     public func configure(_ arguments: AppArguments) throws {
+        let env = HBEnvironment()
+
         SendMessageJob.register()
 
         try self.addRedis(
             configuration: .init(
-                hostname: "localhost",
+                hostname: env.get("REDIS_HOST") ?? "localhost",
                 port: 6379,
                 pool: .init(connectionRetryTimeout: .seconds(1))
             )
