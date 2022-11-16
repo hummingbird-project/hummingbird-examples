@@ -51,8 +51,7 @@
                     
                     // 7. The client sends proof to the server.
                     let verifyData = {
-                        "proof": M.toString(16),
-                        "sessionId": data.sessionId
+                        "proof": M.toString(16)
                     }
                     $.ajax({
                         url: '/api/user/verify',
@@ -68,6 +67,7 @@
                             // 9. Compare server proofs
                             if (data.proof == M2.toString(16)) {
                                 alert("Login success")
+                                window.location.href = 'api/user/loggedIn.html'
                             } else {
                                 alert("Login failed, server failed to prove it has secret")
                             }
