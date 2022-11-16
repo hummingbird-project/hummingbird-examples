@@ -17,15 +17,12 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 
-struct SessionAuthenticator: HBAuthenticator {
-    func authenticate(request: HBRequest) -> EventLoopFuture<User?> {
-        // check if session exists.
-        return request.session.load().flatMap { userId in
-            guard let userId = userId else {
-                return request.success(nil)
-            }
+struct SessionAuthenticator: HBSessionAuthenticator {
+    typealias Session = UUID
+    typealias Value = User
+
+    func getValue(from: UUID, request: Hummingbird.HBRequest) -> NIOCore.EventLoopFuture<User?> {
             // find user from userId
-            return User.find(userId, on: request.db)
-        }
+            return User.find(from, on: request.db)
     }
 }

@@ -13,17 +13,16 @@
 //===----------------------------------------------------------------------===//
 
 import FluentKit
+import Foundation
+import Hummingbird
+import HummingbirdAuth
 
-struct CreateSession: Migration {
-    func prepare(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema("session")
-            .id()
-            .field("user-id", .uuid, .required, .references("user", "id"))
-            .field("expires", .date, .required)
-            .create()
-    }
+struct SessionAuthenticator: HBAsyncSessionAuthenticator {
+    typealias Session = UUID
+    typealias Value = User
 
-    func revert(on database: Database) -> EventLoopFuture<Void> {
-        return database.schema("user").delete()
+    func getValue(from: UUID, request: Hummingbird.HBRequest) async throws -> User? {
+            // find user from userId
+            return try await User.find(from, on: request.db)
     }
 }

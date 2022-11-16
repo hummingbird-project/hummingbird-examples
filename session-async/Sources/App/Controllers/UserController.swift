@@ -28,30 +28,29 @@ struct UserController {
     }
 
     /// Create new user
-    func create(_ request: HBRequest) -> EventLoopFuture<UserResponse> {
-        guard let createUser = try? request.decode(as: CreateUserRequest.self) else { return request.failure(.badRequest) }
-        let user = User(from: createUser)
+    func create(_ request: HBRequest) async throws -> UserResponse {
+        guard let createUser = try? request.decode(as: CreateUserRequest.self) else { throw HBHTTPError(.badRequest) }
         // check if user exists and if they don't then add new user
-        return User.query(on: request.db)
-            .filter(\.$name == user.name)
+        let existingUser = try await User.query(on: request.db)
+            .filter(\.$name == createUser.name)
             .first()
-            .flatMapThrowing { user -> Void in
-                // if user already exist throw conflict
-                guard user == nil else { throw HBHTTPError(.conflict) }
-                return
-            }
-            .flatMap { _ in
-                return user.save(on: request.db)
-            }
-            .transform(to: UserResponse(from: user))
+        // if user already exist throw conflict
+        guard existingUser == nil else { throw HBHTTPError(.conflict) }
+        
+        let user = User(from: createUser)
+        try await user.save(on: request.db)
+        
+        return UserResponse(from: user)
     }
 
     /// Login user and create session
-    func login(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
+    func login(_ request: HBRequest) async throws -> HTTPResponseStatus {
         // get authenticated user and return
         guard let user = request.authGet(User.self),
-              let userId = user.id else { return request.failure(.unauthorized) }
-        return request.session.save(userId: userId, expiresIn: .hours(1)).map { .ok }
+              let userId = user.id else { throw HBHTTPError(.unauthorized) }
+        // create session lasting 1 hour
+        try await request.session.save(session: userId, expiresIn: .seconds(60))
+        return .ok
     }
 
     /// Get current logged in user

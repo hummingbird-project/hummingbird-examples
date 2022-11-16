@@ -52,7 +52,7 @@ struct UserController {
         guard let user = request.authGet(User.self),
               let userId = user.id else { return request.failure(.unauthorized) }
         // create session lasting 1 hour
-        return request.session.save(userId: userId, expiresIn: .seconds(60))
+        return request.session.save(session: userId, expiresIn: .seconds(60))
             .map { .ok }
     }
 
