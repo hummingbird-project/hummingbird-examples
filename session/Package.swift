@@ -10,41 +10,44 @@ let package = Package(
         .executable(name: "Server", targets: ["Server"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.13.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "0.7.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "0.3.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-redis.git", from: "0.4.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.0.0-alpha"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "1.0.0-alpha"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "1.0.0-alpha"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-redis.git", from: "1.0.0-alpha"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0")
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
     ],
     targets: [
-        .target(name: "App",
+        .target(
+            name: "App",
             dependencies: [
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
                 .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
                 .product(name: "HummingbirdFoundation", package: "hummingbird"),
-                .product(name: "HummingbirdRedis", package: "hummingbird-redis")
+                .product(name: "HummingbirdRedis", package: "hummingbird-redis"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
                 // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
+                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
             ]
         ),
-        .target(name: "Server",
+        .target(
+            name: "Server",
             dependencies: [
                 .byName(name: "App"),
-                .product(name: "ArgumentParser", package: "swift-argument-parser")
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
-        .testTarget(name: "AppTests",
+        .testTarget(
+            name: "AppTests",
             dependencies: [
                 .byName(name: "App"),
-                .product(name: "HummingbirdXCT", package: "hummingbird")
+                .product(name: "HummingbirdXCT", package: "hummingbird"),
             ]
-        )
+        ),
     ]
 )
