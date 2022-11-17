@@ -17,8 +17,8 @@ extension HBApplication {
         self.addFluent()
         // add sqlite database
         self.fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
-        // add persist framework
-        self.addPersist(using: .fluent)
+        // add session management using fluent
+        self.addSessions(using: .fluent)
         // add migrations
         self.fluent.migrations.add(CreateUser())
 

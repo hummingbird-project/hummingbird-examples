@@ -20,9 +20,10 @@ extension HBApplication {
         self.fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
         // add migrations
         self.fluent.migrations.add(CreateUser())
-        // add persist framework using redis
+        // add redis
         try self.addRedis(configuration: .init(hostname: "localhost", port: 6379))
-        self.addPersist(using: .redis)
+        // add session management
+        self.addSessions(using: .redis)
 
         // add logging middleware
         self.middleware.add(HBLogRequestsMiddleware(.debug))
