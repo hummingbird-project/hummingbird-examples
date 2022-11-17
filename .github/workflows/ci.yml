@@ -20,23 +20,18 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'swift:5.7-bionic'
-          - 'swift:5.7-focal'
-          - 'swift:5.7-amazonlinux2'
+          - 'swift:5.5'
+          - 'swift:5.6'
+          - 'swift:5.7'
     container:
       image: ${{ matrix.image }}
     steps:
     - name: Checkout
       uses: actions/checkout@v2
-    - name: Install dependencies (Ubuntu)
-      if: ${{ matrix.image == 'swift:5.6-bionic' || matrix.image == 'swift:5.6-focal'}}
+    - name: Install dependencies
       run: |
         apt-get update -qq
         apt-get install -q -y libsqlite3-dev
-    - name: Install dependencies (Amazon Linux2/CentOS8)
-      if: ${{ matrix.image == 'swift:5.6-amazonlinux2' || matrix.image == 'swift:5.6-centos7'}}
-      run: |
-        yum -y install sqlite-devel
     - name: Build Examples
       run: |
         ./scripts/build-all.sh
