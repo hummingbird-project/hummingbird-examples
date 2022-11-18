@@ -28,15 +28,16 @@ struct UserController {
     /// Add routes for user controller
     func addRoutes(to group: HBRouterGroup) {
         group.post(use: CreateUser.self)
-        group.post("login", use: InitLogin.self)
-        group.post("verify", use: VerifyLogin.self)
+        group.post("login", options: .editResponse, use: InitLogin.self)
+        group.post("verify", options: .editResponse, use: VerifyLogin.self)
+        group.group()
+            .add(middleware: SRPSessionAuthenticator())
+            .get("loggedIn.html", use: self.loggedIn)
     }
 
     /// SRP session. All keys are stored as base64
     struct SRPSession: Codable {
         let userId: UUID
-        let name: String
-        let salt: String
         let A: String // base64
         let B: String // base64
         let serverSharedSecret: String // base64
@@ -89,7 +90,6 @@ struct UserController {
         struct Output: HBResponseEncodable {
             let B: String
             let salt: String
-            let sessionId: String
         }
 
         let input: Input
@@ -112,23 +112,21 @@ struct UserController {
                         let serverKeys = UserController.srp.generateKeys(verifier: verifier)
                         // calculate secret
                         let serverSharedSecret = try UserController.srp.calculateSharedSecret(clientPublicKey: A, serverKeys: serverKeys, verifier: verifier)
-                        // create session key and pass public server key and salt back to client
-                        let session = try SRPSession(
-                            userId: user.requireID(),
-                            name: user.name,
-                            salt: user.salt,
-                            A: String(base64Encoding: A.bytes),
-                            B: String(base64Encoding: serverKeys.public.bytes),
-                            serverSharedSecret: String(base64Encoding: serverSharedSecret.bytes)
-                        )
-                        let sessionId = "srp.\(UserController.createSessionId())"
+
                         // store session data and return server public key, salt and session id
-                        return request.persist.create(key: sessionId, value: session, expires: .minutes(10))
+                        let session = try SRPSessionAuthenticator.Session(
+                            userId: user.requireID(),
+                            state: .authenticating(
+                                A: String(base64Encoding: A.bytes),
+                                B: String(base64Encoding: serverKeys.public.bytes),
+                                serverSharedSecret: String(base64Encoding: serverSharedSecret.bytes)
+                            )
+                        )
+                        return request.session.save(session: session, expiresIn: .minutes(10))
                             .map { _ in
                                 return .init(
                                     B: serverKeys.public.hex,
-                                    salt: user.salt,
-                                    sessionId: sessionId
+                                    salt: user.salt
                                 )
                             }
                     } catch {
@@ -141,7 +139,6 @@ struct UserController {
     /// Verify login secret from client and return server proof of secret
     struct VerifyLogin: HBRouteHandler {
         struct Input: Decodable {
-            let sessionId: String
             let proof: String
         }
 
@@ -156,29 +153,41 @@ struct UserController {
         }
 
         func handle(request: HBRequest) -> EventLoopFuture<Output> {
-            return request.persist.get(key: self.input.sessionId, as: SRPSession.self)
-                .flatMapThrowing { session in
+            return request.session.load(as: SRPSessionAuthenticator.Session.self)
+                .flatMap { session in
                     do {
-                        // get data
-                        guard let session = session else { throw HBHTTPError(.badRequest) }
-                        guard let clientProof = SRPKey(hex: input.proof)?.bytes else { throw HBHTTPError(.badRequest) }
-                        // verify client proof is correct and generate server proof
-                        let serverProof = try srp.verifySimpleClientProof(
-                            proof: clientProof,
-                            clientPublicKey: SRPKey(session.A.base64decoded()),
-                            serverPublicKey: SRPKey(session.B.base64decoded()),
-                            sharedSecret: SRPKey(session.serverSharedSecret.base64decoded())
-                        )
-                        return .init(proof: SRPKey(serverProof).hex)
+                        guard let session = session else { return request.failure(.unauthorized) }
+                        switch session.state {
+                        case .authenticating(let A, let B, let sharedSecret):
+                            guard let clientProof = SRPKey(hex: input.proof)?.bytes else { throw HBHTTPError(.badRequest) }
+                            // verify client proof is correct and generate server proof
+                            let serverProof = try srp.verifySimpleClientProof(
+                                proof: clientProof,
+                                clientPublicKey: SRPKey(A.base64decoded()),
+                                serverPublicKey: SRPKey(B.base64decoded()),
+                                sharedSecret: SRPKey(sharedSecret.base64decoded())
+                            )
+                            var session = session
+                            session.state = .authenticated
+                            // set session state to authenticated and return server proof
+                            return request.session.save(session: session, expiresIn: .hours(24))
+                                .map { _ in
+                                    return Output(proof: SRPKey(serverProof).hex)
+                                }
+                        case .authenticated:
+                            return request.failure(.badRequest)
+                        }
                     } catch SRPServerError.invalidClientProof {
-                        throw HBHTTPError(.unauthorized)
+                        return request.failure(.unauthorized)
+                    } catch {
+                        return request.failure(error)
                     }
                 }
         }
     }
 
-    static func createSessionId() -> String {
-        let bytes: [UInt8] = (0..<32).map { _ in UInt8.random(in: 0...255) }
-        return String(base64Encoding: bytes)
+    func loggedIn(request: HBRequest) throws -> String {
+        let user = try request.authRequire(User.self)
+        return "Logged in as \(user.name)"
     }
 }

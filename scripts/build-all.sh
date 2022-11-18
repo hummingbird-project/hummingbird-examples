@@ -21,9 +21,8 @@ build_example hello
 build_example html-form
 build_example http2
 build_example multipart-form
-build_example session-fluent
-build_example session-persist
-build_example session-persist-async
+build_example session
+build_example session-async
 build_example todos-dynamodb
 build_example todos-fluent
 build_example todos-postgres

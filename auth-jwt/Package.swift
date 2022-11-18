@@ -7,13 +7,13 @@ let package = Package(
   name: "auth-jwt",
   platforms: [.macOS(.v12)],
   products: [
-    .executable(name: "Server", targets: ["Server"])
+    .executable(name: "Server", targets: ["Server"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "0.15.2"),
-    .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "0.7.1"),
+    .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.0.0-alpha"),
+    .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "1.0.0-alpha"),
     .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
-    .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
+    .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
   ],
   targets: [
     .target(
@@ -28,7 +28,7 @@ let package = Package(
         // Enable better optimizations when building in Release configuration. Despite the use of
         // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
         // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-        .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
+        .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
       ]
     ),
     .executableTarget(

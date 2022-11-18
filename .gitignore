@@ -7,4 +7,5 @@ xcuserdata/
 Package.resolved
 .swiftpm/
 *.pem
+*.sqlite
 .env

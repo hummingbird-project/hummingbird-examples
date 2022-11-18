@@ -13,9 +13,8 @@ Examples include
 - [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit
 - [proxy-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server) - Using AsyncHTTPClient to build a proxy server
 - [proxy-server-core](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server-core) - Version of proxy server only using HummingbirdCore
-- [session-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-fluent) - Username/password and session authentication, using Fluent. 
-- [session-persist](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-persist) - Username/password and session authentication, using persist module. 
-- [session-persist-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-persist-async) - Async/Await version of session-persist sample using new swift concurrency. 
+- [session](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session) - Username/password and session authentication. 
+- [session-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-async) - Version of session sample using new swift concurrency. 
 - [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB
 - [todos-dynamodb-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb-async) - Version of DynamoDB Todos application using new swift concurrency.
 - [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
