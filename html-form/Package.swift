@@ -1,4 +1,4 @@
-// swift-tools-version:5.3
+// swift-tools-version:5.5
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -15,6 +15,13 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
     ],
     targets: [
+        .executableTarget(
+            name: "Server",
+            dependencies: [
+                .byName(name: "App"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
+            ]
+        ),
         .target(
             name: "App",
             dependencies: [
@@ -27,13 +34,6 @@ let package = Package(
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
                 // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
-            ]
-        ),
-        .target(
-            name: "Server",
-            dependencies: [
-                .byName(name: "App"),
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ]
         ),
         .testTarget(

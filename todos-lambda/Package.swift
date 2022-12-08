@@ -1,4 +1,4 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.5
 
 import PackageDescription
 
@@ -17,7 +17,7 @@ let package = Package(
         .package(url: "https://github.com/soto-project/soto.git", from: "6.0.0"),
     ],
     targets: [
-        .target(name: "Run", dependencies: [
+        .executableTarget(name: "Run", dependencies: [
             .byName(name: "App"),
         ]),
         .target(name: "App", dependencies: [
