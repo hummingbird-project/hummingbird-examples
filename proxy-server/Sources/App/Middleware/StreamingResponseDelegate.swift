@@ -1,5 +1,7 @@
 import AsyncHTTPClient
 import Hummingbird
+import HummingbirdCore
+import NIOCore
 import NIOHTTP1
 
 final class StreamingResponseDelegate: HTTPClientResponseDelegate {
@@ -26,27 +28,27 @@ final class StreamingResponseDelegate: HTTPClientResponseDelegate {
     func didReceiveHead(task: HTTPClient.Task<Response>, _ head: HTTPResponseHead) -> EventLoopFuture<Void> {
         switch self.state {
         case .idle:
-            let response = Response(status: head.status, headers: head.headers, body: .stream(streamer))
-            responsePromise.succeed(response)
+            let response = Response(status: head.status, headers: head.headers, body: .stream(self.streamer))
+            self.responsePromise.succeed(response)
             self.state = .head(head)
         case .error:
             break
         default:
-            preconditionFailure("Unexpected state \(state)")
+            preconditionFailure("Unexpected state \(self.state)")
         }
-        return eventLoop.makeSucceededVoidFuture()
+        return self.eventLoop.makeSucceededVoidFuture()
     }
 
     func didReceiveBodyPart(task: HTTPClient.Task<Response>, _ buffer: ByteBuffer) -> EventLoopFuture<Void> {
         switch self.state {
         case .head:
-            return streamer.feed(buffer: buffer)
+            return self.streamer.feed(buffer: buffer)
         case .error:
             break
         default:
-            preconditionFailure("Unexpected state \(state)")
+            preconditionFailure("Unexpected state \(self.state)")
         }
-        return eventLoop.makeSucceededVoidFuture()
+        return self.eventLoop.makeSucceededVoidFuture()
     }
 
     func didFinishRequest(task: HTTPClient.Task<Response>) throws -> HBResponse {
@@ -54,17 +56,17 @@ final class StreamingResponseDelegate: HTTPClientResponseDelegate {
         case .head(let head):
             self.state = .idle
             self.streamer.feed(.end)
-            return .init(status: head.status, headers: head.headers, body: .stream(streamer))
+            return .init(status: head.status, headers: head.headers, body: .stream(self.streamer))
         case .error(let error):
             throw error
         default:
-            preconditionFailure("Unexpected state \(state)")
+            preconditionFailure("Unexpected state \(self.state)")
         }
     }
 
     func didReceiveError(task: HTTPClient.Task<Response>, _ error: Error) {
-        streamer.feed(.error(error))
-        responsePromise.fail(error)
+        self.streamer.feed(.error(error))
+        self.responsePromise.fail(error)
         self.state = .error(error)
     }
 }
