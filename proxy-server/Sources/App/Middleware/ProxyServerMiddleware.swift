@@ -14,6 +14,7 @@
 
 import AsyncHTTPClient
 import Hummingbird
+import HummingbirdCore
 import Logging
 
 /// Middleware forwarding requests onto another server
@@ -21,7 +22,7 @@ public struct HBProxyServerMiddleware: HBMiddleware {
     public struct Proxy {
         let location: String
         let target: String
-        
+
         init(location: String, target: String) {
             self.location = location.dropSuffix("/")
             self.target = target.dropSuffix("/")
@@ -30,24 +31,24 @@ public struct HBProxyServerMiddleware: HBMiddleware {
 
     let httpClient: HTTPClient
     let proxy: Proxy
-    
+
     public init(httpClient: HTTPClient, proxy: Proxy) {
         self.httpClient = httpClient
         self.proxy = proxy
     }
-    
+
     public func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         guard let responseFuture = forward(request: request, to: proxy) else {
             return next.respond(to: request)
         }
         return responseFuture
     }
-    
+
     func forward(request: HBRequest, to proxy: Proxy) -> EventLoopFuture<HBResponse>? {
         guard request.uri.description.hasPrefix(proxy.location) else { return nil }
         let newURI = request.uri.description.dropFirst(proxy.location.count)
         guard newURI.first == nil || newURI.first == "/" else { return nil }
-        
+
         do {
             // create request
             let ahcRequest = try request.ahcRequest(uri: String(newURI), host: proxy.target, eventLoop: request.eventLoop)
@@ -55,11 +56,11 @@ public struct HBProxyServerMiddleware: HBMiddleware {
             request.logger.info("\(request.uri) -> \(ahcRequest.url)")
 
             // create response body streamer
-            let streamer = HBByteBufferStreamer(eventLoop: request.eventLoop, maxSize: 2048*1024, maxStreamingBufferSize: 128*1024)
+            let streamer = HBByteBufferStreamer(eventLoop: request.eventLoop, maxSize: 2048 * 1024, maxStreamingBufferSize: 128 * 1024)
             // delegate for streaming bytebuffers from AsyncHTTPClient
             let delegate = StreamingResponseDelegate(on: request.eventLoop, streamer: streamer)
             // execute request
-            _ = httpClient.execute(
+            _ = self.httpClient.execute(
                 request: ahcRequest,
                 delegate: delegate,
                 eventLoop: .delegateAndChannel(on: request.eventLoop),
@@ -104,7 +105,7 @@ extension HBRequest {
 }
 
 extension String {
-    fileprivate func addSuffix(_ suffix: String) -> String {
+    private func addSuffix(_ suffix: String) -> String {
         if hasSuffix(suffix) {
             return self
         } else {
