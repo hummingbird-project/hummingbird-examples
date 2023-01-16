@@ -48,7 +48,9 @@ let package = Package(
             name: "AppTests",
             dependencies: [
                 .byName(name: "App"),
+                .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "HummingbirdXCT", package: "hummingbird"),
+                .product(name: "SRP", package: "swift-srp"),
             ]
         ),
     ]

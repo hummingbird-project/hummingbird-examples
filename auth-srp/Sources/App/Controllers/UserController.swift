@@ -45,13 +45,13 @@ struct UserController {
 
     /// Create new user
     struct CreateUser: HBRouteHandler {
-        struct Input: Decodable {
+        struct Input: Codable {
             let name: String
             let salt: String
             let verifier: String // hex format
         }
 
-        struct Output: HBResponseEncodable {
+        struct Output: HBResponseCodable {
             let name: String
         }
 
@@ -82,12 +82,12 @@ struct UserController {
 
     /// Login user and create session
     struct InitLogin: HBRouteHandler {
-        struct Input: Decodable {
+        struct Input: Codable {
             let name: String
             let A: String
         }
 
-        struct Output: HBResponseEncodable {
+        struct Output: HBResponseCodable {
             let B: String
             let salt: String
         }
@@ -138,11 +138,11 @@ struct UserController {
 
     /// Verify login secret from client and return server proof of secret
     struct VerifyLogin: HBRouteHandler {
-        struct Input: Decodable {
+        struct Input: Codable {
             let proof: String
         }
 
-        struct Output: HBResponseEncodable {
+        struct Output: HBResponseCodable {
             let proof: String
         }
 
