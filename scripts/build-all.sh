@@ -21,6 +21,7 @@ build_example hello
 build_example html-form
 build_example http2
 build_example multipart-form
+build_example proxy-server
 build_example session
 build_example session-async
 build_example todos-dynamodb
