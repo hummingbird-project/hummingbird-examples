@@ -48,12 +48,12 @@ final class AppTests: XCTestCase {
             uri: "/api/user/login",
             method: .POST,
             body: .init(data: initLoginBody)
-        ) { response -> (output: UserController.InitLogin.Output, cookies: String) in
+        ) { response in
             XCTAssertEqual(response.status, .ok)
             let cookies = try XCTUnwrap(response.headers["set-cookie"].first)
             let body = try XCTUnwrap(response.body)
             let initLoginResponse = try JSONDecoder().decode(UserController.InitLogin.Output.self, from: Data(buffer: body))
-            return (output: initLoginResponse, cookies: cookies)
+            return (initLoginResponse, cookies)
         }
         let serverPublicKey = try XCTUnwrap(SRPKey(hex: initLoginResponse.B))
         let sharedSecret = try srpClient.calculateSharedSecret(
