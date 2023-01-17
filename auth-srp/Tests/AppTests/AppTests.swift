@@ -37,56 +37,55 @@ final class AppTests: XCTestCase {
         let (salt, verifier) = srpClient.generateSaltAndVerifier(username: "JohnSmith", password: "1234567890")
         let createUser = UserController.CreateUser.Input(name: "JohnSmith", salt: salt.hexDigest(), verifier: verifier.hex)
         let createUserBody = try JSONEncoder().encode(createUser)
-        app.XCTExecute(uri: "/api/user", method: .POST, body: .init(data: createUserBody)) { response in
+        try app.XCTExecute(uri: "/api/user", method: .POST, body: .init(data: createUserBody)) { response in
             XCTAssertEqual(response.status, .ok)
         }
 
         let keys = srpClient.generateKeys()
         let initLogin = UserController.InitLogin.Input(name: "JohnSmith", A: keys.public.hex)
         let initLoginBody = try JSONEncoder().encode(initLogin)
-        var initLoginResponse: UserController.InitLogin.Output?
-        var cookies: String?
-        app.XCTExecute(uri: "/api/user/login", method: .POST, body: .init(data: initLoginBody)) { response in
+        let (initLoginResponse, cookies) = try app.XCTExecute(
+            uri: "/api/user/login",
+            method: .POST,
+            body: .init(data: initLoginBody)
+        ) { response -> (output: UserController.InitLogin.Output, cookies: String) in
             XCTAssertEqual(response.status, .ok)
-            cookies = response.headers["set-cookie"].first
+            let cookies = try XCTUnwrap(response.headers["set-cookie"].first)
             let body = try XCTUnwrap(response.body)
-            initLoginResponse = try JSONDecoder().decode(UserController.InitLogin.Output.self, from: Data(buffer: body))
+            let initLoginResponse = try JSONDecoder().decode(UserController.InitLogin.Output.self, from: Data(buffer: body))
+            return (output: initLoginResponse, cookies: cookies)
         }
-        if let initLoginResponse = initLoginResponse, let cookies = cookies {
-            let serverPublicKey = try XCTUnwrap(SRPKey(hex: initLoginResponse.B))
-            let sharedSecret = try srpClient.calculateSharedSecret(
-                username: "JohnSmith",
-                password: "1234567890",
-                salt: salt,
+        let serverPublicKey = try XCTUnwrap(SRPKey(hex: initLoginResponse.B))
+        let sharedSecret = try srpClient.calculateSharedSecret(
+            username: "JohnSmith",
+            password: "1234567890",
+            salt: salt,
+            clientKeys: keys,
+            serverPublicKey: serverPublicKey
+        )
+        let proof = srpClient.calculateSimpleClientProof(
+            clientPublicKey: keys.public,
+            serverPublicKey: serverPublicKey,
+            sharedSecret: sharedSecret
+        )
+        let verifyLogin = UserController.VerifyLogin.Input(proof: proof.hexDigest())
+        let verifyLoginBody = try JSONEncoder().encode(verifyLogin)
+        try app.XCTExecute(
+            uri: "/api/user/verify",
+            method: .POST,
+            headers: ["cookie": cookies],
+            body: .init(data: verifyLoginBody)
+        ) { response in
+            XCTAssertEqual(response.status, .ok)
+            let body = try XCTUnwrap(response.body)
+            let verifyLoginResponse = try JSONDecoder().decode(UserController.VerifyLogin.Output.self, from: Data(buffer: body))
+            let serverProof = try XCTUnwrap(SRPKey(hex: verifyLoginResponse.proof))
+            try srpClient.verifySimpleServerProof(
+                serverProof: serverProof.bytes,
+                clientProof: proof,
                 clientKeys: keys,
-                serverPublicKey: serverPublicKey
-            )
-            let proof = srpClient.calculateSimpleClientProof(
-                clientPublicKey: keys.public,
-                serverPublicKey: serverPublicKey,
                 sharedSecret: sharedSecret
             )
-            let verifyLogin = UserController.VerifyLogin.Input(proof: proof.hexDigest())
-            let verifyLoginBody = try JSONEncoder().encode(verifyLogin)
-            app.XCTExecute(
-                uri: "/api/user/verify",
-                method: .POST,
-                headers: ["cookie": cookies],
-                body: .init(data: verifyLoginBody)
-            ) { response in
-                XCTAssertEqual(response.status, .ok)
-                let body = try XCTUnwrap(response.body)
-                let verifyLoginResponse = try JSONDecoder().decode(UserController.VerifyLogin.Output.self, from: Data(buffer: body))
-                let serverProof = try XCTUnwrap(SRPKey(hex: verifyLoginResponse.proof))
-                try srpClient.verifySimpleServerProof(
-                    serverProof: serverProof.bytes,
-                    clientProof: proof,
-                    clientKeys: keys,
-                    sharedSecret: sharedSecret
-                )
-            }
-        } else {
-            XCTFail("Failed to get init login response")
         }
     }
 }

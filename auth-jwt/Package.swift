@@ -10,8 +10,8 @@ let package = Package(
     .executable(name: "Server", targets: ["Server"]),
   ],
   dependencies: [
-    .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.0.0-alpha"),
-    .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "1.0.0-alpha"),
+    .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.0.0-rc"),
+    .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "1.0.0-rc"),
     .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
     .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
   ],

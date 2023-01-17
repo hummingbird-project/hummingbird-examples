@@ -29,7 +29,7 @@ final class AppTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(uri: "/send", method: .POST, body: ByteBuffer(string: "Hello")) { response in
+        try app.XCTExecute(uri: "/send", method: .POST, body: ByteBuffer(string: "Hello")) { response in
             XCTAssertEqual(response.status, .ok)
         }
     }

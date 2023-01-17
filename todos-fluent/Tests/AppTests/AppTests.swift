@@ -16,10 +16,11 @@ final class AppTests: XCTestCase {
         try app.XCTStart()
         defer { app.XCTStop() }
 
-        app.XCTExecute(
+        try app.XCTExecute(
             uri: "/todos",
             method: .POST,
-            body: ByteBufferAllocator().buffer(string: #"{"title":"add more tests"}"#)) { response in
+            body: ByteBufferAllocator().buffer(string: #"{"title":"add more tests"}"#)
+        ) { response in
             XCTAssertEqual(response.status, .created)
         }
     }
