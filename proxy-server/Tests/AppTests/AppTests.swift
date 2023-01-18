@@ -36,7 +36,7 @@ final class AppTests: XCTestCase {
         try proxy.XCTStart()
         defer { proxy.XCTStop() }
 
-        proxy.XCTExecute(uri: "/hello", method: .GET) { response in
+        try proxy.XCTExecute(uri: "/hello", method: .GET) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), "Hello")
         }
@@ -55,7 +55,7 @@ final class AppTests: XCTestCase {
         defer { proxy.XCTStop() }
 
         let bodyString = "This is a test body"
-        proxy.XCTExecute(uri: "/echo", method: .POST, body: ByteBuffer(string: bodyString)) { response in
+        try proxy.XCTExecute(uri: "/echo", method: .POST, body: ByteBuffer(string: bodyString)) { response in
             let body = try XCTUnwrap(response.body)
             XCTAssertEqual(String(buffer: body), bodyString)
         }
@@ -74,7 +74,7 @@ final class AppTests: XCTestCase {
         defer { proxy.XCTStop() }
 
         let buffer = randomBuffer(size: 1024 * 1500)
-        proxy.XCTExecute(uri: "/echo", method: .POST, body: buffer) { response in
+        try proxy.XCTExecute(uri: "/echo", method: .POST, body: buffer) { response in
             XCTAssertEqual(response.body, buffer)
         }
     }

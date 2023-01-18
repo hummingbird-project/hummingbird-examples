@@ -48,7 +48,7 @@ final class AppTests: XCTestCase {
             uri: "/api/user/login",
             method: .POST,
             body: .init(data: initLoginBody)
-        ) { response in
+        ) { response -> (UserController.InitLogin.Output, String) in
             XCTAssertEqual(response.status, .ok)
             let cookies = try XCTUnwrap(response.headers["set-cookie"].first)
             let body = try XCTUnwrap(response.body)

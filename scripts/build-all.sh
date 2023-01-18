@@ -8,7 +8,7 @@ build_example()
     pushd "$EXAMPLE"
     swift package update
     swift package edit hummingbird --revision main
-    swift build
+    swift test
     swift package unedit hummingbird
     popd
 }
