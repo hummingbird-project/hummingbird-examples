@@ -12,7 +12,7 @@ final class AppTests: XCTestCase {
         defer { app.XCTStop() }
 
         let urlencoded = "name=Adam&age=34"
-        app.XCTExecute(
+        try app.XCTExecute(
             uri: "/",
             method: .POST,
             headers: ["Content-Type": "application/x-www-form-urlencoded"],

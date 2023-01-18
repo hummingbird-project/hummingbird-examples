@@ -12,26 +12,28 @@ final class AppTests: XCTestCase {
         defer { app.XCTStop() }
 
         let testQuery = """
-            {
-                "query": "{hero(episode:NEWHOPE){name}}",
-                "variables": {}
-            }
-            """
+        {
+            "query": "{hero(episode:NEWHOPE){name}}",
+            "variables": {}
+        }
+        """
         let testBody = ByteBuffer(string: testQuery)
         let expectedResult = #"{"data":{"hero":{"name":"R2-D2"}}}"#
-        app.XCTExecute(uri: "/graphql",
-                       method: .POST,
-                       headers: .init(dictionaryLiteral: ("Content-Type", "application/json; charset=utf-8")),
-                       body: testBody) { res in
+        try app.XCTExecute(
+            uri: "/graphql",
+            method: .POST,
+            headers: .init(dictionaryLiteral: ("Content-Type", "application/json; charset=utf-8")),
+            body: testBody
+        ) { res in
             XCTAssertEqual(res.status, .ok)
-            
+
             let body = try XCTUnwrap(res.body)
-            
+
             let testBodyString = body.getString(at: 0, length: body.capacity)?.trimmingCharacters(in: .whitespacesAndNewlines)
             XCTAssertEqual(testBodyString, expectedResult)
         }
     }
-    
+
     func testGraphQLQueryError() throws {
         let app = HBApplication(testing: .live)
         try app.configure()
@@ -41,10 +43,12 @@ final class AppTests: XCTestCase {
 
         let badQuery = #"{ FAIL"#
         let badRequestBody = ByteBuffer(string: badQuery)
-        app.XCTExecute(uri: "/graphql",
-                       method: .POST,
-                       headers: .init(dictionaryLiteral: ("Content-Type", "application/json; charset=utf-8")),
-                       body: badRequestBody) { res in
+        try app.XCTExecute(
+            uri: "/graphql",
+            method: .POST,
+            headers: .init(dictionaryLiteral: ("Content-Type", "application/json; charset=utf-8")),
+            body: badRequestBody
+        ) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
     }

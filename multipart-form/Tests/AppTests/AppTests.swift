@@ -23,7 +23,7 @@ final class AppTests: XCTestCase {
         ------HBTestFormBoundaryXD6BXJI--\r
         """
         let contentType = "multipart/form-data; boundary=----HBTestFormBoundaryXD6BXJI"
-        app.XCTExecute(
+        try app.XCTExecute(
             uri: "/",
             method: .POST,
             headers: ["content-type": contentType],

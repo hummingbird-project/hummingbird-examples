@@ -20,10 +20,12 @@ final class AppTests: XCTestCase {
         }
         let buffer = ByteBufferAllocator().buffer(string: textString)
 
-        app.XCTExecute(uri: "/files",
-                       method: .POST,
-                       headers: ["File-Name" : testFileName],
-                       body: buffer) { response in
+        try app.XCTExecute(
+            uri: "/files",
+            method: .POST,
+            headers: ["File-Name": testFileName],
+            body: buffer
+        ) { response in
             XCTAssertEqual(response.status, .ok)
             guard let body = response.body else {
                 XCTFail("Response should contain a valid body")
@@ -31,8 +33,8 @@ final class AppTests: XCTestCase {
             }
             XCTAssertTrue(body.contains(string: testFileName))
         }
-        
-        app.XCTExecute(uri: "/files/\(testFileName)", method: .GET) { response in
+
+        try app.XCTExecute(uri: "/files/\(testFileName)", method: .GET) { response in
             guard let body = response.body else {
                 XCTFail("Response should contain a valid body")
                 return
@@ -43,7 +45,7 @@ final class AppTests: XCTestCase {
     }
 }
 
-fileprivate extension ByteBuffer {
+private extension ByteBuffer {
     func contains(string: String) -> Bool {
         return String(buffer: self).contains(string)
     }
