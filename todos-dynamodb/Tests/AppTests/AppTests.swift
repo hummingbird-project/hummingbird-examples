@@ -5,6 +5,8 @@ import XCTest
 
 final class AppTests: XCTestCase {
     func testCreate() throws {
+        try XCTSkipIf(HBEnvironment().get("CI") != nil)
+
         let app = HBApplication(testing: .live)
         try app.configure()
 
