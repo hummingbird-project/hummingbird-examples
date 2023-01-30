@@ -5,13 +5,13 @@ import PackageDescription
 
 let package = Package(
     name: "websocket-chat",
-    platforms: [.macOS(.v10_14)],
+    platforms: [.macOS(.v10_15)],
     products: [
         .executable(name: "Server", targets: ["Server"]),
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.0.0-rc"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-websocket.git", from: "1.0.0-rc"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-websocket.git", from: "1.0.0-rc.2"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
     ],
     targets: [
