@@ -17,9 +17,8 @@ import HummingbirdWebSocket
 import NIOConcurrencyHelpers
 
 extension HBApplication {
-    class ConnectionManager {
+    actor ConnectionManager {
         init() {
-            self.lock = .init()
             self.map = [:]
         }
 
@@ -27,57 +26,47 @@ extension HBApplication {
         func newUser(name: String, ws: HBWebSocket) {
             // add to list of connections
             self.add(name: name, ws: ws)
-            // output joined text
-            self.textOutput("\(name) has joined")
             // send ping and wait for pong and repeat every 60 seconds
             ws.initiateAutoPing(interval: .seconds(60))
-            // if connection is closed, remove from list of connections
-            ws.onClose { _ in
-                self.remove(name: name)
-                self.textOutput("\(name) has left")
-            }
-            // on reading input from websocket output to all websockets, with tag indicating who input is from
-            ws.onRead { data, _ in
-                switch data {
-                case .text(let text):
-                    self.textOutput("[\(name)]: \(text)")
-                default:
-                    break
+
+            Task {
+                // output joined text
+                try await self.textOutput("\(name) has joined")
+                let stream = ws.readStream()
+                for try await data in stream {
+                    switch data {
+                    case .text(let text):
+                        try await self.textOutput("[\(name)]: \(text)")
+                    default:
+                        break
+                    }
                 }
+                self.remove(name: name)
+                try await self.textOutput("\(name) has left")
             }
         }
 
         /// output text to all connections
-        func textOutput(_ text: String) {
-            let webSockets = self.lock.withLock {
-                map.values
-            }
-            webSockets.forEach {
-                $0.write(.text(text))
+        func textOutput(_ text: String) async throws {
+            for webSocket in map.values {
+                try await webSocket.write(.text(text))
             }
         }
 
         func get(name: String) -> HBWebSocket? {
-            self.lock.withLock {
-                map[name]
-            }
+            map[name]
         }
 
         /// Add to list of connections
         private func add(name: String, ws: HBWebSocket) {
-            self.lock.withLock {
-                map[name] = ws
-            }
+            map[name] = ws
         }
 
         /// Remove from list of connections
         private func remove(name: String) {
-            self.lock.withLock {
-                map[name] = nil
-            }
+            map[name] = nil
         }
 
-        private var lock: NIOLock
         private var map: [String: HBWebSocket]
     }
 

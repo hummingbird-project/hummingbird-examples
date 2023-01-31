@@ -7,6 +7,7 @@ extension HBApplication {
     /// setup the encoder/decoder
     /// add your routes
     public func configure() throws {
+        // server html
         self.middleware.add(HBFileMiddleware(application: self))
         // add HTTP to WebSocket upgrade
         self.ws.addUpgrade()
@@ -15,27 +16,28 @@ extension HBApplication {
         // on websocket connect.
         self.ws.on(
             "/chat",
-            shouldUpgrade: { request in
+            shouldUpgrade: { request -> HTTPHeaders? in
                 // only allow upgrade if username query parameter exists
                 guard request.uri.queryParameters["username"] != nil else {
-                    return request.failure(.badRequest)
+                    throw HBHTTPError(.badRequest)
                 }
-                return request.success([:])
+                return nil
             },
-            onUpgrade: { request, ws in
+            onUpgrade: { request, ws -> HTTPResponseStatus in
                 // close websocket if no username parameter
                 guard let username = request.uri.queryParameters["username"] else {
-                    ws.close(promise: nil)
-                    return
+                    try await ws.close()
+                    return .badRequest
                 }
                 // if username is already connected output this info and close the connection
-                guard request.application.connectionMgr.get(name: String(username)) == nil else {
-                    ws.write(.text("\(username) is already connected"))
-                    ws.close(promise: nil)
-                    return
+                guard await request.application.connectionMgr.get(name: String(username)) == nil else {
+                    try await ws.write(.text("\(username) is already connected"))
+                    try await ws.close()
+                    return .conflict
                 }
                 // add new user
-                request.application.connectionMgr.newUser(name: String(username), ws: ws)
+                await request.application.connectionMgr.newUser(name: String(username), ws: ws)
+                return .ok
             }
         )
         // initialize connection manager

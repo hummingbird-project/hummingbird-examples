@@ -30,7 +30,6 @@ final class AppTests: XCTestCase {
         let srpClient = SRPClient(configuration: SRPConfiguration<Insecure.SHA1>(.N2048))
         let app = HBApplication(testing: .live)
         try app.configure(TestArguments())
-
         try app.XCTStart()
         defer { app.XCTStop() }
 
