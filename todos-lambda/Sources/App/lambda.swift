@@ -20,6 +20,7 @@ import HummingbirdLambda
 
 public typealias AppHandler = HBLambdaHandler<AppLambda>
 
+@main
 public struct AppLambda: HBLambda {
     public typealias In = APIGateway.Request
     public typealias Out = APIGateway.Response
@@ -27,8 +28,4 @@ public struct AppLambda: HBLambda {
     public init(_ app: HBApplication) throws {
         try app.configure()
     }
-}
-
-Lambda.run { context in
-    return try AppHandler(context: context)
 }
