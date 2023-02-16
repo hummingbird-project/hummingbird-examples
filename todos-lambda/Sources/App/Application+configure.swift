@@ -12,8 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import AWSLambdaEvents
-import AWSLambdaRuntime
 import HummingbirdFoundation
 import NIO
 import SotoDynamoDB

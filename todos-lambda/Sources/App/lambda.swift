@@ -12,23 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-import App
 import AWSLambdaEvents
 import AWSLambdaRuntime
 import HummingbirdFoundation
 import HummingbirdLambda
 
-public typealias AppHandler = HBLambdaHandler<AppLambda>
-
+@main
 public struct AppLambda: HBLambda {
-    public typealias In = APIGateway.Request
-    public typealias Out = APIGateway.Response
+    public typealias Event = APIGatewayRequest
+    public typealias Output = APIGatewayResponse
 
     public init(_ app: HBApplication) throws {
         try app.configure()
     }
-}
-
-Lambda.run { context in
-    return try AppHandler(context: context)
 }
