@@ -18,7 +18,9 @@ import HummingbirdXCT
 import XCTest
 
 final class AppTests: XCTestCase {
-    struct TestArguments: AppArguments {}
+    struct TestArguments: AppArguments {
+        var inMemoryDatabase: Bool { true }
+    }
 
     func testApp() throws {
         let args = TestArguments()

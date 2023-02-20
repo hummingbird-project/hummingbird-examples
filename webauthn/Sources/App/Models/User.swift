@@ -12,15 +12,27 @@
 //
 //===----------------------------------------------------------------------===//
 
+import FluentSQLiteDriver
+import HummingbirdAuth
+import HummingbirdFluent
 import WebAuthn
 
-/// Protocol to interact with a user throughout the registration ceremony
-struct HBWebAuthnUser: User {
-    /// A unique identifier for the user. For privacy reasons it should NOT be something like an email address.
-    let userID: String
-    /// A value that will help the user identify which account this credential is associated with.
-    /// Can be an email address, etc...
-    let name: String
-    /// A user-friendly representation of their account. Can be a full name ,etc...
-    let displayName: String
+final class User: Model, HBAuthenticatable {
+    static let schema = "user"
+
+    @ID(key: .id)
+    var id: UUID?
+
+    @Field(key: "webAuthnId")
+    var webAuthnId: String
+
+    @Field(key: "publicKey")
+    var publicKey: String
+
+    init() {}
+
+    init(from credential: Credential) {
+        self.webAuthnId = credential.id
+        self.publicKey = credential.id
+    }
 }

@@ -23,6 +23,9 @@ struct App: ParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var port: Int = 8080
 
+    @Flag(name: .shortAndLong)
+    var inMemoryDatabase: Bool = false
+
     func run() throws {
         let app = HBApplication(
             configuration: .init(
