@@ -17,6 +17,7 @@ import Foundation
 import Hummingbird
 import HummingbirdFluent
 import HummingbirdFoundation
+import HummingbirdTLS
 import WebAuthn
 
 /// Application arguments protocol. We use a protocol so we can call
@@ -25,6 +26,8 @@ import WebAuthn
 /// `TestArguments` in AppTest.swift
 public protocol AppArguments {
     var inMemoryDatabase: Bool { get }
+    var certificateChain: String { get }
+    var privateKey: String { get }
 }
 
 extension HBApplication {
@@ -33,11 +36,14 @@ extension HBApplication {
     /// setup the encoder/decoder
     /// add your routes
     func configure(_ arguments: AppArguments) throws {
+        // Add TLS
+        try server.addTLS(tlsConfiguration: self.getTLSConfig(arguments))
+
         self.webauthn = .init(
             config: WebAuthnConfig(
                 relyingPartyDisplayName: "Hummingbird WebAuthn example",
-                relyingPartyID: "hummingbird.com",
-                relyingPartyOrigin: "https://hummingbird.com",
+                relyingPartyID: "localhost",
+                relyingPartyOrigin: "https://localhost:8080",
                 timeout: 600
             )
         )
@@ -54,12 +60,25 @@ extension HBApplication {
         }
         // add migrations
         self.fluent.migrations.add(CreateUser())
+        try self.fluent.migrate().wait()
 
         self.addSessions(using: .memory)
 
+        self.router.middlewares.add(HBLogRequestsMiddleware(.info))
+        self.router.middlewares.add(HBFileMiddleware(searchForIndexHtml: true, application: self))
         self.router.get("/health") { _ -> HTTPResponseStatus in
             return .ok
         }
+        HBWebAuthnController().add(self.router.group("api"))
+    }
+
+    func getTLSConfig(_ arguments: AppArguments) throws -> TLSConfiguration {
+        let certificateChain = try NIOSSLCertificate.fromPEMFile(arguments.certificateChain)
+        let privateKey = try NIOSSLPrivateKey(file: arguments.privateKey, format: .pem)
+        return TLSConfiguration.makeServerConfiguration(
+            certificateChain: certificateChain.map { .certificate($0) },
+            privateKey: .privateKey(privateKey)
+        )
     }
 }
 

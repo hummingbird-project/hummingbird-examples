@@ -26,6 +26,9 @@ struct App: ParsableCommand, AppArguments {
     @Flag(name: .shortAndLong)
     var inMemoryDatabase: Bool = false
 
+    var privateKey: String { "certs/server.key" }
+    var certificateChain: String { "certs/server.crt" }
+
     func run() throws {
         let app = HBApplication(
             configuration: .init(

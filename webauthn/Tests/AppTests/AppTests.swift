@@ -20,6 +20,8 @@ import XCTest
 final class AppTests: XCTestCase {
     struct TestArguments: AppArguments {
         var inMemoryDatabase: Bool { true }
+        var privateKey: String { "certs/server.key" }
+        var certificateChain: String { "certs/server.crt" }
     }
 
     func testApp() throws {

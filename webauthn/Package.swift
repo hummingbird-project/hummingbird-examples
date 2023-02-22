@@ -11,6 +11,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", from: "1.0.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "1.0.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "1.0.0"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
@@ -25,6 +26,7 @@ let package = Package(
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
+                .product(name: "HummingbirdTLS", package: "hummingbird-core"),
                 .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
                 .product(name: "WebAuthn", package: "webauthn-swift"),
             ],
