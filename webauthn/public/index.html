@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebAuthn Test</title>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript">
+
+        function registerUser(event) {
+            event.preventDefault();
+            
+            const username = $("#email").val();
+            const fullname = $("#fullname").val();
+
+            let data = {
+                "name": username,
+                "displayName": fullname
+            }
+            $.ajax({
+                url: '/api/beginregister',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(data),
+                dataType: 'json',
+                processData: false,
+                success: function(data) {
+                    const publicKeyCredentialCreationOptions = {
+                        challenge: Uint8Array.from(atob(data.challenge), c => c.charCodeAt(0)),
+                        rp: data.relyingParty,
+                        user: {
+                            id: Uint8Array.from(data.user.id, c => c.charCodeAt(0)),
+                            name: data.user.name,
+                            displayName: data.user.displayName,
+                        },
+                        pubKeyCredParams: data.publicKeyCredentialParameters.map(item => { return {alg: item.algorithm, type: item.type};}),
+                        timeout: data.timeout,
+                    };
+                    navigator.credentials.create({publicKey: publicKeyCredentialCreationOptions}).then(
+                        function(result) {
+                            const registrationCredential = {
+                                authenicatorAttachment: result.authenicatorAttachment,
+                                id: result.id,
+                                rawId: btoa(String.fromCharCode(...new Uint8Array(result.rawId))),
+                                type: result.type,
+                                response: {
+                                    attestationObject: btoa(String.fromCharCode(...new Uint8Array(result.response.attestationObject))),
+                                    clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(result.response.clientDataJSON)))
+                                }
+                            }
+                            $.ajax({
+                                url: '/api/finishregister',
+                                type: 'POST',
+                                contentType: 'application/json',
+                                data: JSON.stringify(registrationCredential),
+                                dataType: 'text',
+                                processData: false,
+                                success: function(data) {
+                                    alert("Registered user");
+                                },
+                                error: function(error) {
+                                    alert("Failed to register user 2");
+                                }
+                            })
+                        },
+                        function(error) {
+                            alert(error.message);
+                        }
+                    )
+                },
+                error: function(error) {
+                    alert("Failed to register user 1")
+                }
+            })
+        }
+    </script>
+</head>
+<body>
+    <h1>Register</h1>
+    <form action="#">
+    <label for="email">Email</label><br/>
+    <input type="text" id="email" name="email"/><br/>
+    <label for="fullname">Fullname</label><br/>
+    <input type="text" id="fullname" name="fullname"/><br/>
+    <br>
+    <input type="register" value="Register" onclick="registerUser(event)"/>
+    </form>
+</body>
+</html>

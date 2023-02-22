@@ -20,10 +20,11 @@ import HummingbirdCore
 import WebAuthn
 
 struct HBWebAuthnController {
-    init(_ group: HBRouterGroup) {
-        group.get("register", use: BeginRegistrationHandler.self)
-        group.post("register", use: FinishRegistrationHandler.self)
-        group.get("login", use: self.beginAuthentication)
+    func add(_ group: HBRouterMethods) {
+        group.post("beginregister", options: .editResponse, use: BeginRegistrationHandler.self)
+        group.post("finishregister", use: FinishRegistrationHandler.self)
+        group.get("login", options: .editResponse, use: self.beginAuthentication)
+        group.post("login", use: FinishAuthenticationHandler.self)
     }
 
     /// Begin registering a User
@@ -69,16 +70,21 @@ struct HBWebAuthnController {
         func handle(request: HBRequest) async throws -> Output {
             guard let session = try await request.session.load(as: WebAuthnSessionAuthenticator.Session.self) else { throw HBHTTPError(.unauthorized) }
             guard case .registering(let challenge) = session else { throw HBHTTPError(.unauthorized) }
-            let credential = try await request.webauthn.finishRegistration(
-                challenge: challenge,
-                credentialCreationData: self.input,
-                // this is likely to be removed soon
-                confirmCredentialIDNotRegisteredYet: { _ in
-                    return try await HBWebAuthnController.queryUserWithWebAuthnId(self.input.id, request: request) == nil
-                }
-            )
+            do {
+                let credential = try await request.webauthn.finishRegistration(
+                    challenge: challenge,
+                    credentialCreationData: self.input,
+                    // this is likely to be removed soon
+                    confirmCredentialIDNotRegisteredYet: { _ in
+                        return try await HBWebAuthnController.queryUserWithWebAuthnId(self.input.id, request: request) == nil
+                    }
+                )
+                try await User(from: credential).save(on: request.db)
+            } catch {
+                request.logger.error("\(error)")
+            }
+            request.logger.info("Registration success, id: \(self.input.id)")
 
-            try await User(from: credential).save(on: request.db)
             return .ok
         }
     }
