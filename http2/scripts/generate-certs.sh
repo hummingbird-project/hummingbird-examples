@@ -46,5 +46,7 @@ function generateServerCertificate() {
         -days 365
 }
 
+mkdir -p ${HOME}/../certs
+cd ${HOME}/../certs
 generateCA "/C=UK/ST=London/L=London/O=Hummingbird/OU=Examples/CN=${SERVER}"
 generateServerCertificate "/C=UK/ST=London/L=London/O=Hummingbird/OU=Examples/CN=${SERVER}" server
