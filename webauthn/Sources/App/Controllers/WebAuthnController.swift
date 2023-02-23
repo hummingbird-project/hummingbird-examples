@@ -27,7 +27,7 @@ struct HBWebAuthnController {
             .get("login", options: .editResponse, use: self.beginAuthentication)
             .post("login", options: .editResponse, use: FinishAuthenticationHandler.self)
             .add(middleware: WebAuthnSessionAuthenticator())
-            .get("test", use: self.test)
+            .get("test", use: self.authenticationDetails)
     }
 
     /// Begin registering a User
@@ -138,9 +138,9 @@ struct HBWebAuthnController {
     }
 
     /// Test authenticated
-    func test(_ request: HBRequest) throws -> HTTPResponseStatus {
-        guard request.authHas(User.self) else { throw HBHTTPError(.unauthorized) }
-        return .ok
+    func authenticationDetails(_ request: HBRequest) throws -> User {
+        guard let user = request.authGet(User.self) else { throw HBHTTPError(.unauthorized) }
+        return user
     }
 
     static func queryUserWithWebAuthnId(_ id: String, request: HBRequest) async throws -> User? {

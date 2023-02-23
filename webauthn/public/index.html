@@ -4,72 +4,16 @@
     <title>WebAuthn Register</title>
     <meta charset="UTF-8">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="js/webauthn.js?v=1"></script>
     <script type="text/javascript">
-
         function registerUser(event) {
-            event.preventDefault();
-            
             const username = $("#email").val();
             const fullname = $("#fullname").val();
-
-            let data = {
-                "name": username,
-                "displayName": fullname
-            }
-            $.ajax({
-                url: '/api/beginregister',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(data),
-                dataType: 'json',
-                processData: false,
-                success: async function(data) {
-                    try {
-                        const publicKeyCredentialCreationOptions = {
-                            challenge: Uint8Array.from(atob(data.challenge), c => c.charCodeAt(0)),
-                            rp: data.relyingParty,
-                            user: {
-                                id: Uint8Array.from(data.user.id, c => c.charCodeAt(0)),
-                                name: data.user.name,
-                                displayName: data.user.displayName,
-                            },
-                            pubKeyCredParams: data.publicKeyCredentialParameters.map(item => { return {alg: item.algorithm, type: item.type};}),
-                            timeout: data.timeout,
-                        };
-                        const result = await navigator.credentials.create({publicKey: publicKeyCredentialCreationOptions})
-                        const registrationCredential = {
-                            authenicatorAttachment: result.authenicatorAttachment,
-                            id: result.id,
-                            rawId: btoa(String.fromCharCode(...new Uint8Array(result.rawId))),
-                            type: result.type,
-                            response: {
-                                attestationObject: btoa(String.fromCharCode(...new Uint8Array(result.response.attestationObject))),
-                                clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(result.response.clientDataJSON)))
-                            }
-                        }
-                        $.ajax({
-                            url: '/api/finishregister',
-                            type: 'POST',
-                            contentType: 'application/json',
-                            data: JSON.stringify(registrationCredential),
-                            dataType: 'text',
-                            processData: false,
-                            success: function(data) {
-                                alert("Registered user");
-                                window.location.href = 'login.html';
-                            },
-                            error: function(error) {
-                                alert("Failed to register user 2");
-                            }
-                        })
-                    } catch(error) {
-                        alert(`Register failed: ${error.message}`)
-                    }
-                },
-                error: function(error) {
-                    alert("Failed to register user 1")
-                }
-            })
+            register(username, fullname)
+        }
+        async function testUser(event) {
+            const result = await test();
+            $("#testText").text = result
         }
     </script>
 </head>
@@ -86,11 +30,17 @@
                 <input type="text" id="fullname" name="fullname"/><br/>
             </p>
         <br>
-        <input type="register" value="Register" onclick="registerUser(event)"/>
+        <button type="button" onclick="registerUser(event);">Register</button>
         </form>
-    </p>    
+    </p>
+    <h2>Login</h2>
     <p>
-        <a href="login.html">Login</a>
+        <button type="button" onclick="login();">Login</button>
+    </p>
+    <h2>Test</h2>
+    <p>
+        <button type="button" onclick="testUser(event);">Test</button>
+        <p id="testText"></p>
     </p>
 </body>
 </html>
