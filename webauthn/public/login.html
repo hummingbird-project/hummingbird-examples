@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebAuthn Login</title>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+    <script type="text/javascript">
+
+        function login(event) {
+            event.preventDefault();
+
+            $.ajax({
+                url: '/api/login',
+                type: 'GET',
+                dataType: 'json',
+                processData: false,
+                success: async function(data) {
+                    try {
+                        const publicKeyCredentialRequestOptions = {
+                            challenge: Uint8Array.from(atob(data.challenge), c => c.charCodeAt(0)),
+                            allowCredentials: data.allowCredentials,
+                            timeout: data.timeout,
+                        }
+                        const result = await navigator.credentials.get({
+                            publicKey: publicKeyCredentialRequestOptions
+                        });
+                        const credential = {
+                            id: result.id,
+                            authenticatorAttachment: result.authenticatorAttachment,
+                            type: result.type,
+                            response: {
+                                authenticatorData: btoa(String.fromCharCode(...new Uint8Array(result.response.authenticatorData))),
+                                clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(result.response.clientDataJSON))),
+                                signature: btoa(String.fromCharCode(...new Uint8Array(result.response.signature))),
+                                userHandle: String.fromCharCode(...new Uint8Array(result.response.userHandle))
+                            }
+                        }
+                        $.ajax({
+                            url: '/api/login',
+                            type: 'POST',
+                            contentType: 'application/json',
+                            data: JSON.stringify(credential),
+                            dataType: 'text',
+                            processData: false,
+                            success: function(data) {
+                                alert("Success");
+                            },
+                            error: function(error) {
+                                alert("Login failed");
+                            }
+                        })
+                    } catch(error) {
+                        alert(`Login failed: ${error.message}`)
+                    }
+                },
+                error: function(error) {
+                    alert("Server connection failed")
+                }
+            })
+        }
+    </script>
+</head>
+<body>
+    <h2>Login</h2>
+    <p>
+        <button type="button" onclick="login(event);">Login</button>
+    </p>
+    <p>
+        <a href="/">Register</a>
+    </p>
+</body>
+</html>

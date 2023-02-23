@@ -20,11 +20,14 @@ import HummingbirdCore
 import WebAuthn
 
 struct HBWebAuthnController {
-    func add(_ group: HBRouterMethods) {
-        group.post("beginregister", options: .editResponse, use: BeginRegistrationHandler.self)
-        group.post("finishregister", use: FinishRegistrationHandler.self)
-        group.get("login", options: .editResponse, use: self.beginAuthentication)
-        group.post("login", use: FinishAuthenticationHandler.self)
+    func add(_ group: HBRouterGroup) {
+        group
+            .post("beginregister", options: .editResponse, use: BeginRegistrationHandler.self)
+            .post("finishregister", use: FinishRegistrationHandler.self)
+            .get("login", options: .editResponse, use: self.beginAuthentication)
+            .post("login", options: .editResponse, use: FinishAuthenticationHandler.self)
+            .add(middleware: WebAuthnSessionAuthenticator())
+            .get("test", use: self.test)
     }
 
     /// Begin registering a User
@@ -91,8 +94,10 @@ struct HBWebAuthnController {
 
     /// Begin Authenticating a user
     func beginAuthentication(_ request: HBRequest) async throws -> PublicKeyCredentialRequestOptions {
-        let options = try request.webauthn.beginAuthentication(timeout: 600)
-        try await request.session.save(session: WebAuthnSessionAuthenticator.Session.authenticating(challenge: options.challenge), expiresIn: .minutes(10))
+        let options = try request.webauthn.beginAuthentication(timeout: 60000)
+        let challenge = String.base64URL(fromBase64: options.challenge)
+        request.logger.info("Challenge: \(challenge)")
+        try await request.session.save(session: WebAuthnSessionAuthenticator.Session.authenticating(challenge: challenge), expiresIn: .minutes(10))
         return options
     }
 
@@ -114,7 +119,7 @@ struct HBWebAuthnController {
             guard let user = try await HBWebAuthnController.queryUserWithWebAuthnId(self.input.id, request: request) else {
                 throw HBHTTPError(.unauthorized)
             }
-
+            request.logger.info("Challenge: \(challenge)")
             do {
                 _ = try request.webauthn.finishAuthentication(
                     credential: self.input,
@@ -123,12 +128,19 @@ struct HBWebAuthnController {
                     credentialCurrentSignCount: 0
                 )
             } catch {
+                request.logger.error("\(error)")
                 throw HBHTTPError(.unauthorized)
             }
             try await request.session.save(session: WebAuthnSessionAuthenticator.Session.authenticated(userId: user.id!), expiresIn: .hours(24))
 
             return .ok
         }
+    }
+
+    /// Test authenticated
+    func test(_ request: HBRequest) throws -> HTTPResponseStatus {
+        guard request.authHas(User.self) else { throw HBHTTPError(.unauthorized) }
+        return .ok
     }
 
     static func queryUserWithWebAuthnId(_ id: String, request: HBRequest) async throws -> User? {

@@ -33,6 +33,6 @@ final class User: Model, HBAuthenticatable {
 
     init(from credential: Credential) {
         self.webAuthnId = credential.id
-        self.publicKey = credential.id
+        self.publicKey = credential.publicKey.base64EncodedString()
     }
 }
