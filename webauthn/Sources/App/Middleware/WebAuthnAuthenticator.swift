@@ -17,7 +17,7 @@ import HummingbirdAuth
 
 struct WebAuthnSessionAuthenticator: HBAsyncSessionAuthenticator {
     enum Session: Codable {
-        case registering(challenge: String)
+        case registering(challenge: String, username: String)
         case authenticating(challenge: String)
         case authenticated(userId: UUID)
     }

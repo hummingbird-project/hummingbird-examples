@@ -52,9 +52,17 @@ struct HBWebAuthnController {
         }
 
         func handle(request: HBRequest) async throws -> Output {
+            guard try await User.query(on: request.db)
+                .filter(\.$username == self.input.name)
+                .first() == nil else {
+                throw HBHTTPError(.conflict, message: "Username already taken.")
+            }
             let user = HBWebAuthUser(userID: UUID().uuidString, displayName: self.input.displayName, name: self.input.name)
             let options = try request.webauthn.beginRegistration(user: user)
-            try await request.session.save(session: WebAuthnSessionAuthenticator.Session.registering(challenge: options.challenge), expiresIn: .minutes(10))
+            try await request.session.save(
+                session: WebAuthnSessionAuthenticator.Session.registering(challenge: options.challenge, username: self.input.name), 
+                expiresIn: .minutes(10)
+            )
             return options
         }
     }
@@ -72,7 +80,7 @@ struct HBWebAuthnController {
 
         func handle(request: HBRequest) async throws -> Output {
             guard let session = try await request.session.load(as: WebAuthnSessionAuthenticator.Session.self) else { throw HBHTTPError(.unauthorized) }
-            guard case .registering(let challenge) = session else { throw HBHTTPError(.unauthorized) }
+            guard case .registering(let challenge, let username) = session else { throw HBHTTPError(.unauthorized) }
             do {
                 let credential = try await request.webauthn.finishRegistration(
                     challenge: challenge,
@@ -82,7 +90,7 @@ struct HBWebAuthnController {
                         return try await HBWebAuthnController.queryUserWithWebAuthnId(self.input.id, request: request) == nil
                     }
                 )
-                try await User(from: credential).save(on: request.db)
+                try await User(username: username, credential: credential).save(on: request.db)
             } catch {
                 request.logger.error("\(error)")
             }

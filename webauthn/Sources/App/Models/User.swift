@@ -23,6 +23,9 @@ final class User: Model, HBAuthenticatable, HBResponseEncodable {
     @ID(key: .id)
     var id: UUID?
 
+    @Field(key: "username")
+    var username: String
+
     @Field(key: "webAuthnId")
     var webAuthnId: String
 
@@ -31,7 +34,8 @@ final class User: Model, HBAuthenticatable, HBResponseEncodable {
 
     init() {}
 
-    init(from credential: Credential) {
+    init(username: String, credential: Credential) {
+        self.username = username
         self.webAuthnId = credential.id
         self.publicKey = credential.publicKey.base64EncodedString()
     }

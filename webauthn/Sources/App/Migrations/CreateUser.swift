@@ -18,8 +18,10 @@ struct CreateUser: Migration {
     func prepare(on database: Database) -> EventLoopFuture<Void> {
         return database.schema("user")
             .id()
+            .field("username", .string, .required)
             .field("webAuthnId", .string, .required)
             .field("publicKey", .string, .required)
+            .unique(on: "username", "webAuthnId")
             .create()
     }
 
