@@ -15,17 +15,34 @@
 import Foundation
 import HummingbirdAuth
 
+struct AuthenticationState: HBAuthenticatable, HBResponseEncodable {
+    let state: WebAuthnSessionAuthenticator.Session.State
+    let user: User
+}
+
 struct WebAuthnSessionAuthenticator: HBAsyncSessionAuthenticator {
-    enum Session: Codable {
-        case registering(challenge: String, username: String)
-        case authenticating(challenge: String)
-        case authenticated(userId: UUID)
+    struct Session: Codable {
+        enum State: Codable {
+            case none
+            case registering(challenge: String)
+            case authenticating(challenge: String)
+            case authenticated
+        }
+
+        let state: State
+        let userId: UUID
+
+        init(state: State = .none, userId: UUID) {
+            self.state = state
+            self.userId = userId
+        }
     }
 
-    func getValue(from session: Session, request: HBRequest) async throws -> User? {
-        if case .authenticated(let userId) = session {
-            return try await User.find(userId, on: request.db)
-        }
-        return nil
+    func getValue(from session: Session, request: HBRequest) async throws -> AuthenticationState? {
+        guard let user = try await User.find(session.userId, on: request.db) else { return nil }
+        return AuthenticationState(
+            state: session.state,
+            user: user
+        )
     }
 }

@@ -19,14 +19,13 @@
  * @param {*} username 
  * @param {*} fullname 
  */
-async function register(username, fullname) {
+async function register(username) {
     try {
         let data = {
-            "name": username,
-            "displayName": fullname
+            "name": username
         }
         const response = await asyncAjax({
-            url: '/api/beginregister',
+            url: '/api/signup',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(data),
@@ -89,7 +88,7 @@ async function test() {
             type: 'GET',
             dataType: 'json'
         })
-        return response.id
+        return JSON.stringify(response)
     } catch(error) {
         return "Failed to get authenication data";
     }

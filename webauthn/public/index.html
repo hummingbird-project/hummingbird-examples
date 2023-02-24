@@ -8,8 +8,7 @@
     <script type="text/javascript">
         function registerUser(event) {
             const username = $("#email").val();
-            const fullname = $("#fullname").val();
-            register(username, fullname)
+            register(username)
         }
         async function testUser(event) {
             const result = await test();
@@ -21,14 +20,8 @@
     <h2>Register</h2>
     <p>
         <form action="#">
-            <p>
-                <label for="email">Email</label>
-                <input type="text" id="email" name="email"/><br/>
-            </p>
-            <p>
-                <label for="fullname">Fullname</label>
-                <input type="text" id="fullname" name="fullname"/><br/>
-            </p>
+            <label for="email">Email</label>
+            <input type="text" id="email" name="email"/><br/>
         <br>
         <button type="button" onclick="registerUser(event);">Register</button>
         </form>

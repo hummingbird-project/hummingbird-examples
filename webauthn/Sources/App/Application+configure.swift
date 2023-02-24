@@ -60,6 +60,7 @@ extension HBApplication {
         }
         // add migrations
         self.fluent.migrations.add(CreateUser())
+        self.fluent.migrations.add(CreateWebAuthnCredential())
         try self.fluent.migrate().wait()
 
         self.addSessions(using: .memory)
