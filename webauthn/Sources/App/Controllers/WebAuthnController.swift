@@ -23,10 +23,11 @@ struct HBWebAuthnController {
     func add(_ group: HBRouterGroup) {
         group
             .post("signup", options: .editResponse, use: SignupHandler.self)
-            .add(middleware: WebAuthnSessionAuthenticator())
-            .post("beginregister", options: .editResponse, use: BeginRegistrationHandler.self)
-            .post("finishregister", use: FinishRegistrationHandler.self)
             .get("login", options: .editResponse, use: self.beginAuthentication)
+        group
+            .add(middleware: WebAuthnSessionAuthenticator())
+            .post("beginregister", use: BeginRegistrationHandler.self)
+            .post("finishregister", use: FinishRegistrationHandler.self)
             .post("login", options: .editResponse, use: FinishAuthenticationHandler.self)
             .get("test", use: self.authenticationDetails)
     }
@@ -53,7 +54,7 @@ struct HBWebAuthnController {
             }
             let user = User(username: self.input.name)
             try await user.save(on: request.db)
-            let session = WebAuthnSessionAuthenticator.Session(userId: user.id!)
+            let session = WebAuthnSessionAuthenticator.Session.signedUp(userId: user.id!)
             try await request.session.save(
                 session: session,
                 expiresIn: .minutes(10)
@@ -72,17 +73,20 @@ struct HBWebAuthnController {
             let name: String
         }
 
-        let authenticationState: AuthenticationState
+        let authenticationSession: AuthenticationSession
 
         init(from request: HBRequest) throws {
-            self.authenticationState = try request.authRequire(AuthenticationState.self)
+            self.authenticationSession = try request.authRequire(AuthenticationSession.self)
         }
 
         func handle(request: HBRequest) async throws -> Output {
-            let user = HBWebAuthUser(userID: UUID().uuidString, displayName: self.authenticationState.user.username, name: self.authenticationState.user.username)
+            guard case .signedUp(let user) = self.authenticationSession else { throw HBHTTPError(.unauthorized) }
             let options = try request.webauthn.beginRegistration(user: user)
-            let session = WebAuthnSessionAuthenticator.Session(state: .registering(challenge: options.challenge), userId: self.authenticationState.user.id!)
-            try await request.session.save(session: session, expiresIn: .minutes(10))
+            let session = WebAuthnSessionAuthenticator.Session.registering(
+                userId: user.id!,
+                challenge: options.challenge
+            )
+            try await request.session.update(session: session, expiresIn: .minutes(10))
             return options
         }
     }
@@ -93,15 +97,15 @@ struct HBWebAuthnController {
         typealias Output = HTTPResponseStatus
 
         let input: RegistrationCredential
-        let authenticationState: AuthenticationState
+        let authenticationSession: AuthenticationSession
 
         init(from request: HBRequest) throws {
-            self.authenticationState = try request.authRequire(AuthenticationState.self)
+            self.authenticationSession = try request.authRequire(AuthenticationSession.self)
             self.input = try request.decode(as: Input.self)
         }
 
         func handle(request: HBRequest) async throws -> Output {
-            guard case .registering(let challenge) = self.authenticationState.state else { throw HBHTTPError(.unauthorized) }
+            guard case .registering(let user, let challenge) = self.authenticationSession else { throw HBHTTPError(.unauthorized) }
             do {
                 let credential = try await request.webauthn.finishRegistration(
                     challenge: challenge,
@@ -111,7 +115,7 @@ struct HBWebAuthnController {
                         return try await WebAuthnCredential.query(on: request.db).filter(\.$id == id).first() == nil
                     }
                 )
-                try await WebAuthnCredential(credential: credential, userId: self.authenticationState.user.id!).save(on: request.db)
+                try await WebAuthnCredential(credential: credential, userId: user.id!).save(on: request.db)
             } catch {
                 request.logger.error("\(error)")
             }
@@ -123,13 +127,11 @@ struct HBWebAuthnController {
 
     /// Begin Authenticating a user
     func beginAuthentication(_ request: HBRequest) async throws -> PublicKeyCredentialRequestOptions {
-        let authenticationState = try request.authRequire(AuthenticationState.self)
         let options = try request.webauthn.beginAuthentication(timeout: 60000)
         let challenge = String.base64URL(fromBase64: options.challenge)
         request.logger.info("Challenge: \(challenge)")
-        let session = WebAuthnSessionAuthenticator.Session(
-            state: .authenticating(challenge: String.base64URL(fromBase64: options.challenge)),
-            userId: authenticationState.user.id!
+        let session = WebAuthnSessionAuthenticator.Session.authenticating(
+            challenge: String.base64URL(fromBase64: options.challenge)
         )
         try await request.session.save(session: session, expiresIn: .minutes(10))
         return options
@@ -141,15 +143,15 @@ struct HBWebAuthnController {
         typealias Output = HTTPResponseStatus
 
         let input: AuthenticationCredential
-        let authenticationState: AuthenticationState
+        let authenticationSession: AuthenticationSession
 
         init(from request: HBRequest) throws {
-            self.authenticationState = try request.authRequire(AuthenticationState.self)
+            self.authenticationSession = try request.authRequire(AuthenticationSession.self)
             self.input = try request.decode(as: AuthenticationCredential.self)
         }
 
         func handle(request: HBRequest) async throws -> Output {
-            guard case .authenticating(let challenge) = self.authenticationState.state else { throw HBHTTPError(.unauthorized) }
+            guard case .authenticating(let challenge) = self.authenticationSession else { throw HBHTTPError(.unauthorized) }
             guard let webAuthnCredential = try await WebAuthnCredential.query(on: request.db)
                 .filter(\.$id == input.id)
                 .with(\.$user)
@@ -169,7 +171,7 @@ struct HBWebAuthnController {
                 request.logger.error("\(error)")
                 throw HBHTTPError(.unauthorized)
             }
-            let session = WebAuthnSessionAuthenticator.Session(state: .authenticated, userId: self.authenticationState.user.id!)
+            let session = WebAuthnSessionAuthenticator.Session.authenticated(userId: webAuthnCredential.user.id!)
             try await request.session.save(session: session, expiresIn: .hours(24))
 
             return .ok
@@ -177,8 +179,8 @@ struct HBWebAuthnController {
     }
 
     /// Test authenticated
-    func authenticationDetails(_ request: HBRequest) throws -> AuthenticationState {
-        guard let state = request.authGet(AuthenticationState.self) else { throw HBHTTPError(.unauthorized) }
+    func authenticationDetails(_ request: HBRequest) throws -> AuthenticationSession {
+        guard let state = request.authGet(AuthenticationSession.self) else { throw HBHTTPError(.unauthorized) }
         return state
     }
 }

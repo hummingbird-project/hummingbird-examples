@@ -15,34 +15,34 @@
 import Foundation
 import HummingbirdAuth
 
-struct AuthenticationState: HBAuthenticatable, HBResponseEncodable {
-    let state: WebAuthnSessionAuthenticator.Session.State
-    let user: User
+enum AuthenticationSession: Codable, HBAuthenticatable, HBResponseEncodable {
+    case signedUp(user: User)
+    case registering(user: User, challenge: String)
+    case authenticating(challenge: String)
+    case authenticated(user: User)
 }
 
 struct WebAuthnSessionAuthenticator: HBAsyncSessionAuthenticator {
-    struct Session: Codable {
-        enum State: Codable {
-            case none
-            case registering(challenge: String)
-            case authenticating(challenge: String)
-            case authenticated
-        }
-
-        let state: State
-        let userId: UUID
-
-        init(state: State = .none, userId: UUID) {
-            self.state = state
-            self.userId = userId
-        }
+    enum Session: Codable {
+        case signedUp(userId: UUID)
+        case registering(userId: UUID, challenge: String)
+        case authenticating(challenge: String)
+        case authenticated(userId: UUID)
     }
 
-    func getValue(from session: Session, request: HBRequest) async throws -> AuthenticationState? {
-        guard let user = try await User.find(session.userId, on: request.db) else { return nil }
-        return AuthenticationState(
-            state: session.state,
-            user: user
-        )
+    func getValue(from session: Session, request: HBRequest) async throws -> AuthenticationSession? {
+        switch session {
+        case .authenticating(let challenge):
+            return .authenticating(challenge: challenge)
+        case .signedUp(let userId):
+            guard let user = try await User.find(userId, on: request.db) else { return nil }
+            return .signedUp(user: user)
+        case .registering(let userId, let challenge):
+            guard let user = try await User.find(userId, on: request.db) else { return nil }
+            return .registering(user: user, challenge: challenge)
+        case .authenticated(let userId):
+            guard let user = try await User.find(userId, on: request.db) else { return nil }
+            return .authenticated(user: user)
+        }
     }
 }

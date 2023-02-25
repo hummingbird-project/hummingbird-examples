@@ -18,3 +18,9 @@ final class User: Model, HBAuthenticatable, HBResponseEncodable {
         self.username = username
     }
 }
+
+extension User: WebAuthn.User {
+    var userID: String { self.id!.uuidString }
+    var name: String { self.username }
+    var displayName: String { self.username }
+}
