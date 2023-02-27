@@ -59,7 +59,7 @@ struct HBWebAuthnController {
                 session: session,
                 expiresIn: .minutes(10)
             )
-            return .init(status: .temporaryRedirect, headers: ["location": "/api/beginregister"])
+            return .redirect(to: "/api/beginregister", type: .temporary)
         }
     }
 
