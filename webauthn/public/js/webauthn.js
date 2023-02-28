@@ -24,25 +24,33 @@ async function register(username) {
         let data = {
             "name": username
         }
-        const response = await asyncAjax({
-            url: '/api/signup',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(data),
-            dataType: 'json',
-            processData: false
+        // signup api call
+        const response = await fetch('/api/signup', {
+            method: 'POST',
+            headers: {"content-type": "application/json"},
+            body: JSON.stringify(data)
         });
-        const publicKeyCredentialCreationOptions = createPublicKeyCredentialCreationOptionsFromServerResponse(response);
+        switch (response.status ) {
+        case 200:
+            break
+        case 409:
+            throw Error("Username already exist");
+        default:
+            throw Error(`Error: status code: ${response.status}`)
+        }
+        const responseJSON = await response.json();
+        const publicKeyCredentialCreationOptions = createPublicKeyCredentialCreationOptionsFromServerResponse(responseJSON);
         const result = await navigator.credentials.create({publicKey: publicKeyCredentialCreationOptions});
         const registrationCredential = createRegistrationCredentialForServer(result);
-        await asyncAjax({
-            url: '/api/finishregister',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(registrationCredential),
-            dataType: 'text',
-            processData: false
-        })
+        // finish registration api call
+        const finishResponse = await fetch('/api/finishregister', {
+            method: "POST",
+            headers: {"content-type": "application/json"},
+            body: JSON.stringify(registrationCredential)
+        });
+        if (finishResponse.status !== 200) {
+            throw Error(`Error: status code: ${response.status}`)
+        }
         alert("Registered user");
     } catch(error) {
         alert(`Login failed: ${error.message}`)
@@ -54,24 +62,26 @@ async function register(username) {
  */
 async function login() {
     try {
-        const response = await asyncAjax({
-            url: '/api/login',
-            type: 'GET',
-            dataType: 'json'
-        })
-        const publicKeyCredentialRequestOptions = createPublicKeyCredentialRequestOptionsFromServerResponse(response)
+        // initiate login
+        const response = await fetch('/api/login')
+        if (response.status !== 200) {
+            throw Error(`Error: status code: ${response.status}`)
+        }
+        const responseBody = await response.json()
+        const publicKeyCredentialRequestOptions = createPublicKeyCredentialRequestOptionsFromServerResponse(responseBody)
         const result = await navigator.credentials.get({
             publicKey: publicKeyCredentialRequestOptions
         });
         const credential = createAuthenicationCredentialForServer(result);
-        await asyncAjax({
-            url: '/api/login',
-            type: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(credential),
-            dataType: 'text',
-            processData: false
-        })
+        // finish login
+        const finishResponse = await fetch('/api/login', {
+            method: 'POST',
+            headers: {"content-type": 'application/json'},
+            body: JSON.stringify(credential)
+        });
+        if (response.status !== 200) {
+            throw Error(`Error: status code: ${response.status}`)
+        }
         alert("Success")
     } catch(error) {
         alert(`Login failed: ${error.message}`)
@@ -83,39 +93,15 @@ async function login() {
  */
 async function test() {
     try {
-        const response = await asyncAjax({
-            url: '/api/test',
-            type: 'GET',
-            dataType: 'json'
-        })
-        return JSON.stringify(response)
+        const response = await fetch('/api/test')
+        if (response.status !== 200) {
+            throw Error(`Error: status code: ${response.status}`)
+        }
+        const responseJSON = await response.json();
+        return JSON.stringify(responseJSON);
     } catch(error) {
         return "Failed to get authenication data";
     }
-}
-
-/**
- * Async/await version of $.ajax
- * @param {*} request Ajax request object
- * @returns Response from Ajax call
- */
-function asyncAjax(request) {
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: request.url,
-            type: request.type,
-            contentType: request.contentType,
-            data: request.data,
-            dataType: request.dataType,
-            processData: request.processData,
-            success: function(data) {
-                resolve(data)
-            },
-            error: function(error) {
-                reject(error)
-            }
-        })
-    });
 }
 
 /**
