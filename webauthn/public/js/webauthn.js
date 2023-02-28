@@ -49,7 +49,7 @@ async function register(username) {
             body: JSON.stringify(registrationCredential)
         });
         if (finishResponse.status !== 200) {
-            throw Error(`Error: status code: ${response.status}`)
+            throw Error(`Error: status code: ${finishResponse.status}`)
         }
         alert("Registered user");
     } catch(error) {
@@ -79,8 +79,8 @@ async function login() {
             headers: {"content-type": 'application/json'},
             body: JSON.stringify(credential)
         });
-        if (response.status !== 200) {
-            throw Error(`Error: status code: ${response.status}`)
+        if (finishResponse.status !== 200) {
+            throw Error(`Error: status code: ${finishResponse.status}`)
         }
         alert("Success")
     } catch(error) {

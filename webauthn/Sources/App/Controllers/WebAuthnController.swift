@@ -118,6 +118,7 @@ struct HBWebAuthnController {
                 try await WebAuthnCredential(credential: credential, userId: user.id!).save(on: request.db)
             } catch {
                 request.logger.error("\(error)")
+                throw HBHTTPError(.unauthorized)
             }
             request.logger.info("Registration success, id: \(self.input.id)")
 
