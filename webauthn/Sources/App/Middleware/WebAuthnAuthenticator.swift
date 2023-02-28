@@ -14,19 +14,20 @@
 
 import Foundation
 import HummingbirdAuth
+import WebAuthn
 
 enum AuthenticationSession: Codable, HBAuthenticatable, HBResponseEncodable {
     case signedUp(user: User)
-    case registering(user: User, challenge: String)
-    case authenticating(challenge: String)
+    case registering(user: User, challenge: EncodedBase64)
+    case authenticating(challenge: EncodedBase64)
     case authenticated(user: User)
 }
 
 struct WebAuthnSessionAuthenticator: HBAsyncSessionAuthenticator {
     enum Session: Codable {
         case signedUp(userId: UUID)
-        case registering(userId: UUID, challenge: String)
-        case authenticating(challenge: String)
+        case registering(userId: UUID, challenge: EncodedBase64)
+        case authenticating(challenge: EncodedBase64)
         case authenticated(userId: UUID)
     }
 

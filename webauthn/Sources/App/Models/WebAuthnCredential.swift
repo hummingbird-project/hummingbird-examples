@@ -1,4 +1,5 @@
 import FluentSQLiteDriver
+import Foundation
 import HummingbirdAuth
 import HummingbirdFluent
 import WebAuthn
@@ -10,14 +11,14 @@ final class WebAuthnCredential: Model {
     var id: String?
 
     @Field(key: "public_key")
-    var publicKey: String
+    var publicKey: EncodedBase64
 
     @Parent(key: "user_id")
     var user: User
 
     init() {}
 
-    init(id: String, publicKey: String, userId: UUID) {
+    private init(id: String, publicKey: EncodedBase64, userId: UUID) {
         self.id = id
         self.publicKey = publicKey
         self.$user.id = userId
@@ -26,7 +27,7 @@ final class WebAuthnCredential: Model {
     convenience init(credential: Credential, userId: UUID) {
         self.init(
             id: credential.id,
-            publicKey: credential.publicKey.base64URLEncodedString(),
+            publicKey: credential.publicKey.base64EncodedString(),
             userId: userId
         )
     }

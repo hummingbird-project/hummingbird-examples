@@ -129,10 +129,8 @@ struct HBWebAuthnController {
     /// Begin Authenticating a user
     func beginAuthentication(_ request: HBRequest) async throws -> PublicKeyCredentialRequestOptions {
         let options = try request.webauthn.beginAuthentication(timeout: 60000)
-        let challenge = String.base64URL(fromBase64: options.challenge)
-        request.logger.info("Challenge: \(challenge)")
         let session = WebAuthnSessionAuthenticator.Session.authenticating(
-            challenge: String.base64URL(fromBase64: options.challenge)
+            challenge: options.challenge
         )
         try await request.session.save(session: session, expiresIn: .minutes(10))
         return options
@@ -154,7 +152,7 @@ struct HBWebAuthnController {
         func handle(request: HBRequest) async throws -> Output {
             guard case .authenticating(let challenge) = self.authenticationSession else { throw HBHTTPError(.unauthorized) }
             guard let webAuthnCredential = try await WebAuthnCredential.query(on: request.db)
-                .filter(\.$id == input.id)
+                .filter(\.$id == input.id.asString())
                 .with(\.$user)
                 .first()
             else {
@@ -164,8 +162,8 @@ struct HBWebAuthnController {
             do {
                 _ = try request.webauthn.finishAuthentication(
                     credential: self.input,
-                    expectedChallenge: challenge,
-                    credentialPublicKey: [UInt8](webAuthnCredential.publicKey.base64URLDecodedData!),
+                    expectedChallenge: challenge.urlEncoded,
+                    credentialPublicKey: [UInt8](webAuthnCredential.publicKey.decoded!),
                     credentialCurrentSignCount: 0
                 )
             } catch {
