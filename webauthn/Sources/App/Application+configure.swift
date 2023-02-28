@@ -37,13 +37,13 @@ extension HBApplication {
     /// add your routes
     func configure(_ arguments: AppArguments) throws {
         // Add TLS
-        try server.addTLS(tlsConfiguration: self.getTLSConfig(arguments))
+        //try server.addTLS(tlsConfiguration: self.getTLSConfig(arguments))
 
         self.webauthn = .init(
             config: WebAuthnConfig(
                 relyingPartyDisplayName: "Hummingbird WebAuthn example",
                 relyingPartyID: "localhost",
-                relyingPartyOrigin: "https://localhost:8080",
+                relyingPartyOrigin: "http://localhost:8080",
                 timeout: 600
             )
         )
@@ -71,15 +71,6 @@ extension HBApplication {
             return .ok
         }
         HBWebAuthnController().add(self.router.group("api"))
-    }
-
-    func getTLSConfig(_ arguments: AppArguments) throws -> TLSConfiguration {
-        let certificateChain = try NIOSSLCertificate.fromPEMFile(arguments.certificateChain)
-        let privateKey = try NIOSSLPrivateKey(file: arguments.privateKey, format: .pem)
-        return TLSConfiguration.makeServerConfiguration(
-            certificateChain: certificateChain.map { .certificate($0) },
-            privateKey: .privateKey(privateKey)
-        )
     }
 }
 

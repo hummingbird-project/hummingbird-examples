@@ -26,7 +26,6 @@ let package = Package(
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
-                .product(name: "HummingbirdTLS", package: "hummingbird-core"),
                 .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
                 .product(name: "WebAuthn", package: "webauthn-swift"),
             ],
