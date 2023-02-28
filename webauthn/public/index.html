@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebAuthn Register</title>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="js/webauthn.js?v=1"></script>
+    <script type="text/javascript">
+        function registerUser(event) {
+            const username = $("#email").val();
+            register(username)
+        }
+        async function testUser(event) {
+            const result = await test();
+            $("#testText").text(result)
+        }
+    </script>
+</head>
+<body>
+    <h2>Register</h2>
+    <p>
+        <form action="#">
+            <label for="email">Email</label>
+            <input type="text" id="email" name="email"/><br/>
+        <br>
+        <button type="button" onclick="registerUser(event);">Register</button>
+        </form>
+    </p>
+    <h2>Login</h2>
+    <p>
+        <button type="button" onclick="login();">Login</button>
+    </p>
+    <h2>Test</h2>
+    <p>
+        <button type="button" onclick="testUser(event);">Test</button>
+        <p id="testText"></p>
+    </p>
+</body>
+</html>
