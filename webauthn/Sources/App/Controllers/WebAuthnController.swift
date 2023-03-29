@@ -67,7 +67,7 @@ struct HBWebAuthnController {
     struct BeginRegistrationHandler: HBAsyncRouteHandler {
         typealias Output = PublicKeyCredentialCreationOptions
 
-        struct HBWebAuthUser: WebAuthn.User {
+        struct HBWebAuthUser: WebAuthnUser {
             var userID: String
             let displayName: String
             let name: String

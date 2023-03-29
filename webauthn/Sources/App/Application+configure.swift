@@ -43,8 +43,7 @@ extension HBApplication {
             config: WebAuthnConfig(
                 relyingPartyDisplayName: "Hummingbird WebAuthn example",
                 relyingPartyID: "localhost",
-                relyingPartyOrigin: "http://localhost:8080",
-                timeout: 600
+                relyingPartyOrigin: "http://localhost:8080"
             )
         )
 

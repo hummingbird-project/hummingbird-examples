@@ -112,13 +112,13 @@ async function test() {
 function createPublicKeyCredentialCreationOptionsFromServerResponse(response) {
     return  {
         challenge: Uint8Array.from(atob(response.challenge), c => c.charCodeAt(0)),
-        rp: response.relyingParty,
+        rp: response.rp,
         user: {
             id: Uint8Array.from(response.user.id, c => c.charCodeAt(0)),
             name: response.user.name,
             displayName: response.user.displayName,
         },
-        pubKeyCredParams: response.publicKeyCredentialParameters.map(item => { return {alg: item.algorithm, type: item.type};}),
+        pubKeyCredParams: response.pubKeyCredParams,
         timeout: response.timeout,
     };
 }
