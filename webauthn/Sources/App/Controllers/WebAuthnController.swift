@@ -63,10 +63,10 @@ struct HBWebAuthnController {
         let authenticationSession = try request.authRequire(AuthenticationSession.self)
         guard case .signedUp(let user) = authenticationSession else { throw HBHTTPError(.unauthorized) }
         let options = self.webauthn.beginRegistration(user: user.publicKeyCredentialUserEntity)
-        let session = WebAuthnSessionStateAuthenticator.Session.registering(
-            userId: user.id!,
+        let session = WebAuthnSessionStateAuthenticator.Session(from: .registering(
+            user: user,
             challenge: options.challenge
-        )
+        ))
         try await request.session.update(session: session, expiresIn: .minutes(10))
         return options
     }
@@ -98,9 +98,9 @@ struct HBWebAuthnController {
     /// Begin Authenticating a user
     func beginAuthentication(_ request: HBRequest) async throws -> PublicKeyCredentialRequestOptions {
         let options = try self.webauthn.beginAuthentication(timeout: 60000)
-        let session = WebAuthnSessionAuthenticator.Session.authenticating(
+        let session = WebAuthnSessionAuthenticator.Session(from: .authenticating(
             challenge: options.challenge
-        )
+        ))
         try await request.session.save(session: session, expiresIn: .minutes(10))
         return options
     }
