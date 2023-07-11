@@ -146,7 +146,6 @@ struct HBWebAuthnController {
         func handle(request: HBRequest) async throws -> Output {
             guard case .authenticating(let challenge) = self.authenticationSession else { throw HBHTTPError(.unauthorized) }
             let id = self.input.id.urlDecoded.asString()
-            try await print(WebAuthnCredential.query(on: request.db).all())
             guard let webAuthnCredential = try await WebAuthnCredential.query(on: request.db)
                 .filter(\.$id == id)
                 .with(\.$user)
