@@ -22,7 +22,7 @@
 async function register(username) {
     try {
         let data = {
-            "name": username
+            "username": username
         }
         // signup api call
         const response = await fetch('/api/signup', {
@@ -43,7 +43,7 @@ async function register(username) {
         const result = await navigator.credentials.create({publicKey: publicKeyCredentialCreationOptions});
         const registrationCredential = createRegistrationCredentialForServer(result);
         // finish registration api call
-        const finishResponse = await fetch('/api/finishregister', {
+        const finishResponse = await fetch('/api/register/finish', {
             method: "POST",
             headers: {"content-type": "application/json"},
             body: JSON.stringify(registrationCredential)

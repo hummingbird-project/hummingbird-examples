@@ -70,6 +70,6 @@ extension HBApplication {
                     relyingPartyOrigin: "http://localhost:8080"
                 )
             )
-        ).add(self.router.group("api"))
+        ).add(to: self.router.group("api"))
     }
 }
