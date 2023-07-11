@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -25,20 +25,19 @@ struct UserController {
             .post(options: .editResponse, use: self.login)
         group.add(middleware: SessionAuthenticator())
             .get(use: self.current)
+            .post("logout", use: self.logout)
     }
 
     /// Create new user
     func create(_ request: HBRequest) async throws -> UserResponse {
         guard let createUser = try? request.decode(as: CreateUserRequest.self) else { throw HBHTTPError(.badRequest) }
-        // check if user exists and if they don't then add new user
-        let existingUser = try await User.query(on: request.db)
-            .filter(\.$name == createUser.name)
-            .first()
-        // if user already exist throw conflict
-        guard existingUser == nil else { throw HBHTTPError(.conflict) }
 
-        let user = User(from: createUser)
-        try await user.save(on: request.db)
+        let user = try await User.create(
+            name: createUser.name,
+            email: createUser.email,
+            password: createUser.password,
+            request: request
+        )
 
         request.response.status = .created
         return UserResponse(from: user)
@@ -50,7 +49,17 @@ struct UserController {
         guard let user = request.authGet(User.self),
               let userId = user.id else { throw HBHTTPError(.unauthorized) }
         // create session lasting 1 hour
-        try await request.session.save(session: userId, expiresIn: .seconds(60))
+        try await request.session.save(session: userId, expiresIn: .minutes(60))
+        return .ok
+    }
+
+    /// Login user and create session
+    func logout(_ request: HBRequest) async throws -> HTTPResponseStatus {
+        // get authenticated user and return
+        guard let user = request.authGet(User.self) else { throw HBHTTPError(.unauthorized) }
+        guard let userId = user.id else { throw HBHTTPError(.unauthorized) }
+        // create session finishing now
+        try await request.session.update(session: userId, expiresIn: .seconds(0))
         return .ok
     }
 

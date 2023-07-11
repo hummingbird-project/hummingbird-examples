@@ -19,8 +19,8 @@ struct CreateTodo: AsyncMigration {
         return try await database.schema("todos")
             .id()
             .field("title", .string, .required)
-            .field("order", .int)
-            .field("completed", .bool)
+            .field("owner_id", .uuid, .required, .references("user", "id"))
+            .field("completed", .bool, .required)
             .field("url", .string)
             .create()
     }

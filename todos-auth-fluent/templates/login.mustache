@@ -1,0 +1,17 @@
+{{>head}}
+<body>
+    <h1>Login</h1>
+    {{#failed}}<p>Login failed</p>{{/failed}}
+    <form action="/login" method="post">
+    <label for="email">Email</label><br/>
+    <input type="text" id="email" name="email"/><br/>
+    <label for="password">Password</label><br/>
+    <input type="text" id="password" name="password"/><br/>
+    <br>
+    <input type="submit" value="Submit" />
+    </form>
+    <p>
+    <a href="/signup">Sign Up</a>
+    </p>
+</body>
+</html>

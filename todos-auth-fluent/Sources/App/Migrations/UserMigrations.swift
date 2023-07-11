@@ -19,6 +19,7 @@ struct CreateUser: Migration {
         return database.schema("user")
             .id()
             .field("name", .string, .required)
+            .field("email", .string, .required)
             .field("password", .string, .required)
             .create()
     }

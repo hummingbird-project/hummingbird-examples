@@ -24,17 +24,24 @@ final class User: Model, HBAuthenticatable {
     @ID(key: .id)
     var id: UUID?
 
+    @Field(key: "email")
+    var email: String
+
     @Field(key: "name")
     var name: String
 
     @Field(key: "password")
     var passwordHash: String
 
+    @Children(for: \.$owner)
+    var todos: [Todo]
+
     internal init() {}
 
-    internal init(id: UUID? = nil, name: String, passwordHash: String) {
+    internal init(id: UUID? = nil, name: String, email: String, passwordHash: String) {
         self.id = id
         self.name = name
+        self.email = email
         self.passwordHash = passwordHash
     }
 
@@ -45,13 +52,42 @@ final class User: Model, HBAuthenticatable {
     }
 }
 
+extension User {
+    static func create(name: String, email: String, password: String, request: HBRequest) async throws -> User {
+        // check if user exists and if they don't then add new user
+        let existingUser = try await User.query(on: request.db)
+            .filter(\.$name == name)
+            .first()
+        // if user already exist throw conflict
+        guard existingUser == nil else { throw HBHTTPError(.conflict) }
+
+        let passwordHash = Bcrypt.hash(password, cost: 12)
+        let user = User(name: name, email: email, passwordHash: passwordHash)
+        try await user.save(on: request.db)
+        return user
+    }
+
+    static func login(email: String, password: String, request: HBRequest) async throws -> User? {
+        // check if user exists in the database and then verify the entered password
+        // against the one stored in the database. If it is correct then login in user
+        let user = try await User.query(on: request.db)
+            .filter(\.$email == email)
+            .first()
+        guard let user = user else { return nil }
+        guard Bcrypt.verify(password, hash: user.passwordHash) else { return nil }
+        return user
+    }
+}
+
 /// Create user request object decoded from HTTP body
 struct CreateUserRequest: Decodable {
     let name: String
+    let email: String
     let password: String
 
-    internal init(name: String, password: String) {
+    internal init(name: String, email: String, password: String) {
         self.name = name
+        self.email = email
         self.password = password
     }
 }
@@ -59,15 +95,12 @@ struct CreateUserRequest: Decodable {
 /// User encoded into HTTP response
 struct UserResponse: HBResponseCodable {
     let id: UUID?
-    let name: String
 
-    internal init(id: UUID?, name: String) {
+    internal init(id: UUID?) {
         self.id = id
-        self.name = name
     }
 
     internal init(from user: User) {
         self.id = user.id
-        self.name = user.name
     }
 }

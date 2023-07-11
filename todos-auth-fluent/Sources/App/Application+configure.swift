@@ -4,6 +4,7 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 import HummingbirdFoundation
+import HummingbirdMustache
 
 public protocol AppArguments {
     var inMemoryDatabase: Bool { get }
@@ -16,11 +17,13 @@ extension HBApplication {
     /// setup the encoder/decoder
     /// add your routes
     public func configure(_ arguments: AppArguments) throws {
+        self.logger.logLevel = .info
         // set encoder and decoder
         self.encoder = JSONEncoder()
-        self.decoder = JSONDecoder()
+        self.decoder = RequestDecoder()
         // middleware
         self.middleware.add(HBLogRequestsMiddleware(.debug))
+        self.middleware.add(HBFileMiddleware(application: self))
         self.middleware.add(HBCORSMiddleware(
             allowOrigin: .originBased,
             allowHeaders: ["Content-Type"],
@@ -46,9 +49,15 @@ extension HBApplication {
             try self.fluent.migrate().wait()
         }
 
-        self.router.get("/") { _ in
+        self.router.get("/health") { _ in
             return "Hello"
         }
+
+        // load mustache template library
+        let library = try HBMustacheLibrary(directory: "templates")
+        assert(library.getTemplate(named: "head") != nil, "Set your working directory to the root folder of this example to get it to work")
+
+        WebController(mustacheLibrary: library).addRoutes(to: self.router)
         TodoController().addRoutes(to: self.router.group("todos"))
         UserController().addRoutes(to: self.router.group("users"))
     }

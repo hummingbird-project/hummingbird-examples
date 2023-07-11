@@ -15,6 +15,7 @@ let package = Package(
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.6.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "1.1.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "1.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-mustache.git", from: "1.0.0"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "0.3.0"),
     ],
@@ -28,6 +29,7 @@ let package = Package(
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
                 .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
                 .product(name: "HummingbirdFoundation", package: "hummingbird"),
+                .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of

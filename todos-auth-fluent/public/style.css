@@ -1,0 +1,38 @@
+body {
+    max-width: min(800px, 90%);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+th { 
+    border-bottom: 2px solid black;
+}
+td, th {
+    text-align: "left";
+    padding: 5px 10px;
+}
+input {
+    margin: 5px 5px;
+}
+
+td.title {
+    min-width: min(400px, 75%);
+}
+
+.header {
+    float: left;
+}
+
+.todo-table, .add-todo {
+    float: left;
+    padding: 16px;
+    border: 1px solid black;
+}
+
+#todo-title {
+    min-width: 300px;
+}
+
+#logout {
+    float: right;
+}
