@@ -22,7 +22,7 @@ extension HBApplication {
         self.encoder = JSONEncoder()
         self.decoder = RequestDecoder()
         // middleware
-        self.middleware.add(HBLogRequestsMiddleware(.debug))
+        self.middleware.add(HBLogRequestsMiddleware(.info))
         self.middleware.add(HBFileMiddleware(application: self))
         self.middleware.add(HBCORSMiddleware(
             allowOrigin: .originBased,

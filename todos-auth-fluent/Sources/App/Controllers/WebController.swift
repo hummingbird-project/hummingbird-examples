@@ -30,12 +30,29 @@ struct RedirectMiddleware: HBMiddleware {
 }
 
 struct WebController {
-    let mustacheLibrary: HBMustacheLibrary
+    let todosTemplate: HBMustacheTemplate
+    let loginTemplate: HBMustacheTemplate
+    let signupTemplate: HBMustacheTemplate
+    let errorTemplate: HBMustacheTemplate
+
+    init(mustacheLibrary: HBMustacheLibrary) {
+        guard let todosTemplate = mustacheLibrary.getTemplate(named: "todos"),
+              let loginTemplate = mustacheLibrary.getTemplate(named: "login"),
+              let signupTemplate = mustacheLibrary.getTemplate(named: "signup"),
+              let errorTemplate = mustacheLibrary.getTemplate(named: "error")
+        else {
+            preconditionFailure("Failed to load mustache templates")
+        }
+        self.todosTemplate = todosTemplate
+        self.loginTemplate = loginTemplate
+        self.signupTemplate = signupTemplate
+        self.errorTemplate = errorTemplate
+    }
 
     /// Add routes for webpages
     func addRoutes(to router: HBRouterBuilder) {
         router.group()
-            .add(middleware: ErrorPageMiddleware(template: self.mustacheLibrary.getTemplate(named: "error")!))
+            .add(middleware: ErrorPageMiddleware(template: self.errorTemplate))
             .get("/login", use: self.login)
             .post("/login", options: .editResponse, use: self.loginDetails)
             .get("/signup", use: self.signup)
@@ -56,12 +73,12 @@ struct WebController {
             "name": user.name,
             "todos": todos,
         ]
-        let html = self.mustacheLibrary.render(object, withTemplate: "todos")!
+        let html = self.todosTemplate.render(object)
         return HTML(html: html)
     }
 
     func login(request: HBRequest) async throws -> HTML {
-        let html = self.mustacheLibrary.render((), withTemplate: "login")!
+        let html = self.loginTemplate.render(())
         return HTML(html: html)
     }
 
@@ -83,7 +100,7 @@ struct WebController {
             try await request.session.save(session: user.requireID(), expiresIn: .minutes(60))
             return .redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
         } else {
-            let html = self.mustacheLibrary.render(["failed": true], withTemplate: "login")!
+            let html = self.loginTemplate.render(["failed": true])
             return try HTML(html: html).response(from: request)
         }
     }
@@ -95,7 +112,7 @@ struct WebController {
     }
 
     func signup(request: HBRequest) async throws -> HTML {
-        let html = self.mustacheLibrary.render((), withTemplate: "signup")!
+        let html = self.signupTemplate.render(())
         return HTML(html: html)
     }
 
@@ -111,7 +128,7 @@ struct WebController {
             return .redirect(to: "/login", type: .found)
         } catch let error as HBHTTPError {
             if error.status == .conflict {
-                let html = self.mustacheLibrary.render(["failed": true], withTemplate: "signup")!
+                let html = self.signupTemplate.render(["failed": true])
                 return try HTML(html: html).response(from: request)
             } else {
                 throw error
