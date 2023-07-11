@@ -22,7 +22,7 @@
 async function register(username) {
     try {
         let data = {
-            "name": username
+            "username": username
         }
         // signup api call
         const response = await fetch('/api/signup', {
@@ -43,7 +43,7 @@ async function register(username) {
         const result = await navigator.credentials.create({publicKey: publicKeyCredentialCreationOptions});
         const registrationCredential = createRegistrationCredentialForServer(result);
         // finish registration api call
-        const finishResponse = await fetch('/api/finishregister', {
+        const finishResponse = await fetch('/api/register/finish', {
             method: "POST",
             headers: {"content-type": "application/json"},
             body: JSON.stringify(registrationCredential)
@@ -110,11 +110,13 @@ async function test() {
  * @returns PublicKeyCredentialCreationOptions
  */
 function createPublicKeyCredentialCreationOptionsFromServerResponse(response) {
+    const challenge = bufferDecode(response.challenge);
+    const userId = bufferDecode(response.user.id);
     return  {
-        challenge: Uint8Array.from(atob(response.challenge), c => c.charCodeAt(0)),
+        challenge: challenge,
         rp: response.rp,
         user: {
-            id: Uint8Array.from(response.user.id, c => c.charCodeAt(0)),
+            id: userId,
             name: response.user.name,
             displayName: response.user.displayName,
         },
@@ -132,11 +134,11 @@ function createRegistrationCredentialForServer(registrationCredential) {
     return {
         authenicatorAttachment: registrationCredential.authenicatorAttachment,
         id: registrationCredential.id,
-        rawId: btoa(String.fromCharCode(...new Uint8Array(registrationCredential.rawId))),
+        rawId: bufferEncode(registrationCredential.rawId),
         type: registrationCredential.type,
         response: {
-            attestationObject: btoa(String.fromCharCode(...new Uint8Array(registrationCredential.response.attestationObject))),
-            clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(registrationCredential.response.clientDataJSON)))
+            attestationObject: bufferEncode(registrationCredential.response.attestationObject),
+            clientDataJSON: bufferEncode(registrationCredential.response.clientDataJSON)
         }
     }
 }
@@ -148,7 +150,7 @@ function createRegistrationCredentialForServer(registrationCredential) {
  */
 function createPublicKeyCredentialRequestOptionsFromServerResponse(response) {
     return {
-        challenge: Uint8Array.from(atob(response.challenge), c => c.charCodeAt(0)),
+        challenge: bufferDecode(response.challenge),
         allowCredentials: response.allowCredentials,
         timeout: response.timeout,
     }
@@ -162,13 +164,25 @@ function createPublicKeyCredentialRequestOptionsFromServerResponse(response) {
 function createAuthenicationCredentialForServer(credential) {
     return {
         id: credential.id,
+        rawId: bufferEncode(credential.rawId),
         authenticatorAttachment: credential.authenticatorAttachment,
         type: credential.type,
         response: {
-            authenticatorData: btoa(String.fromCharCode(...new Uint8Array(credential.response.authenticatorData))),
-            clientDataJSON: btoa(String.fromCharCode(...new Uint8Array(credential.response.clientDataJSON))),
-            signature: btoa(String.fromCharCode(...new Uint8Array(credential.response.signature))),
-            userHandle: String.fromCharCode(...new Uint8Array(credential.response.userHandle))
+            authenticatorData: bufferEncode(credential.response.authenticatorData),
+            clientDataJSON: bufferEncode(credential.response.clientDataJSON),
+            signature: bufferEncode(credential.response.signature),
+            userHandle: bufferEncode(credential.response.userHandle)//String.fromCharCode(...new Uint8Array(credential.response.userHandle))
         }
     }
+}
+
+function bufferEncode(value) {
+    return btoa(String.fromCharCode(...new Uint8Array(value)))
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_")
+        .replace(/=/g, "");
+}
+
+function bufferDecode(value) {
+    return Uint8Array.from(atob(value.replace(/_/g, '/').replace(/-/g, '+')), c => c.charCodeAt(0));
 }

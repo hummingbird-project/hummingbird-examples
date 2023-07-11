@@ -20,8 +20,8 @@ final class User: Model, HBAuthenticatable, HBResponseEncodable {
     }
 }
 
-extension User: WebAuthnUser {
-    var userID: String { self.id!.uuidString }
-    var name: String { self.username }
-    var displayName: String { self.username }
+extension User {
+    var publicKeyCredentialUserEntity: PublicKeyCredentialUserEntity {
+        .init(id: .init(self.id!.uuidString.utf8), name: self.username, displayName: self.username)
+    }
 }

@@ -37,15 +37,7 @@ extension HBApplication {
     /// add your routes
     func configure(_ arguments: AppArguments) throws {
         // Add TLS
-        //try server.addTLS(tlsConfiguration: self.getTLSConfig(arguments))
-
-        self.webauthn = .init(
-            config: WebAuthnConfig(
-                relyingPartyDisplayName: "Hummingbird WebAuthn example",
-                relyingPartyID: "localhost",
-                relyingPartyOrigin: "http://localhost:8080"
-            )
-        )
+        // try server.addTLS(tlsConfiguration: self.getTLSConfig(arguments))
 
         self.encoder = JSONEncoder()
         self.decoder = JSONDecoder()
@@ -69,10 +61,15 @@ extension HBApplication {
         self.router.get("/health") { _ -> HTTPResponseStatus in
             return .ok
         }
-        HBWebAuthnController().add(self.router.group("api"))
+        // Add WebAuthn routes
+        HBWebAuthnController(
+            webauthn: .init(
+                config: .init(
+                    relyingPartyID: "localhost",
+                    relyingPartyName: "Hummingbird WebAuthn example",
+                    relyingPartyOrigin: "http://localhost:8080"
+                )
+            )
+        ).add(to: self.router.group("api"))
     }
-}
-
-extension HBRequest {
-    var webauthn: WebAuthnManager { return self.application.webauthn }
 }
