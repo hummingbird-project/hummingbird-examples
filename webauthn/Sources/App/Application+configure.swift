@@ -37,12 +37,12 @@ extension HBApplication {
     /// add your routes
     func configure(_ arguments: AppArguments) throws {
         // Add TLS
-        //try server.addTLS(tlsConfiguration: self.getTLSConfig(arguments))
+        // try server.addTLS(tlsConfiguration: self.getTLSConfig(arguments))
 
         self.webauthn = .init(
-            config: WebAuthnConfig(
-                relyingPartyDisplayName: "Hummingbird WebAuthn example",
+            config: .init(
                 relyingPartyID: "localhost",
+                relyingPartyName: "Hummingbird WebAuthn example",
                 relyingPartyOrigin: "http://localhost:8080"
             )
         )

@@ -67,12 +67,6 @@ struct HBWebAuthnController {
     struct BeginRegistrationHandler: HBAsyncRouteHandler {
         typealias Output = PublicKeyCredentialCreationOptions
 
-        struct HBWebAuthUser: WebAuthnUser {
-            var userID: String
-            let displayName: String
-            let name: String
-        }
-
         let authenticationSession: AuthenticationSession
 
         init(from request: HBRequest) throws {
@@ -81,7 +75,7 @@ struct HBWebAuthnController {
 
         func handle(request: HBRequest) async throws -> Output {
             guard case .signedUp(let user) = self.authenticationSession else { throw HBHTTPError(.unauthorized) }
-            let options = try request.webauthn.beginRegistration(user: user)
+            let options = request.webauthn.beginRegistration(user: user.publicKeyCredentialUserEntity)
             let session = WebAuthnSessionAuthenticator.Session.registering(
                 userId: user.id!,
                 challenge: options.challenge
@@ -151,8 +145,10 @@ struct HBWebAuthnController {
 
         func handle(request: HBRequest) async throws -> Output {
             guard case .authenticating(let challenge) = self.authenticationSession else { throw HBHTTPError(.unauthorized) }
+            let id = self.input.id.urlDecoded.asString()
+            try await print(WebAuthnCredential.query(on: request.db).all())
             guard let webAuthnCredential = try await WebAuthnCredential.query(on: request.db)
-                .filter(\.$id == input.id.asString())
+                .filter(\.$id == id)
                 .with(\.$user)
                 .first()
             else {
@@ -162,7 +158,7 @@ struct HBWebAuthnController {
             do {
                 _ = try request.webauthn.finishAuthentication(
                     credential: self.input,
-                    expectedChallenge: challenge.urlEncoded,
+                    expectedChallenge: challenge,
                     credentialPublicKey: [UInt8](webAuthnCredential.publicKey.decoded!),
                     credentialCurrentSignCount: 0
                 )

@@ -18,16 +18,16 @@ import WebAuthn
 
 enum AuthenticationSession: Codable, HBAuthenticatable, HBResponseEncodable {
     case signedUp(user: User)
-    case registering(user: User, challenge: EncodedBase64)
-    case authenticating(challenge: EncodedBase64)
+    case registering(user: User, challenge: [UInt8])
+    case authenticating(challenge: [UInt8])
     case authenticated(user: User)
 }
 
 struct WebAuthnSessionAuthenticator: HBAsyncSessionAuthenticator {
     enum Session: Codable {
         case signedUp(userId: UUID)
-        case registering(userId: UUID, challenge: EncodedBase64)
-        case authenticating(challenge: EncodedBase64)
+        case registering(userId: UUID, challenge: [UInt8])
+        case authenticating(challenge: [UInt8])
         case authenticated(userId: UUID)
     }
 
