@@ -23,6 +23,10 @@ td.title {
     float: left;
 }
 
+.error {
+    color: red;
+}
+
 .todo-table, .add-todo {
     float: left;
     padding: 16px;

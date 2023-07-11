@@ -1,7 +1,7 @@
 {{>head}}
 <body>
     <h1>Sign Up</h1>
-    {{#failed}}<p>User already exists</p>{{/failed}}
+    {{#failed}}<p class="error">User already exists</p>{{/failed}}
     <p>
     <form action="/signup" method="post">
     <label for="name">Name</label><br/>

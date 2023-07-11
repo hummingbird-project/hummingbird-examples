@@ -119,11 +119,14 @@ struct WebController {
             return .redirect(to: "/login", type: .found)
         } catch let error as HBHTTPError {
             if error.status == .conflict {
-                let html = self.mustacheLibrary.render(["failed": true], withTemplate: "login")!
+                let html = self.mustacheLibrary.render(["failed": true], withTemplate: "signup")!
                 return try HTML(html: html).response(from: request)
             } else {
                 throw error
             }
+        } catch {
+            print("\(error)")
+            throw error
         }
     }
 }

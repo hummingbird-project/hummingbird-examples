@@ -56,7 +56,7 @@ extension User {
     static func create(name: String, email: String, password: String, request: HBRequest) async throws -> User {
         // check if user exists and if they don't then add new user
         let existingUser = try await User.query(on: request.db)
-            .filter(\.$name == name)
+            .filter(\.$email == email)
             .first()
         // if user already exist throw conflict
         guard existingUser == nil else { throw HBHTTPError(.conflict) }

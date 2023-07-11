@@ -1,7 +1,7 @@
 {{>head}}
 <body>
     <h1>Login</h1>
-    {{#failed}}<p>Login failed</p>{{/failed}}
+    {{#failed}}<p class="error">Login failed</p>{{/failed}}
     <form action="/login" method="post">
     <label for="email">Email</label><br/>
     <input type="text" id="email" name="email"/><br/>
