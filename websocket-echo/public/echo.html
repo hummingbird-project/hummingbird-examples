@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <title>WebSocket Echo</title>
+  <script language="javascript" type="text/javascript">
+
+  var wsUri = "ws://localhost:8080/echo";
+  var connected = false;
+  var inputText;
+  var outputText;
+  var connectButton;
+  var typeRadio;
+  var textRadio;
+  var binaryRadio;
+
+  function init()
+  {
+      inputText = document.getElementById("input");
+      outputText = document.getElementById("output");
+      connectButton = document.getElementById("connect")
+      typeRadio = document.getElementById("type")
+      textRadio = document.getElementById("text")
+      binaryRadio = document.getElementById("binary")
+
+      input.value = ""
+      input.style.display = 'none'
+      typeRadio.style.display = 'none'
+      textRadio.checked = true
+  }
+
+  function openWebSocket(uri)
+  {
+    websocket = new WebSocket(uri);
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { onMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+    websocket.binaryType = "arraybuffer"
+  }
+
+  function onOpen(evt)
+  {
+
+  }
+
+  function onClose(evt)
+  {
+    writeToScreen("DISCONNECTED");
+    connected = false
+    // show connect
+    connectButton.style.display = 'block'
+    // show input
+    typeRadio.style.display = 'none'
+    inputText.style.display = 'none'
+  }
+
+  function onMessage(evt)
+  {
+    let type = typeof(evt.data)
+    if (typeof(evt.data) === "string") {
+      writeToScreen('<span style="color: blue;">' + evt.data + '</span>');
+    } else if (typeof(evt.data) === "object") {
+      const dec = new TextDecoder()
+      const string = dec.decode(evt.data)
+      writeToScreen('<span style="color: blue;">' + string + '</span>');
+    }
+  }
+
+  function onError(evt)
+  {
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+  }
+
+  function doSend(message)
+  {
+    if(textRadio.checked === true) {
+      websocket.send(message);
+    } else {
+      const enc = new TextEncoder()
+      const binary = enc.encode(message)
+      websocket.send(binary);
+    }
+  }
+
+  function writeToScreen(message)
+  {
+    var pre = document.createElement("p");
+    pre.style.wordWrap = "break-word";
+    pre.innerHTML = message;
+    outputText.appendChild(pre);
+  }
+
+  function connect() {
+    if (connected === false) {
+      // hide button
+      connectButton.style.display = 'none'
+      // show input
+      inputText.style.display = 'block'
+      typeRadio.style.display = 'block'
+
+      openWebSocket(wsUri)
+      connected = true      
+    }
+  }
+
+  function inputEnter() {
+      if (connected === true) {
+          if (inputText.value == "") {
+              return
+          }
+          doSend(inputText.value)
+      }
+      inputText.value = ""
+  }
+  window.addEventListener("load", init, false);
+  </script>
+</head>
+<body>
+  <h2>WebSocket Echo</h2>
+  <div id="output"></div>
+  <div id="type">
+    <input type="radio" id="text" name="output" value="Text">
+    <label for="text">Text</label>
+    <input type="radio" id="binary" name="output" value="Binary">
+    <label for="binary">Binary</label>
+  </div>
+  <input id="connect" onclick = "connect()" type="button" name="Connect" value="Connect"/><br>
+  <input id="input" onchange = "inputEnter()" type="text" name="name"/>
+</body>
