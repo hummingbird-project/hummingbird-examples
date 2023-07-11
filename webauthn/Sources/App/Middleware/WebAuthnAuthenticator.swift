@@ -16,6 +16,7 @@ import Foundation
 import HummingbirdAuth
 import WebAuthn
 
+/// Authentication state
 enum AuthenticationSession: Codable, HBAuthenticatable, HBResponseEncodable {
     case signedUp(user: User)
     case registering(user: User, challenge: [UInt8])
@@ -23,7 +24,8 @@ enum AuthenticationSession: Codable, HBAuthenticatable, HBResponseEncodable {
     case authenticated(user: User)
 }
 
-struct WebAuthnSessionAuthenticator: HBAsyncSessionAuthenticator {
+/// Authenticator that will return current state of authentication
+struct WebAuthnSessionStateAuthenticator: HBAsyncSessionAuthenticator {
     enum Session: Codable {
         case signedUp(userId: UUID)
         case registering(userId: UUID, challenge: [UInt8])
@@ -45,5 +47,14 @@ struct WebAuthnSessionAuthenticator: HBAsyncSessionAuthenticator {
             guard let user = try await User.find(userId, on: request.db) else { return nil }
             return .authenticated(user: user)
         }
+    }
+}
+
+/// Authenticator that will return an authenticated user
+struct WebAuthnSessionAuthenticator: HBAsyncSessionAuthenticator {
+    typealias Session = WebAuthnSessionStateAuthenticator.Session
+    func getValue(from session: Session, request: HBRequest) async throws -> User? {
+        guard case .authenticated(let userId) = session else { return nil }
+        return try await User.find(userId, on: request.db)
     }
 }

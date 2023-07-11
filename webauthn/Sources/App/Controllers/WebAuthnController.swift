@@ -27,11 +27,13 @@ struct HBWebAuthnController {
             .post("signup", options: .editResponse, use: self.signin)
             .get("login", options: .editResponse, use: self.beginAuthentication)
         group
-            .add(middleware: WebAuthnSessionAuthenticator())
+            .add(middleware: WebAuthnSessionStateAuthenticator())
             .post("beginregister", use: self.beginRegistration)
             .post("finishregister", use: self.finishRegistration)
             .post("login", options: .editResponse, use: self.finishAuthentication)
-            .get("test", use: self.authenticationDetails)
+        group
+            .add(middleware: WebAuthnSessionAuthenticator())
+            .get("test", use: self.getUser)
     }
 
     struct SignInInput: Decodable {
@@ -48,7 +50,7 @@ struct HBWebAuthnController {
         }
         let user = User(username: input.name)
         try await user.save(on: request.db)
-        let session = WebAuthnSessionAuthenticator.Session.signedUp(userId: user.id!)
+        let session = WebAuthnSessionStateAuthenticator.Session.signedUp(userId: user.id!)
         try await request.session.save(
             session: session,
             expiresIn: .minutes(10)
@@ -61,7 +63,7 @@ struct HBWebAuthnController {
         let authenticationSession = try request.authRequire(AuthenticationSession.self)
         guard case .signedUp(let user) = authenticationSession else { throw HBHTTPError(.unauthorized) }
         let options = self.webauthn.beginRegistration(user: user.publicKeyCredentialUserEntity)
-        let session = WebAuthnSessionAuthenticator.Session.registering(
+        let session = WebAuthnSessionStateAuthenticator.Session.registering(
             userId: user.id!,
             challenge: options.challenge
         )
@@ -135,9 +137,9 @@ struct HBWebAuthnController {
     }
 
     /// Test authenticated
-    func authenticationDetails(_ request: HBRequest) throws -> AuthenticationSession {
-        guard let state = request.authGet(AuthenticationSession.self) else { throw HBHTTPError(.unauthorized) }
-        return state
+    func getUser(_ request: HBRequest) throws -> User {
+        guard let user = request.authGet(User.self) else { throw HBHTTPError(.unauthorized) }
+        return user
     }
 }
 
