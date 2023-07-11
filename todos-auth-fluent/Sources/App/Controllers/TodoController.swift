@@ -15,15 +15,18 @@
 import FluentKit
 import Foundation
 import Hummingbird
+import HummingbirdAuth
 import HummingbirdFluent
 import NIO
 
 struct TodoController {
     func addRoutes(to group: HBRouterGroup) {
         group
+            .add(middleware: SessionAuthenticator())
+            .add(middleware: IsAuthenticatedMiddleware(User.self))
             .get(use: self.list)
             .get(":id", use: self.get)
-            .put(options: .editResponse, use: self.create)
+            .post(options: .editResponse, use: self.create)
             .delete(use: self.deleteAll)
             .patch(":id", use: self.update)
             .delete(":id", use: self.deleteId)

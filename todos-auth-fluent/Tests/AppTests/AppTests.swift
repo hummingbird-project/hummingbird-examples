@@ -15,10 +15,11 @@ final class AppTests: XCTestCase {
         let title: String
     }
 
-    func createTodo(_ todo: Todo, app: HBApplication) throws -> Todo {
+    func createTodo(_ todo: Todo, cookie: String? = nil, app: HBApplication) throws -> Todo {
         try app.XCTExecute(
             uri: "/todos",
-            method: .PUT,
+            method: .POST,
+            headers: cookie.map { ["cookie": $0] } ?? [:],
             body: JSONEncoder().encodeAsByteBuffer(todo, allocator: ByteBufferAllocator())
         ) { response in
             XCTAssertEqual(response.status, .created)
@@ -40,7 +41,7 @@ final class AppTests: XCTestCase {
     func createUser(_ user: User, app: HBApplication) throws -> UserResponse {
         try app.XCTExecute(
             uri: "/users",
-            method: .PUT,
+            method: .POST,
             body: JSONEncoder().encodeAsByteBuffer(user, allocator: ByteBufferAllocator())
         ) { response in
             XCTAssertEqual(response.status, .created)
@@ -61,17 +62,6 @@ final class AppTests: XCTestCase {
     }
 
     // MARK: tests
-
-    func testCreateTodo() throws {
-        let app = HBApplication(testing: .live)
-        try app.configure(TestArguments())
-
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        let todo = try self.createTodo(.init(title: "Write more tests"), app: app)
-        XCTAssertEqual(todo.title, "Write more tests")
-    }
 
     func testCreateUser() throws {
         let app = HBApplication(testing: .live)
@@ -102,13 +92,26 @@ final class AppTests: XCTestCase {
         defer { app.XCTStop() }
 
         _ = try self.createUser(.init(name: "Tom Jones", password: "password123"), app: app)
-        let cookies = try self.login(username: "Tom Jones", password: "password123", app: app)
+        let cookie = try self.login(username: "Tom Jones", password: "password123", app: app)
         try app.XCTExecute(
             uri: "/users/",
             method: .GET,
-            headers: cookies.map { ["cookie": $0] } ?? [:]
+            headers: cookie.map { ["cookie": $0] } ?? [:]
         ) { response in
             XCTAssertEqual(response.status, .ok)
         }
+    }
+
+    func testCreateTodo() throws {
+        let app = HBApplication(testing: .live)
+        try app.configure(TestArguments())
+
+        try app.XCTStart()
+        defer { app.XCTStop() }
+
+        _ = try self.createUser(.init(name: "Tom Jones", password: "password123"), app: app)
+        let cookie = try self.login(username: "Tom Jones", password: "password123", app: app)
+        let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
+        XCTAssertEqual(todo.title, "Write more tests")
     }
 }

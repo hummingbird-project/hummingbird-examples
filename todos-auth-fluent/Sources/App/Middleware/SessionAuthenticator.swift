@@ -22,7 +22,7 @@ struct SessionAuthenticator: HBAsyncSessionAuthenticator {
     typealias Value = User
 
     func getValue(from: UUID, request: Hummingbird.HBRequest) async throws -> User? {
-            // find user from userId
-            return try await User.find(from, on: request.db)
+        // find user from userId
+        return try await User.find(from, on: request.db)
     }
 }

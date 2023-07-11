@@ -20,7 +20,7 @@ import NIO
 struct UserController {
     /// Add routes for user controller
     func addRoutes(to group: HBRouterGroup) {
-        group.put(options: .editResponse, use: self.create)
+        group.post(options: .editResponse, use: self.create)
         group.group("login").add(middleware: BasicAuthenticator())
             .post(options: .editResponse, use: self.login)
         group.add(middleware: SessionAuthenticator())
