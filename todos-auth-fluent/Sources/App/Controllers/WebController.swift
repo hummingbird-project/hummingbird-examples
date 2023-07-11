@@ -17,15 +17,6 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdMustache
 
-struct HTML: HBResponseGenerator {
-    let html: String
-
-    public func response(from request: HBRequest) throws -> HBResponse {
-        let buffer = request.allocator.buffer(string: self.html)
-        return .init(status: .ok, headers: ["content-type": "text/html"], body: .byteBuffer(buffer))
-    }
-}
-
 /// Redirects to login page if no user has been authenticated
 struct RedirectMiddleware: HBMiddleware {
     let to: String
@@ -44,6 +35,7 @@ struct WebController {
     /// Add routes for webpages
     func addRoutes(to router: HBRouterBuilder) {
         router.group()
+            .add(middleware: ErrorPageMiddleware(template: self.mustacheLibrary.getTemplate(named: "error")!))
             .get("/login", use: self.login)
             .post("/login", options: .editResponse, use: self.loginDetails)
             .get("/signup", use: self.signup)
