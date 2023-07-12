@@ -12,7 +12,7 @@ let package = Package(
         .executable(name: "App", targets: ["App"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.6.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.6.1"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "1.1.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "1.0.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-mustache.git", from: "1.0.0"),
