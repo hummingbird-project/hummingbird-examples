@@ -14,6 +14,8 @@
 
 import Hummingbird
 
+/// Type wrapping HTML code. Will convert to HBResponse that includes the correct
+/// content-type header
 struct HTML: HBResponseGenerator {
     let html: String
 

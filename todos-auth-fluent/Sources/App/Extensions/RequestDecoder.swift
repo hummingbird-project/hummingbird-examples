@@ -15,8 +15,10 @@
 import Hummingbird
 import HummingbirdFoundation
 
+/// Request body decoder
 struct RequestDecoder: HBRequestDecoder {
     func decode<T>(_ type: T.Type, from request: HBRequest) throws -> T where T: Decodable {
+        /// if no content-type header exists or it is an unknown content-type return bad request
         guard let header = request.headers["content-type"].first else { throw HBHTTPError(.badRequest) }
         guard let mediaType = HBMediaType(from: header) else { throw HBHTTPError(.badRequest) }
         switch mediaType {

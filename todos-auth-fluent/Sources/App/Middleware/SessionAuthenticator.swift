@@ -17,6 +17,8 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 
+/// Session authentication. Get UUID attached to session id in request and return
+/// the associated user
 struct SessionAuthenticator: HBAsyncSessionAuthenticator {
     typealias Session = UUID
     typealias Value = User

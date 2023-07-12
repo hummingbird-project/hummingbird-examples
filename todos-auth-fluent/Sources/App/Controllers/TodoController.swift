@@ -19,6 +19,7 @@ import HummingbirdAuth
 import HummingbirdFluent
 import NIO
 
+/// CRUD routes for todos
 struct TodoController {
     func addRoutes(to group: HBRouterGroup) {
         group
@@ -27,19 +28,21 @@ struct TodoController {
             .get(use: self.list)
             .get(":id", use: self.get)
             .post(options: .editResponse, use: self.create)
-            .delete(use: self.deleteAll)
             .patch(":id", use: self.update)
             .delete(":id", use: self.deleteId)
     }
 
+    /// List all todos created by current user
     func list(_ request: HBRequest) async throws -> [Todo] {
-        return try await Todo.query(on: request.db).all()
+        let user = try request.authRequire(User.self)
+        return try await user.$todos.get(on: request.db)
     }
 
     struct CreateTodoRequest: HBResponseCodable {
         var title: String
     }
 
+    /// Create new todo
     func create(_ request: HBRequest) async throws -> Todo {
         let user = try request.authRequire(User.self)
         guard let todoRequest = try? request.decode(as: CreateTodoRequest.self) else { throw HBHTTPError(.badRequest) }
@@ -53,9 +56,13 @@ struct TodoController {
         return todo
     }
 
+    /// Get todo
     func get(_ request: HBRequest) async throws -> Todo? {
         guard let id = request.parameters.get("id", as: UUID.self) else { throw HBHTTPError(.badRequest) }
-        return try await Todo.find(id, on: request.db)
+        return try await Todo.query(on: request.db)
+            .filter(\.$id == id)
+            .with(\.$owner)
+            .first()
     }
 
     struct EditTodoRequest: HBResponseCodable {
@@ -63,6 +70,7 @@ struct TodoController {
         var completed: Bool?
     }
 
+    /// Edit todo
     func update(_ request: HBRequest) async throws -> Todo {
         guard let id = request.parameters.get("id", as: UUID.self) else { throw HBHTTPError(.badRequest) }
         guard let editTodo = try? request.decode(as: EditTodoRequest.self) else { throw HBHTTPError(.badRequest) }
@@ -80,13 +88,7 @@ struct TodoController {
         return todo
     }
 
-    func deleteAll(_ request: HBRequest) async throws -> HTTPResponseStatus {
-        let user = try request.authRequire(User.self)
-        try await user.$todos.load(on: request.db)
-        try await user.todos.delete(on: request.db)
-        return .ok
-    }
-
+    /// delete todo
     func deleteId(_ request: HBRequest) async throws -> HTTPResponseStatus {
         guard let id = request.parameters.get("id", as: UUID.self) else { throw HBHTTPError(.badRequest) }
         guard let todo = try await Todo.query(on: request.db)

@@ -15,11 +15,14 @@
 import Hummingbird
 import HummingbirdMustache
 
+/// Generate an HTML page for a thrown error
 struct ErrorPageMiddleware: HBMiddleware {
     let template: HBMustacheTemplate
 
     func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
         return next.respond(to: request).flatMapErrorThrowing { error in
+            // if error is thrown from further down the middlware chain then either return
+            // page with status code and message or a 501 with a description of the thrown error
             let values: [String: Any]
             if let error = error as? HBHTTPError {
                 values = [
@@ -32,7 +35,8 @@ struct ErrorPageMiddleware: HBMiddleware {
                     "message": "\(error)",
                 ]
             }
-            let html = self.template.render(values) // emustacheLibrary.render(values, withTemplate: "error")!
+            // render HTML and return
+            let html = self.template.render(values)
             return try HTML(html: html).response(from: request)
         }
     }

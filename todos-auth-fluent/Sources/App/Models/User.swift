@@ -53,6 +53,7 @@ final class User: Model, HBAuthenticatable {
 }
 
 extension User {
+    /// create a User in the db attached to request
     static func create(name: String, email: String, password: String, request: HBRequest) async throws -> User {
         // check if user exists and if they don't then add new user
         let existingUser = try await User.query(on: request.db)
@@ -61,12 +62,15 @@ extension User {
         // if user already exist throw conflict
         guard existingUser == nil else { throw HBHTTPError(.conflict) }
 
-        let passwordHash = Bcrypt.hash(password, cost: 12)
+        // Encrypt password on a separate thread
+        let passwordHash = try await Bcrypt.hash(password, cost: 12, for: request).get()
+        // Create user and save to database
         let user = User(name: name, email: email, passwordHash: passwordHash)
         try await user.save(on: request.db)
         return user
     }
 
+    /// Check user can login
     static func login(email: String, password: String, request: HBRequest) async throws -> User? {
         // check if user exists in the database and then verify the entered password
         // against the one stored in the database. If it is correct then login in user
@@ -74,7 +78,8 @@ extension User {
             .filter(\.$email == email)
             .first()
         guard let user = user else { return nil }
-        guard Bcrypt.verify(password, hash: user.passwordHash) else { return nil }
+        // Verify the password against the hash stored in the database
+        guard try await Bcrypt.verify(password, hash: user.passwordHash, for: request).get() else { return nil }
         return user
     }
 }

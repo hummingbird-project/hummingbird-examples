@@ -29,6 +29,7 @@ struct RedirectMiddleware: HBMiddleware {
     }
 }
 
+/// Serves HTML pages
 struct WebController {
     let todosTemplate: HBMustacheTemplate
     let loginTemplate: HBMustacheTemplate
@@ -36,6 +37,7 @@ struct WebController {
     let errorTemplate: HBMustacheTemplate
 
     init(mustacheLibrary: HBMustacheLibrary) {
+        // get the mustache templates from the library
         guard let todosTemplate = mustacheLibrary.getTemplate(named: "todos"),
               let loginTemplate = mustacheLibrary.getTemplate(named: "login"),
               let signupTemplate = mustacheLibrary.getTemplate(named: "signup"),
@@ -62,13 +64,16 @@ struct WebController {
             .get("/", use: self.home)
     }
 
+    /// Home page listing todos and with add todo UI
     func home(request: HBRequest) async throws -> HTML {
         struct Todo {
             let title: String
             let completed: Bool
         }
+        // get user and list of todos attached to user from database
         let user = try request.authRequire(User.self)
         let todos = try await user.$todos.get(on: request.db)
+        // Render todos template and return as HTML
         let object: [String: Any] = [
             "name": user.name,
             "todos": todos,
@@ -77,6 +82,7 @@ struct WebController {
         return HTML(html: html)
     }
 
+    /// Login page
     func login(request: HBRequest) async throws -> HTML {
         let html = self.loginTemplate.render(())
         return HTML(html: html)
@@ -87,6 +93,7 @@ struct WebController {
         let password: String
     }
 
+    /// Login POST page
     func loginDetails(request: HBRequest) async throws -> HBResponse {
         let details = try request.decode(as: LoginDetails.self)
         // check if user exists in the database and then verify the entered password
@@ -98,8 +105,10 @@ struct WebController {
         ) {
             // create session lasting 1 hour
             try await request.session.save(session: user.requireID(), expiresIn: .minutes(60))
+            // redirect to home page
             return .redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
         } else {
+            // login failed return login HTML with failed comment
             let html = self.loginTemplate.render(["failed": true])
             return try HTML(html: html).response(from: request)
         }
@@ -111,31 +120,34 @@ struct WebController {
         let password: String
     }
 
+    /// Signup page
     func signup(request: HBRequest) async throws -> HTML {
         let html = self.signupTemplate.render(())
         return HTML(html: html)
     }
 
+    /// Signup POST page
     func signupDetails(request: HBRequest) async throws -> HBResponse {
         let details = try request.decode(as: SignupDetails.self)
         do {
+            // create new user
             _ = try await User.create(
                 name: details.name,
                 email: details.email,
                 password: details.password,
                 request: request
             )
+            // redirect to login page
             return .redirect(to: "/login", type: .found)
         } catch let error as HBHTTPError {
+            // if user creation throws a conflict ie the email is already being used by
+            // another user then return signup page with error message
             if error.status == .conflict {
                 let html = self.signupTemplate.render(["failed": true])
                 return try HTML(html: html).response(from: request)
             } else {
                 throw error
             }
-        } catch {
-            print("\(error)")
-            throw error
         }
     }
 }

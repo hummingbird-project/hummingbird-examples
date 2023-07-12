@@ -29,6 +29,7 @@ struct UserController {
     }
 
     /// Create new user
+    /// CURRENTLY NOT USED, as user creation is done by ``WebController.signupDetails``
     func create(_ request: HBRequest) async throws -> UserResponse {
         guard let createUser = try? request.decode(as: CreateUserRequest.self) else { throw HBHTTPError(.badRequest) }
 
@@ -44,6 +45,7 @@ struct UserController {
     }
 
     /// Login user and create session
+    /// CURRENTLY NOT USED, as user creation is done by ``WebController.loginDetails``
     func login(_ request: HBRequest) async throws -> HTTPResponseStatus {
         // get authenticated user and return
         guard let user = request.authGet(User.self),

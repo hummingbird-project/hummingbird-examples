@@ -16,6 +16,7 @@ import FluentKit
 import Foundation
 import Hummingbird
 
+/// Database description of a Todo
 final class Todo: Model, HBResponseCodable {
     static let schema = "todos"
 
