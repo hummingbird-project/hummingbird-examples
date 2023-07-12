@@ -1,14 +1,5 @@
-# Todos Fluent
+# Todos and Authentication
 
-This is an implementation of the [TodoBackend](http://www.todobackend.com/) API using an SQLite database accessed via Fluent to store the todo data. The application has six routes
+This is a more complete example. It is a web interface for editing todos associated with a user. It implements authentication via a login page and session management. User and session details are stored in an SQLite database. Once authenticated you can create todos, list them, edit their completed state and delete them. All the webpages are generated using mustache.
 
-- GET /todos: Lists all the todos in the database
-- POST /todos: Creates a new todo
-- DELETE /todos: Deletes all the todos
-- GET /todos/:id : Returns a single todo with id
-- PATCH /todos/:id : Edits todo with id
-- DELETE /todos/:id : Deletes todo with id
-
-A todo consists of a title, order number, url to link to edit/get/delete that todo and whether that todo is complete or not.
-
-This example comes with a [PAW](https://paw.cloud/) file you can use to test the various endpoints.
+The first time you run this app you should run it with the `--migrate` command line parameter to ensure the database is setup.
