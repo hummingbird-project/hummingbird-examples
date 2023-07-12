@@ -51,7 +51,7 @@ Array.prototype.forEach.call(deleteButtons, button => {
  */
 async function logout() {
     // Add Todo
-    await fetch('/users/logout', {
+    await fetch('/api/users/logout', {
         method: 'POST',
         headers: {"content-type": "application/json"}
     });
@@ -63,7 +63,7 @@ async function logout() {
  */
 async function addTodo(todo) {
     // Add Todo
-    await fetch('/todos', {
+    await fetch('/api/todos', {
         method: 'POST',
         headers: {"content-type": "application/json"},
         body: JSON.stringify(todo)
@@ -77,7 +77,7 @@ async function addTodo(todo) {
  */
 async function setCompletedState(id, completed) {
     const editTodo = {"completed": completed};
-    await fetch(`/todos/${id}`, {
+    await fetch(`/api/todos/${id}`, {
         method: 'PATCH',
         headers: {"content-type": "application/json"},
         body: JSON.stringify(editTodo)
@@ -89,7 +89,7 @@ async function setCompletedState(id, completed) {
  * @param {string} id Todo id
  */
 async function deleteTodo(id) {
-    await fetch(`/todos/${id}`, {
+    await fetch(`/api/todos/${id}`, {
         method: 'DELETE',
         headers: {"content-type": "application/json"}
     });

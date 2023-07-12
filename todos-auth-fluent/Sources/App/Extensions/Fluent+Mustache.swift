@@ -1,32 +1,32 @@
 import FluentKit
 import HummingbirdMustache
 
-// Extend @propertyWrapper Field so it will render its contents. Property wrappers
-// have a '_' prefix before them when you use Mirror reflection so you need to add
-// this in your mustache template
-extension FieldProperty: HBMustacheCustomRenderable {
-    /// default version returning the standard rendering
-    public var renderText: String {
-        String(describing: self.wrappedValue)
-    }
-
-    /// default version returning false
-    public var isNull: Bool {
-        if let value = self.wrappedValue as? Bool {
-            return !value
+/// Extend @propertyWrapper FieldProperty to enable mustache transform functions and add one
+/// to access the wrappedValue. In the mustache template you would access this with
+/// `{{wrappedValue(_myProperty)}}`. Note the `_` prefix on the property name. This is
+/// required as this is how property wrappers appear in the Mirror reflection data.
+extension FieldProperty: HBMustacheTransformable {
+    public func transform(_ name: String) -> Any? {
+        switch name {
+        case "wrappedValue":
+            return wrappedValue
+        default:
+            return nil
         }
-        return self.value == nil
     }
 }
 
-extension IDProperty: HBMustacheCustomRenderable {
-    /// default version returning the standard rendering
-    public var renderText: String {
-        self.wrappedValue.map { String(describing: $0) } ?? ""
-    }
-
-    /// default version returning false
-    public var isNull: Bool {
-        self.wrappedValue == nil
+/// Extend @propertyWrapper IDProperty to enable mustache transform functions and add one
+/// to access the wrappedValue. In the mustache template you would access this with
+/// `{{wrappedValue(_myID)}}`. Note the `_` prefix on the property name. This is
+/// required as this is how property wrappers appear in the Mirror reflection data.
+extension IDProperty: HBMustacheTransformable {
+    public func transform(_ name: String) -> Any? {
+        switch name {
+        case "wrappedValue":
+            return wrappedValue
+        default:
+            return nil
+        }
     }
 }

@@ -10,9 +10,9 @@ Todos for {{name}}
 <table>
 <tr><th>Title</th><th>Done</th></tr>
 {{#todos}}
-<tr id="{{_id}}">
-    <td class="title">{{_title}}</td>
-    <td class="done"><input class="done-checkbox" type="checkbox" {{#_completed}}checked{{/_completed}}/></td>
+<tr id="{{wrappedValue(_id)}}">
+    <td class="title">{{wrappedValue(_title)}}</td>
+    <td class="done"><input class="done-checkbox" type="checkbox" {{#wrappedValue(_completed)}}checked{{/wrappedValue(_completed)}}/></td>
     <td class="delete"><input class="delete-button" type="button" value="Delete" /></td>
 </tr>
 {{/todos}}

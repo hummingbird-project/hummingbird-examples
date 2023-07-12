@@ -47,7 +47,7 @@ struct TodoController {
         let todo = try Todo(title: todoRequest.title, ownerID: user.requireID())
         _ = try await todo.save(on: request.db)
         todo.completed = false
-        todo.url = "http://\(host)/todos/\(todo.id!)"
+        todo.url = "http://\(host)/api/todos/\(todo.id!)"
         try await todo.update(on: request.db)
         request.response.status = .created
         return todo

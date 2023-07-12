@@ -20,9 +20,11 @@ extension HBApplication {
         self.logger.logLevel = .info
         // set encoder and decoder
         self.encoder = JSONEncoder()
+        // We decode both JSON and URLEncoded forms so need a custom decoder
         self.decoder = RequestDecoder()
-        // middleware
+        // add logging middleware
         self.middleware.add(HBLogRequestsMiddleware(.info))
+        // add file middleware to server css and js files
         self.middleware.add(HBFileMiddleware(application: self))
         self.middleware.add(HBCORSMiddleware(
             allowOrigin: .originBased,
@@ -33,6 +35,8 @@ extension HBApplication {
         // add Fluent
         self.addFluent()
 
+        // add support for sessions using a fluent database. This needs to be added
+        // before the migrate
         self.addSessions(using: .fluent)
 
         // add sqlite database
@@ -49,16 +53,20 @@ extension HBApplication {
             try self.fluent.migrate().wait()
         }
 
+        // add health check route
         self.router.get("/health") { _ in
-            return "Hello"
+            return HTTPResponseStatus.ok
         }
 
         // load mustache template library
         let library = try HBMustacheLibrary(directory: "templates")
         assert(library.getTemplate(named: "head") != nil, "Set your working directory to the root folder of this example to get it to work")
 
+        // Add routes serving HTML files
         WebController(mustacheLibrary: library).addRoutes(to: self.router)
-        TodoController().addRoutes(to: self.router.group("todos"))
-        UserController().addRoutes(to: self.router.group("users"))
+        // Add api routes managing todos
+        TodoController().addRoutes(to: self.router.group("api/todos"))
+        // Add api routes managing users
+        UserController().addRoutes(to: self.router.group("api/users"))
     }
 }
