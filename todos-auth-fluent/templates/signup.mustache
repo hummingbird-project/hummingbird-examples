@@ -1,0 +1,17 @@
+{{>head}}
+<body>
+    <h1>Sign Up</h1>
+    {{#failed}}<p class="error">User already exists</p>{{/failed}}
+    <p>
+    <form action="/signup" method="post">
+    <label for="name">Name</label><br/>
+    <input type="text" id="name" name="name"/><br/>
+    <label for="email">Email</label><br/>
+    <input type="text" id="email" name="email"/><br/>
+    <label for="password">Password</label><br/>
+    <input type="text" id="password" name="password"/><br/>
+    <input type="submit" value="Sign Up" />
+    </form>
+    </p>
+</body>
+</html>

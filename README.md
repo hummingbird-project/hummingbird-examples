@@ -23,3 +23,7 @@ Examples include
 - [upload-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload-async) - File uploading and downloading using the async/await APIs
 - [upload-s3](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload-s3) - File uploading and downloading using AWS S3 as backing store.
 - [websocket-chat](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-chat) - Simple chat application using WebSockets.
+
+And finally
+
+- [todos-auth-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-auth-fluent) - This is a more complete example which shows authentication, CRUD operations and mustache rendering all in one app.

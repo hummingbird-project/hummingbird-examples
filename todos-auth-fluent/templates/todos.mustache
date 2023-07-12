@@ -1,0 +1,34 @@
+{{>head}}
+<body>
+<h1 class="header">
+Todos for {{name}}
+</h1>
+<input id="logout" type="button" value="Logout" />
+<div style="float:left; width:100%; height:1px; display:block;"></div>
+<div class="todo-table">
+{{#first(todos)}}
+<table>
+<tr><th>Title</th><th>Done</th></tr>
+{{#todos}}
+<tr id="{{wrappedValue(_id)}}">
+    <td class="title">{{wrappedValue(_title)}}</td>
+    <td class="done"><input class="done-checkbox" type="checkbox" {{#wrappedValue(_completed)}}checked{{/wrappedValue(_completed)}}/></td>
+    <td class="delete"><input class="delete-button" type="button" value="Delete" /></td>
+</tr>
+{{/todos}}
+</table>
+{{/first(todos)}}
+{{^todos}}
+<h3>You have nothing to do</h3>
+{{/todos}}
+</div>
+<div style="float:left; width:100%; height:1px; margin:20px 0; display:block;"></div>
+<div class="add-todo">
+    <form action="#" id="add-todo-form">
+    <input type="text" id="todo-title" name="title"/><br/>
+    <input type="submit" value="Add Todo" /><br/>
+    </form>
+</div>
+<script src="todos.js?v=1"></script>
+</body>
+</html>
