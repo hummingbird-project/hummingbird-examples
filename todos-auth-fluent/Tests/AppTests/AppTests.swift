@@ -25,8 +25,9 @@ final class AppTests: XCTestCase {
 
     func createUser(_ user: CreateUserRequest, app: HBApplication) throws -> CreateUserResponse {
         try app.XCTExecute(
-            uri: "/users",
+            uri: "/api/users",
             method: .POST,
+            headers: ["content-type": "application/json"],
             body: JSONEncoder().encodeAsByteBuffer(user, allocator: ByteBufferAllocator())
         ) { response in
             XCTAssertEqual(response.status, .created)
@@ -37,8 +38,9 @@ final class AppTests: XCTestCase {
 
     func login(username: String, password: String, app: HBApplication) throws -> String? {
         try app.XCTExecute(
-            uri: "/users/login",
+            uri: "/api/users/login",
             method: .POST,
+            headers: ["content-type": "application/json"],
             auth: .basic(username: username, password: password)
         ) { response in
             XCTAssertEqual(response.status, .ok)
@@ -46,11 +48,27 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func createTodo(_ todo: CreateTodoRequest, cookie: String? = nil, app: HBApplication) throws -> Todo {
+    func urlEncodedLogin(username: String, password: String, app: HBApplication) throws -> String? {
         try app.XCTExecute(
-            uri: "/todos",
+            uri: "/login",
             method: .POST,
-            headers: cookie.map { ["cookie": $0] } ?? [:],
+            headers: ["content-type": "application/x-www-form-urlencoded"],
+            body: ByteBuffer(string: "email=\(username)&password=\(password)")
+        ) { response in
+            XCTAssertEqual(response.status, .found)
+            return response.headers["set-cookie"].first
+        }
+    }
+
+    func createTodo(_ todo: CreateTodoRequest, cookie: String? = nil, app: HBApplication) throws -> Todo {
+        var headers: HTTPHeaders = ["content-type": "application/json"]
+        if let cookie = cookie {
+            headers.add(name: "cookie", value: cookie)
+        }
+        return try app.XCTExecute(
+            uri: "/api/todos",
+            method: .POST,
+            headers: headers,
             body: JSONEncoder().encodeAsByteBuffer(todo, allocator: ByteBufferAllocator())
         ) { response in
             guard response.status == .created else { throw TestError.unexpectedStatus(response.status) }
@@ -60,8 +78,8 @@ final class AppTests: XCTestCase {
     }
 
     func getTodo(_ id: String, cookie: String? = nil, app: HBApplication) throws -> Todo? {
-        try app.XCTExecute(
-            uri: "/todos/\(id)",
+        return try app.XCTExecute(
+            uri: "/api/todos/\(id)",
             method: .GET,
             headers: cookie.map { ["cookie": $0] } ?? [:]
         ) { response in
@@ -74,8 +92,8 @@ final class AppTests: XCTestCase {
     }
 
     func deleteTodo(_ id: String, cookie: String? = nil, app: HBApplication) throws {
-        try app.XCTExecute(
-            uri: "/todos/\(id)",
+        return try app.XCTExecute(
+            uri: "/api/todos/\(id)",
             method: .DELETE,
             headers: cookie.map { ["cookie": $0] } ?? [:]
         ) { response in
@@ -84,10 +102,14 @@ final class AppTests: XCTestCase {
     }
 
     func editTodo(_ id: String, _ todo: EditTodoRequest, cookie: String? = nil, app: HBApplication) throws -> Todo? {
-        try app.XCTExecute(
-            uri: "/todos/\(id)",
+        var headers: HTTPHeaders = ["content-type": "application/json"]
+        if let cookie = cookie {
+            headers.add(name: "cookie", value: cookie)
+        }
+        return try app.XCTExecute(
+            uri: "/api/todos/\(id)",
             method: .PATCH,
-            headers: cookie.map { ["cookie": $0] } ?? [:],
+            headers: headers,
             body: JSONEncoder().encodeAsByteBuffer(todo, allocator: ByteBufferAllocator())
         ) { response in
             guard response.status == .ok else { throw TestError.unexpectedStatus(response.status) }
@@ -102,23 +124,31 @@ final class AppTests: XCTestCase {
 
     func testCreateUser() throws {
         try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", password: "password123"), app: app)
+            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
         }
     }
 
     func testLogin() throws {
         try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", password: "password123"), app: app)
-            _ = try self.login(username: "Tom Jones", password: "password123", app: app)
+            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
+            _ = try self.login(username: "t@jones.com", password: "password123", app: app)
+        }
+    }
+
+    func testURLEncodedLogin() throws {
+        try self.testApplication { app in
+            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
+            let cookie = try self.urlEncodedLogin(username: "t@jones.com", password: "password123", app: app)
+            XCTAssertNotNil(cookie)
         }
     }
 
     func testSession() throws {
         try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", password: "password123"), app: app)
-            let cookie = try self.login(username: "Tom Jones", password: "password123", app: app)
+            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
+            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
             try app.XCTExecute(
-                uri: "/users/",
+                uri: "/api/users/",
                 method: .GET,
                 headers: cookie.map { ["cookie": $0] } ?? [:]
             ) { response in
@@ -129,8 +159,8 @@ final class AppTests: XCTestCase {
 
     func testCreateTodo() throws {
         try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", password: "password123"), app: app)
-            let cookie = try self.login(username: "Tom Jones", password: "password123", app: app)
+            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
+            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
             let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
             XCTAssertEqual(todo.title, "Write more tests")
         }
@@ -138,8 +168,8 @@ final class AppTests: XCTestCase {
 
     func testGetTodo() throws {
         try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", password: "password123"), app: app)
-            let cookie = try self.login(username: "Tom Jones", password: "password123", app: app)
+            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
+            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
             let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
             let getTodo = try self.getTodo(todo.id, cookie: cookie, app: app)
             XCTAssertEqual(getTodo?.title, "Write more tests")
@@ -148,8 +178,8 @@ final class AppTests: XCTestCase {
 
     func testDeleteTodo() throws {
         try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", password: "password123"), app: app)
-            let cookie = try self.login(username: "Tom Jones", password: "password123", app: app)
+            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
+            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
             let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
             try self.deleteTodo(todo.id, cookie: cookie, app: app)
 
@@ -166,8 +196,8 @@ final class AppTests: XCTestCase {
 
     func testEditTodo() throws {
         try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", password: "password123"), app: app)
-            let cookie = try self.login(username: "Tom Jones", password: "password123", app: app)
+            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
+            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
             let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
             _ = try self.editTodo(todo.id, .init(title: "Written tests", completed: true), cookie: cookie, app: app)
             let editedTodo = try self.getTodo(todo.id, cookie: cookie, app: app)
@@ -179,11 +209,11 @@ final class AppTests: XCTestCase {
 
     func testUnauthorizedEditTodo() throws {
         try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", password: "password123"), app: app)
-            _ = try self.createUser(.init(name: "Lulu", password: "admin"), app: app)
-            let cookie = try self.login(username: "Tom Jones", password: "password123", app: app)
+            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
+            _ = try self.createUser(.init(name: "Lulu", email: "lu@lu.com", password: "admin"), app: app)
+            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
             let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
-            let cookie2 = try self.login(username: "Lulu", password: "admin", app: app)
+            let cookie2 = try self.login(username: "lu@lu.com", password: "admin", app: app)
             XCTAssertThrowsError(
                 _ = try self.editTodo(todo.id, .init(title: "Written tests", completed: true), cookie: cookie2, app: app)
             ) { error in
@@ -200,8 +230,8 @@ final class AppTests: XCTestCase {
 
 extension AppTests {
     struct CreateUserRequest: Codable {
-        var id: String?
         let name: String
+        let email: String
         let password: String
     }
 

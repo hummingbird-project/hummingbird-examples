@@ -110,6 +110,7 @@ struct WebController {
         } else {
             // login failed return login HTML with failed comment
             let html = self.loginTemplate.render(["failed": true])
+            request.response.status = .unauthorized
             return try HTML(html: html).response(from: request)
         }
     }
