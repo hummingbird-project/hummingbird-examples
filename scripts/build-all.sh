@@ -7,6 +7,11 @@ here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 build_example()
 {
     EXAMPLE=$1
+    echo "##############################################"
+    echo " "
+    echo "Building $EXAMPLE"
+    echo " "
+    echo "##############################################"
     pushd "$EXAMPLE"
     swift package update
     swift package edit hummingbird --revision main
