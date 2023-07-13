@@ -3,16 +3,16 @@ import HummingbirdCore
 import Logging
 import NIO
 import NIOHTTP1
-import Network
 
 public struct HTTPProxyServer: HBHTTPResponder {
     enum ProxyError: Error {
         case invalidURL
     }
+
     let targetServer: String
     let httpClient: HTTPClient
     public let logger: Logger
-    
+
     public init(targetServer: String, httpClient: HTTPClient, logger: Logger) {
         self.targetServer = targetServer
         self.httpClient = httpClient
@@ -20,20 +20,20 @@ public struct HTTPProxyServer: HBHTTPResponder {
     }
 
     public func respond(to request: HBHTTPRequest, context: ChannelHandlerContext, onComplete: @escaping (Result<HBHTTPResponse, Error>) -> Void) {
-        logger.info("\(request.head.uri)")
+        self.logger.info("\(request.head.uri)")
         do {
             // create request
-            let request = try request.ahcRequest(host: targetServer, eventLoop: context.eventLoop)
+            let request = try request.ahcRequest(host: self.targetServer, eventLoop: context.eventLoop)
             // create response body streamer
-            let streamer = HBByteBufferStreamer(eventLoop: context.eventLoop, maxSize: 2048*1024)
+            let streamer = HBByteBufferStreamer(eventLoop: context.eventLoop, maxSize: 2048 * 1024)
             // delegate for streaming bytebuffers from AsyncHTTPClient
             let delegate = StreamingResponseDelegate(on: context.eventLoop, streamer: streamer)
             // execute request
-            _ = httpClient.execute(
+            _ = self.httpClient.execute(
                 request: request,
                 delegate: delegate,
                 eventLoop: .delegateAndChannel(on: context.eventLoop),
-                logger: logger
+                logger: self.logger
             )
             // when delegate receives header then single completion
             delegate.responsePromise.futureResult.whenComplete { result in
