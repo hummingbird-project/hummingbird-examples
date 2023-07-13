@@ -12,6 +12,9 @@ struct HummingbirdArguments: ParsableCommand, AppArguments {
     @Flag(name: .long)
     var processJobs: Bool = false
 
+    @Flag(name: .long)
+    var useMemory: Bool = false
+
     func run() throws {
         let app = HBApplication(
             configuration: .init(
