@@ -24,7 +24,7 @@ struct BasicAuthenticator: HBAsyncAuthenticator {
         // check if user exists in the database and then verify the entered password
         // against the one stored in the database. If it is correct then login in user
         let user = try await User.query(on: request.db)
-            .filter(\.$name == basic.username)
+            .filter(\.$email == basic.username)
             .first()
         guard let user = user else { return nil }
         guard Bcrypt.verify(basic.password, hash: user.passwordHash) else { return nil }

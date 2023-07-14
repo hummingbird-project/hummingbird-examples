@@ -24,12 +24,15 @@ struct ErrorPageMiddleware: HBMiddleware {
             // if error is thrown from further down the middlware chain then either return
             // page with status code and message or a 501 with a description of the thrown error
             let values: [String: Any]
+            let status: HTTPResponseStatus
             if let error = error as? HBHTTPError {
+                status = error.status
                 values = [
                     "statusCode": error.status,
                     "message": error.body ?? "",
                 ]
             } else {
+                status = .internalServerError
                 values = [
                     "statusCode": HTTPResponseStatus.internalServerError,
                     "message": "\(error)",
@@ -37,7 +40,9 @@ struct ErrorPageMiddleware: HBMiddleware {
             }
             // render HTML and return
             let html = self.template.render(values)
-            return try HTML(html: html).response(from: request)
+            var response = try HTML(html: html).response(from: request)
+            response.status = status
+            return response
         }
     }
 }

@@ -2,9 +2,16 @@
 
 set -eux
 
+here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 build_example()
 {
     EXAMPLE=$1
+    echo "##############################################"
+    echo " "
+    echo "Building $EXAMPLE"
+    echo " "
+    echo "##############################################"
     pushd "$EXAMPLE"
     swift package update
     swift package edit hummingbird --revision main
@@ -13,19 +20,19 @@ build_example()
     popd
 }
 
-# Test latest code against for examples
-build_example auth-cognito
-build_example auth-srp
-build_example graphql-server
-build_example hello
-build_example html-form
-build_example http2
-build_example multipart-form
-build_example proxy-server
-build_example session
-build_example session-async
-build_example todos-dynamodb
-build_example todos-fluent
-build_example todos-postgres
-build_example todos-lambda
-build_example websocket-chat
+pushd "$here"/..
+
+# folders to ignore
+ignore_list="scripts ios-image-server"
+
+# get list of folders and remove ignore list
+folders=$(find * -maxdepth 0 -type d)
+
+for i in $ignore_list; do
+    folders=$(echo "$folders" | sed "s/$i//g")
+done
+
+# Test latest code against examples
+for f in $folders; do
+    build_example "$f"
+done

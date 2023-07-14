@@ -20,11 +20,12 @@ import XCTest
 final class AppTests: XCTestCase {
     struct TestArguments: AppArguments {
         let processJobs: Bool
+        let useMemory: Bool
     }
 
     func testApp() throws {
         let app = HBApplication(testing: .live)
-        try app.configure(TestArguments(processJobs: true))
+        try app.configure(TestArguments(processJobs: true, useMemory: true))
 
         try app.XCTStart()
         defer { app.XCTStop() }
