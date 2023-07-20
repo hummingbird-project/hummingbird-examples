@@ -29,6 +29,7 @@ Array.prototype.forEach.call(doneCheckboxes, checkbox => {
         const checked = srcElement.checked
 
         await setCompletedState(id, checked)
+        checkbox.checked = checked
         location.reload();
     })
 });
