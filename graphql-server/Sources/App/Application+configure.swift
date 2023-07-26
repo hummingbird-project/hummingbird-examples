@@ -9,18 +9,22 @@ extension HBApplication {
         decoder = JSONDecoder()
         
         // MARK: - GraphQL Hummingbird Extension
-        self.graphQLHandler = .init()
+        let graphQLHandler = GraphQLHandler()
         
         // MARK: - Routes
-        router.post("/graphql") { request -> EventLoopFuture<GraphQLResult> in
+        router.post("/graphql") { request -> GraphQLResult in
             struct GraphQLQuery: Decodable {
                 let query: String
                 let variables: [String: Map]?
             }
             guard let graphqlQuery = try? request.decode(as: GraphQLQuery.self) else {
-                return request.failure(GraphQLError(message: "Syntax Error"))
+                throw GraphQLError(message: "Syntax Error")
             }
-            return self.graphQLHandler.handle(query: graphqlQuery.query, variables: graphqlQuery.variables, request: request)
+            return try await graphQLHandler.handle(
+                query: graphqlQuery.query, 
+                variables: graphqlQuery.variables, 
+                request: request
+            )
         }
     }
 }
