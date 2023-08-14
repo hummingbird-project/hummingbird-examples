@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2023 the Hummingbird authors
+// Copyright (c) 2023 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -33,7 +33,7 @@ struct HBWebAuthnController {
             .post("login", options: .editResponse, use: self.finishAuthentication)
         group
             .add(middleware: WebAuthnSessionAuthenticator())
-            .get("test", use: self.getUser)
+            .get("logout", options: .editResponse, use: self.logout)
     }
 
     struct SignInInput: Decodable {
@@ -132,15 +132,15 @@ struct HBWebAuthnController {
             throw HBHTTPError(.unauthorized)
         }
         let session = try WebAuthnSessionAuthenticator.Session.authenticated(userId: webAuthnCredential.user.requireID())
-        try await request.session.save(session: session, expiresIn: .hours(24))
+        try await request.session.update(session: session, expiresIn: .hours(24))
 
         return .ok
     }
 
     /// Test authenticated
-    func getUser(_ request: HBRequest) throws -> User {
-        guard let user = request.authGet(User.self) else { throw HBHTTPError(.unauthorized) }
-        return user
+    func logout(_ request: HBRequest) async throws -> HTTPResponseStatus {
+        try await request.session.delete()
+        return .ok
     }
 }
 

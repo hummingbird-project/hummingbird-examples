@@ -51,7 +51,7 @@ async function register(username) {
         if (finishResponse.status !== 200) {
             throw Error(`Error: status code: ${finishResponse.status}`)
         }
-        alert("Registered user");
+        location = "/login.html";
     } catch(error) {
         alert(`Login failed: ${error.message}`)
     }
@@ -82,9 +82,25 @@ async function login() {
         if (finishResponse.status !== 200) {
             throw Error(`Error: status code: ${finishResponse.status}`)
         }
-        alert("Success")
+        location = "/";
     } catch(error) {
         alert(`Login failed: ${error.message}`)
+    }
+}
+
+/**
+ * Login user
+ */
+async function logout() {
+    try {
+        // initiate login
+        const response = await fetch('/api/logout')
+        if (response.status !== 200) {
+            throw Error(`Error: status code: ${response.status}`)
+        }
+        location.reload();
+    } catch(error) {
+        alert(`Logout failed: ${error.message}`)
     }
 }
 
