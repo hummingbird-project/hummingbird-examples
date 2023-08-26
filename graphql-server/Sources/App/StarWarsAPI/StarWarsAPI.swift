@@ -104,7 +104,5 @@ public struct StarWarsAPI : API {
                     .defaultValue("R2-D2")
             }
         }
-
-        Types(Human.self, Droid.self)
     }
 }

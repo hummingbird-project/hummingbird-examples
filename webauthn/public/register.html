@@ -3,6 +3,7 @@
 <head>
     <title>WebAuthn Register</title>
     <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="style.css?v=1">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="js/webauthn.js?v=1"></script>
     <script type="text/javascript">
@@ -10,13 +11,10 @@
             const username = $("#email").val();
             register(username)
         }
-        async function testUser(event) {
-            const result = await test();
-            $("#testText").text(result)
-        }
     </script>
 </head>
 <body>
+    <img id="hb" src="images/hummingbird.png" />
     <h2>Register</h2>
     <p>
         <form action="#">
@@ -25,15 +23,6 @@
         <br>
         <button type="button" onclick="registerUser(event);">Register</button>
         </form>
-    </p>
-    <h2>Login</h2>
-    <p>
-        <button type="button" onclick="login();">Login</button>
-    </p>
-    <h2>Test</h2>
-    <p>
-        <button type="button" onclick="testUser(event);">Test</button>
-        <p id="testText"></p>
     </p>
 </body>
 </html>

@@ -17,6 +17,7 @@ import Foundation
 import Hummingbird
 import HummingbirdFluent
 import HummingbirdFoundation
+import HummingbirdMustache
 import HummingbirdTLS
 import WebAuthn
 
@@ -61,6 +62,13 @@ extension HBApplication {
         self.router.get("/health") { _ -> HTTPResponseStatus in
             return .ok
         }
+
+        // load mustache template library
+        let library = try HBMustacheLibrary(directory: "templates")
+        assert(library.getTemplate(named: "home") != nil, "Set your working directory to the root folder of this example to get it to work")
+
+        // Add WebAuthn routes
+        HTMLController(mustacheLibrary: library).addRoutes(to: self.router)
         // Add WebAuthn routes
         HBWebAuthnController(
             webauthn: .init(

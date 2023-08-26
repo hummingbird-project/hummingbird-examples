@@ -4,30 +4,30 @@
 import PackageDescription
 
 let package = Package(
-    name: "graphql-server",
-    platforms: [.macOS(.v10_15)],
+    name: "session-dep-injection",
+    platforms: [.macOS("12.0")],
     products: [
-        .executable(name: "Server", targets: ["Server"]),
+        .executable(name: "App", targets: ["App"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.8.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "1.2.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "1.1.0"),
+        .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.16.0"),
+        .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
-        .package(url: "https://github.com/GraphQLSwift/Graphiti.git", .upToNextMinor(from: "1.2.0")),
     ],
     targets: [
         .executableTarget(
-            name: "Server",
-            dependencies: [
-                .byName(name: "App"),
-                .product(name: "ArgumentParser", package: "swift-argument-parser"),
-            ]
-        ),
-        .target(
             name: "App",
             dependencies: [
+                .product(name: "FluentKit", package: "fluent-kit"),
+                .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
+                .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
                 .product(name: "HummingbirdFoundation", package: "hummingbird"),
-                .product(name: "Graphiti", package: "Graphiti"),
+                .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of

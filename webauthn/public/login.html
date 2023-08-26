@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebAuthn Register</title>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="style.css?v=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="js/webauthn.js?v=1"></script>
+    <script type="text/javascript">
+        function registerUser(event) {
+            const username = $("#email").val();
+            register(username)
+        }
+    </script>
+</head>
+<body>
+    <img id="hb" src="images/hummingbird.png" />
+    <h2>WebAuthn Demo</h2>
+    <p>
+        <button type="button" onclick="login();">Login</button>
+    </p>
+    <a href="/register.html">Register</a>
+</body>
+</html>
