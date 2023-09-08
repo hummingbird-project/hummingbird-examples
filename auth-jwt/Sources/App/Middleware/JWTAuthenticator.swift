@@ -25,7 +25,7 @@ struct JWTAuthenticator: HBAsyncAuthenticator {
     let jwksData = try Data(
       contentsOf: URL(string: jwksUrl)!
     )
-    jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
+    self.jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
   }
 
   func authenticate(request: HBRequest) async throws -> JWTPayloadData? {
@@ -33,7 +33,7 @@ struct JWTAuthenticator: HBAsyncAuthenticator {
 
     let signers = JWTSigners()
     do {
-      try signers.use(jwks: jwks)
+      try signers.use(jwks: self.jwks)
       let payload = try signers.verify(jwtToken, as: JWTPayloadData.self)
       return payload
     } catch {
