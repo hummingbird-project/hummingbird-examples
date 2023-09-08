@@ -7,10 +7,10 @@ import XCTest
 final class AppTests: XCTestCase {
   let jwksURL = ProcessInfo.processInfo.environment["JWKS_URL"]
 
-  func testApp() throws {
+  func testApp() async throws {
     try XCTSkipIf(self.jwksURL == nil, "Skipping test because jwksURL environment variable not set")
     let app = HBApplication(testing: .live)
-    try app.configure()
+    try await app.configure()
 
     try app.XCTStart()
     defer { app.XCTStop() }

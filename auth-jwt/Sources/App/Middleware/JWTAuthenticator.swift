@@ -2,6 +2,7 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 import JWTKit
+import NIOFoundationCompat
 
 struct JWTPayloadData: JWTPayload, Equatable, HBAuthenticatable {
   enum CodingKeys: String, CodingKey {
@@ -21,10 +22,7 @@ struct JWTPayloadData: JWTPayload, Equatable, HBAuthenticatable {
 struct JWTAuthenticator: HBAsyncAuthenticator {
   var jwks: JWKS
 
-  init(jwksUrl: String) throws {
-    let jwksData = try Data(
-      contentsOf: URL(string: jwksUrl)!
-    )
+  init(jwksData: ByteBuffer) throws {
     self.jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
   }
 
