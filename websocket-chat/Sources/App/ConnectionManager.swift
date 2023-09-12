@@ -33,10 +33,10 @@ extension HBApplication {
                 // output joined text
                 try await self.textOutput("\(name) has joined")
                 let stream = ws.readStream()
-                for try await data in stream {
+                for await data in stream {
                     switch data {
                     case .text(let text):
-                        try await self.textOutput("[\(name)]: \(text)")
+                        try? await self.textOutput("[\(name)]: \(text)")
                     default:
                         break
                     }
