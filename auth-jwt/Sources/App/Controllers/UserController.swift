@@ -23,7 +23,7 @@ struct UserController {
 
     /// Add routes for user controller
     func addRoutes(to group: HBRouterGroup) {
-        group.put(use: self.create)
+        group.put(options: .editResponse, use: self.create)
         group.group("login").add(middleware: BasicAuthenticator())
             .post(use: self.login)
     }
@@ -41,6 +41,7 @@ struct UserController {
         let user = User(from: createUser)
         try await user.save(on: request.db)
 
+        request.response.status = .created
         return UserResponse(from: user)
     }
 

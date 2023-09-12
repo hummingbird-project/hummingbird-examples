@@ -60,7 +60,7 @@ extension HBApplication {
         router.get("/") { _ in
             return "Hello"
         }
-        UserController(jwtSigners: jwtAuthenticator.jwtSigners).addRoutes(to: router.group("users"))
+        UserController(jwtSigners: jwtAuthenticator.jwtSigners).addRoutes(to: router.group("user"))
         router.group("auth")
             .add(middleware: jwtAuthenticator)
             .get("/") { request in

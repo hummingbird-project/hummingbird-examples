@@ -33,7 +33,7 @@ final class AppTests: XCTestCase {
         defer { app.XCTStop() }
 
         let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
-        try app.XCTExecute(uri: "/users", method: .PUT, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
+        try app.XCTExecute(uri: "/user", method: .PUT, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
             XCTAssertEqual(response.status, .ok)
             let body = try XCTUnwrap(response.body)
             let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: body)
@@ -49,14 +49,14 @@ final class AppTests: XCTestCase {
         defer { app.XCTStop() }
 
         let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
-        try app.XCTExecute(uri: "/users", method: .PUT, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
+        try app.XCTExecute(uri: "/user", method: .PUT, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
             XCTAssertEqual(response.status, .ok)
             let body = try XCTUnwrap(response.body)
             let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: body)
             XCTAssertEqual(userResponse.name, "adam")
         }
         let token = try app.XCTExecute(
-            uri: "/users/login",
+            uri: "/user/login",
             method: .POST,
             auth: .basic(username: "adam", password: "testpassword")
         ) { response in
