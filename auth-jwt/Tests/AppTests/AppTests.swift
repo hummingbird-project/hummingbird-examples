@@ -34,7 +34,7 @@ final class AppTests: XCTestCase {
 
         let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
         try app.XCTExecute(uri: "/user", method: .PUT, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
-            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(response.status, .created)
             let body = try XCTUnwrap(response.body)
             let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: body)
             XCTAssertEqual(userResponse.name, "adam")
@@ -50,7 +50,7 @@ final class AppTests: XCTestCase {
 
         let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
         try app.XCTExecute(uri: "/user", method: .PUT, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
-            XCTAssertEqual(response.status, .ok)
+            XCTAssertEqual(response.status, .created)
             let body = try XCTUnwrap(response.body)
             let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: body)
             XCTAssertEqual(userResponse.name, "adam")
