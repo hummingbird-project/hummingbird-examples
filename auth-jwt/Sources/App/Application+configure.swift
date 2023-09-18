@@ -5,6 +5,7 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 import HummingbirdFoundation
+import JWTKit
 
 protocol AppArguments {
     var inMemoryDatabase: Bool { get }
@@ -42,6 +43,7 @@ extension HBApplication {
         }
 
         let jwtAuthenticator: JWTAuthenticator
+        let jwtLocalSignerKid = JWKIdentifier("_hb_local_")
         if let jwksUrl = env.get("JWKS_URL") {
             do {
                 let request = HTTPClientRequest(url: jwksUrl)
@@ -55,12 +57,12 @@ extension HBApplication {
         } else {
             jwtAuthenticator = JWTAuthenticator()
         }
-        jwtAuthenticator.useSigner(.hs256(key: "my-secret-key"), kid: "_hb_local_")
+        jwtAuthenticator.useSigner(.hs256(key: "my-secret-key"), kid: jwtLocalSignerKid)
 
         router.get("/") { _ in
             return "Hello"
         }
-        UserController(jwtSigners: jwtAuthenticator.jwtSigners).addRoutes(to: router.group("user"))
+        UserController(jwtSigners: jwtAuthenticator.jwtSigners, kid: jwtLocalSignerKid).addRoutes(to: router.group("user"))
         router.group("auth")
             .add(middleware: jwtAuthenticator)
             .get("/") { request in

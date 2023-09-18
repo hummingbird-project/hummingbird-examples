@@ -20,6 +20,7 @@ import NIO
 
 struct UserController {
     let jwtSigners: JWTSigners
+    let kid: JWKIdentifier
 
     /// Add routes for user controller
     func addRoutes(to group: HBRouterGroup) {
@@ -54,7 +55,7 @@ struct UserController {
             expiration: .init(value: Date(timeIntervalSinceNow: 12 * 60 * 60))
         )
         return try [
-            "token": self.jwtSigners.sign(payload, kid: "_hb_local_"),
+            "token": self.jwtSigners.sign(payload, kid: self.kid),
         ]
     }
 }

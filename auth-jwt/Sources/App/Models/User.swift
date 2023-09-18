@@ -27,7 +27,7 @@ final class User: Model, HBAuthenticatable {
     @Field(key: "name")
     var name: String
 
-    @Field(key: "password-hash")
+    @OptionalField(key: "password-hash")
     var passwordHash: String?
 
     internal init() {}
