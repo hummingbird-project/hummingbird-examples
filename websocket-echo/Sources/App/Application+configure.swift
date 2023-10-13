@@ -1,6 +1,7 @@
 import Hummingbird
 import HummingbirdFoundation
 import HummingbirdWebSocket
+import HummingbirdWSCompression
 
 extension HBApplication {
     /// configure your application
@@ -12,7 +13,10 @@ extension HBApplication {
         // server html
         self.middleware.add(HBFileMiddleware(application: self))
         // add HTTP to WebSocket upgrade
-        self.ws.addUpgrade(maxFrameSize: 1 << 14)
+        self.ws.addUpgrade(
+            maxFrameSize: 1 << 14,
+            extensions: [.perMessageDeflate()]
+        )
         // add middleware to websocket initial requests
         self.ws.add(middleware: HBLogRequestsMiddleware(.info))
         // on websocket connect.
