@@ -24,7 +24,6 @@ struct HummingbirdArguments: AsyncParsableCommand, AppArguments {
             )
         )
         try await app.configure(arguments: self)
-        try app.start()
-        app.wait()
+        try await app.asyncRun()
     }
 }

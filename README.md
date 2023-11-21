@@ -1,7 +1,9 @@
 # Hummingbird Example Code
 
-Examples include
+Examples converted to Hummingbird 2.0
 - [hello](https://github.com/hummingbird-project/hummingbird-examples/tree/main/hello) - Basic application setup
+
+Examples still working with Hummingbird 1.0
 - [auth-cognito](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-cognito) - Authentication via AWS Cognito.
 - [auth-jwt](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-jwt) - Authentication using JWT.
 - [auth-srp](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-srp) - Secure Remote Password authentication.
