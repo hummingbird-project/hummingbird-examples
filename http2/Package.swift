@@ -10,6 +10,7 @@ let package = Package(
         .executable(name: "App", targets: ["App"]),
     ],
     dependencies: [
+        .package(url: "https://github.com/apple/swift-certificates.git", from: "1.0.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", from: "1.0.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.0.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-xct-async-http-client.git", from: "0.1.0"),
@@ -34,6 +35,7 @@ let package = Package(
             name: "AppTests",
             dependencies: [
                 .byName(name: "App"),
+                .product(name: "X509", package: "swift-certificates"),
                 .product(name: "HummingbirdXCT", package: "hummingbird"),
                 .product(name: "HBXCTAsyncHTTPClient", package: "hummingbird-xct-async-http-client"),
             ]

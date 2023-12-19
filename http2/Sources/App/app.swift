@@ -1,5 +1,6 @@
 import ArgumentParser
 import Hummingbird
+import NIOSSL
 
 @main
 struct HummingbirdArguments: ParsableCommand, AppArguments {
@@ -14,6 +15,17 @@ struct HummingbirdArguments: ParsableCommand, AppArguments {
 
     @Option(name: .long, help: "PEM file containing private key")
     var privateKey: String
+
+    var tlsConfiguration: TLSConfiguration {
+        get throws {
+            let certificateChain = try NIOSSLCertificate.fromPEMFile(self.certificateChain)
+            let privateKey = try NIOSSLPrivateKey(file: self.privateKey, format: .pem)
+            return TLSConfiguration.makeServerConfiguration(
+                certificateChain: certificateChain.map { .certificate($0) },
+                privateKey: .privateKey(privateKey)
+            )
+        }
+    }
 
     func run() throws {
         let app = HBApplication(
