@@ -2,9 +2,8 @@ import Hummingbird
 import HummingbirdCore
 import HummingbirdFoundation
 
-func buildApplication(configuration: HBApplicationConfiguration) -> HBApplication<some HBResponder<HBBasicRequestContext>, HTTP1Channel> {
-    let router = HBRouterBuilder()
-    router.middlewares.add(HBFileMiddleware())
+func buildApplication(configuration: HBApplicationConfiguration) -> some HBApplicationProtocol {
+    let router = HBRouter()
     router.get("/") { _, _ in
         return "Hello"
     }
