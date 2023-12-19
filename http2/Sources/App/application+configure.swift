@@ -13,7 +13,10 @@ extension HBApplication {
     /// add your routes
     public func configure(_ arguments: AppArguments) throws {
         // Add HTTP2 TLS Upgrade option
-        try server.addHTTP2Upgrade(tlsConfiguration: self.getTLSConfig(arguments))
+        try server.addHTTP2Upgrade(
+            tlsConfiguration: self.getTLSConfig(arguments), 
+            idleReadTimeout: .seconds(30)
+        )
 
         router.get("/http") { request in
             return "Using http v\(request.version.major).\(request.version.minor)"

@@ -1,7 +1,7 @@
-import App
 import ArgumentParser
 import Hummingbird
 
+@main
 struct HummingbirdArguments: ParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var hostname: String = "127.0.0.1"
@@ -19,7 +19,8 @@ struct HummingbirdArguments: ParsableCommand, AppArguments {
         let app = HBApplication(
             configuration: .init(
                 address: .hostname(self.hostname, port: self.port),
-                serverName: "Hummingbird"
+                serverName: "Hummingbird",
+                idleTimeoutConfiguration: .init(readTimeout: .seconds(5), writeTimeout: .seconds(5))
             )
         )
         try app.configure(self)
@@ -27,5 +28,3 @@ struct HummingbirdArguments: ParsableCommand, AppArguments {
         app.wait()
     }
 }
-
-HummingbirdArguments.main()
