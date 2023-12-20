@@ -1,6 +1,4 @@
 import Hummingbird
-import HummingbirdCore
-import HummingbirdFoundation
 
 func buildApplication(configuration: HBApplicationConfiguration) -> some HBApplicationProtocol {
     let router = HBRouter()
