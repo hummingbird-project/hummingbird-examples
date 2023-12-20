@@ -7,7 +7,7 @@ func buildApplication(configuration: HBApplicationConfiguration) -> some HBAppli
     }
 
     let app = HBApplication(
-        responder: router.buildResponder(),
+        router: router,
         configuration: configuration
     )
     return app
