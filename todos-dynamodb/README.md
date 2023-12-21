@@ -1,6 +1,6 @@
-# Todos DynamoDB
+# Todos DynamoDB using Async/Await
 
-This is an implementation of the [TodoBackend](http://www.todobackend.com/) API using DynamoDB to store the todo data. The application has six routes
+This is an implementation of the [TodoBackend](http://www.todobackend.com/) API using DynamoDB to store the todo data. This sample uses the async/await APIs of Hummingbird. It has six routes
 
 - GET /todos: Lists all the todos in the database
 - POST /todos: Creates a new todo
@@ -11,6 +11,6 @@ This is an implementation of the [TodoBackend](http://www.todobackend.com/) API 
 
 A todo consists of a title, order number, url to link to edit/get/delete that todo and whether that todo is complete or not.
 
-This example does not create the DynamoDB table it uses, so you should go into the AWS console before running it and create a table with the name "hummingbird-todos", with primary key set to "id" and type string.
+This example does not create the DynamoDB table it uses, so you should go into the AWS console before running it and create a table with the name "hummingbird-todos" in the eu-west-1 region, with primary key set to "id" and type string.
 
 This example comes with a [PAW](https://paw.cloud/) file you can use to test the various endpoints.
