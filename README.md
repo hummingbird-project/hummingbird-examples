@@ -2,6 +2,7 @@
 
 Examples converted to Hummingbird 2.0
 - [hello](https://github.com/hummingbird-project/hummingbird-examples/tree/main/hello) - Basic application setup
+- [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB
 
 Examples still working with Hummingbird 1.0
 - [auth-cognito](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-cognito) - Authentication via AWS Cognito.
@@ -18,7 +19,6 @@ Examples still working with Hummingbird 1.0
 - [session](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session) - Username/password and session authentication. 
 - [session-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-async) - Version of session sample using new swift concurrency. 
 - [session-dep-injection](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-dep-injection) - Version of session sample using dependency injection instead of accessing everything via `HBRequest`. 
-- [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB
 - [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
 - [todos-lambda](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-lambda) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB and running on AWS Lambda.
 - [todos-postgres](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-postgres) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using async/await APIs from PostgresNIO.
