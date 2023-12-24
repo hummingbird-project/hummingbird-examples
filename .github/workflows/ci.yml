@@ -19,8 +19,6 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
     # https://github.com/actions/checkout/issues/766
     - name: Mark the workspace as safe
       run: git config --global --add safe.directory ${GITHUB_WORKSPACE}
@@ -30,5 +28,4 @@ jobs:
         apt-get install -q -y libsqlite3-dev
     - name: Build Examples
       run: |
-        git remote -v
         ./scripts/build-all.sh -u origin/${GITHUB_BASE_REF}

@@ -43,7 +43,6 @@ do
     esac
 done
 
-git status
 # get list of folders and remove ignore list
 if [[ -n "$COMPARISON" ]]; then
     COMPARE1=$(echo "$COMPARISON" | sed s/:.\*$//)
