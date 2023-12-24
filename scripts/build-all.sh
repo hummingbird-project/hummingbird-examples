@@ -48,7 +48,7 @@ if [[ -n "$COMPARISON" ]]; then
     COMPARE1=$(echo "$COMPARISON" | sed s/:.\*$//)
     COMPARE2=$(echo "$COMPARISON" | sed s/^.\*://)
     if [[ "$COMPARE1" == "$COMPARE2" ]]; then
-        COMPARE1="FETCH_HEAD"
+        COMPARE1=""
     fi
     echo "Comparing $COMPARE1 with $COMPARE2"
     # get intersection between folders at root level and list of folders that have changed in merge commit
