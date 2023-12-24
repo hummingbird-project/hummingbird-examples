@@ -19,9 +19,11 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v4
-      with: 
+      with:
         fetch-depth: 0
-        set-safe-directory: true
+    # https://github.com/actions/checkout/issues/766
+    - name: Mark the workspace as safe
+      run: git config --global --add safe.directory ${GITHUB_WORKSPACE}
     - name: Install dependencies
       run: |
         apt-get update -qq
