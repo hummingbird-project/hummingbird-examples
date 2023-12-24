@@ -31,20 +31,22 @@ pushd "$here"/..
 # folders to ignore
 ignore_list="scripts ios-image-server"
 
-BUILD_UPDATED=""
+COMPARE_AGAINST=""
+DRY_RUN=""
 
-while getopts 'u' option
+while getopts 'du:' option
 do
     case $option in
-        u) BUILD_UPDATED=1 ;;
+        u) COMPARE_AGAINST=$OPTARG ;;
+        d) DRY_RUN=1 ;;
         *) usage ;;
     esac
 done
 
 # get list of folders and remove ignore list
-if [[ -n "$BUILD_UPDATED" ]]; then
+if [[ -n "$COMPARE_AGAINST" ]]; then
     # get intersection between folders at root level and list of folders that have changed in merge commit
-    folders=$(comm -12 <(find * -maxdepth 0 -type d) <(git diff --name-only HEAD^1 HEAD | awk -F "/" '{print $1}' | sort -u))
+    folders=$(comm -12 <(find * -maxdepth 0 -type d) <(git --no-pager diff --name-only HEAD "$COMPARE_AGAINST" | awk -F "/" '{print $1}' | sort -u))
 else
     folders=$(find * -maxdepth 0 -type d)
 fi
@@ -53,7 +55,11 @@ for i in $ignore_list; do
     folders=$(echo "$folders" | sed "s/$i//g")
 done
 
-echo "Updating $folders"
+echo "Updating:"
+echo "$folders"
+if [[ -n "$DRY_RUN" ]]; then
+    exit 0
+fi
 
 # Test latest code against examples
 for f in $folders; do
