@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -eux
 
 here="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
@@ -43,6 +43,7 @@ do
     esac
 done
 
+git status
 # get list of folders and remove ignore list
 if [[ -n "$COMPARISON" ]]; then
     COMPARE1=$(echo "$COMPARISON" | sed s/:.\*$//)
@@ -52,7 +53,7 @@ if [[ -n "$COMPARISON" ]]; then
     fi
     echo "Comparing $COMPARE1 with $COMPARE2"
     # get intersection between folders at root level and list of folders that have changed in merge commit
-    folders=$(comm -12 <(find * -maxdepth 0 -type d) <(git --no-pager diff --name-only "$COMPARE1" "$COMPARE2" | awk -F "/" '{print $1}' | sort -u))
+    folders=$(comm -12 <(find * -maxdepth 0 -type d) <(git --no-pager diff --name-only $COMPARE1 "$COMPARE2" | awk -F "/" '{print $1}' | sort -u))
 else
     folders=$(find * -maxdepth 0 -type d)
 fi
