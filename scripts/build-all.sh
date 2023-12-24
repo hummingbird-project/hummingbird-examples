@@ -46,7 +46,7 @@ done
 # get list of folders and remove ignore list
 if [[ -n "$COMPARE_AGAINST" ]]; then
     # get intersection between folders at root level and list of folders that have changed in merge commit
-    folders=$(comm -12 <(find * -maxdepth 0 -type d) <(git --no-pager diff --name-only HEAD "$COMPARE_AGAINST" | awk -F "/" '{print $1}' | sort -u))
+    folders=$(comm -12 <(find * -maxdepth 0 -type d) <(git --no-pager diff --name-only FETCH_HEAD "$COMPARE_AGAINST" | awk -F "/" '{print $1}' | sort -u))
 else
     folders=$(find * -maxdepth 0 -type d)
 fi
