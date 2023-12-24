@@ -44,7 +44,7 @@ done
 # get list of folders and remove ignore list
 if [[ -n "$BUILD_UPDATED" ]]; then
     # get intersection between folders at root level and list of folders that have changed in merge commit
-    folders=$(comm -12 <(find * -maxdepth 0 -type d) <(git diff --name-only -r HEAD^1 HEAD | awk -F "/" '{print $1}' | sort -u))
+    folders=$(comm -12 <(find * -maxdepth 0 -type d) <(git diff --name-only HEAD^1 HEAD | awk -F "/" '{print $1}' | sort -u))
 else
     folders=$(find * -maxdepth 0 -type d)
 fi
