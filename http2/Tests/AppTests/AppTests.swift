@@ -1,6 +1,5 @@
 @testable import App
 import Crypto
-import HBXCTAsyncHTTPClient
 import Hummingbird
 import HummingbirdXCT
 import NIOHTTP2
