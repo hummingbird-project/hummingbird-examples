@@ -31,22 +31,28 @@ pushd "$here"/..
 # folders to ignore
 ignore_list="scripts ios-image-server"
 
-COMPARE_AGAINST=""
+COMPARISON=""
 DRY_RUN=""
 
 while getopts 'du:' option
 do
     case $option in
-        u) COMPARE_AGAINST=$OPTARG ;;
+        u) COMPARISON=$OPTARG ;;
         d) DRY_RUN=1 ;;
         *) usage ;;
     esac
 done
 
 # get list of folders and remove ignore list
-if [[ -n "$COMPARE_AGAINST" ]]; then
+if [[ -n "$COMPARISON" ]]; then
+    COMPARE1=$(echo "$COMPARISON" | sed s/:.\*$//)
+    COMPARE2=$(echo "$COMPARISON" | sed s/^.\*://)
+    if [[ "$COMPARE1" == "$COMPARE2" ]]; then
+        COMPARE1="FETCH_HEAD"
+    fi
+    echo "Comparing $COMPARE1 with $COMPARE2"
     # get intersection between folders at root level and list of folders that have changed in merge commit
-    folders=$(comm -12 <(find * -maxdepth 0 -type d) <(git --no-pager diff --name-only FETCH_HEAD "$COMPARE_AGAINST" | awk -F "/" '{print $1}' | sort -u))
+    folders=$(comm -12 <(find * -maxdepth 0 -type d) <(git --no-pager diff --name-only "$COMPARE1" "$COMPARE2" | awk -F "/" '{print $1}' | sort -u))
 else
     folders=$(find * -maxdepth 0 -type d)
 fi

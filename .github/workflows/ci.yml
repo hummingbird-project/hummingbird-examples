@@ -28,4 +28,4 @@ jobs:
         apt-get install -q -y libsqlite3-dev
     - name: Build Examples
       run: |
-        ./scripts/build-all.sh -u ${GITHUB_BASE_REF}
+        ./scripts/build-all.sh -u $(GITHUB_REF):${GITHUB_BASE_REF}
