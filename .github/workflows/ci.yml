@@ -27,11 +27,13 @@ jobs:
       image: ${{ matrix.image }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 2
     - name: Install dependencies
       run: |
         apt-get update -qq
         apt-get install -q -y libsqlite3-dev
     - name: Build Examples
       run: |
-        ./scripts/build-all.sh
+        ./scripts/build-all.sh -u
