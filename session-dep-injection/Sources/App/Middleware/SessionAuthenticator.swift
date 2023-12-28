@@ -18,19 +18,20 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 
-struct SessionAuthenticator: HBAsyncSessionAuthenticator {
+struct SessionAuthenticator<Context: HBAuthRequestContextProtocol>: HBSessionAuthenticator {
     typealias Session = UUID
-    typealias Value = User
+    typealias Value = LoggedInUser
 
     let sessionStorage: HBSessionStorage
     let fluent: HBFluent
 
-    func getValue(from: UUID, request: HBRequest) async throws -> User? {
+    func getValue(from: UUID, request: HBRequest, context: Context) async throws -> Value? {
         // find user from userId
-        return try await User.find(from, on: self.fluent.db(on: request.eventLoop))
+        guard let user = try await User.find(from, on: self.fluent.db()) else { return nil }
+        return try .init(from: user)
     }
 
-    func getSession(request: HBRequest) async throws -> Session? {
+    func getSession(request: HBRequest, context: Context) async throws -> Session? {
         try await self.sessionStorage.load(request: request)
     }
 }

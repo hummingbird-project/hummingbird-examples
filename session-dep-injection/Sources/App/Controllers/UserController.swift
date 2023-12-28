@@ -29,44 +29,46 @@ struct UserController {
     }
 
     /// Add routes for user controller
-    func addRoutes(to group: HBRouterGroup) {
-        group.put(use: self.create)
-        group.group("login").add(middleware: BasicAuthenticator(fluent: fluent))
-            .post(options: .editResponse, use: self.login)
-        group.add(middleware: SessionAuthenticator(sessionStorage: self.sessionStorage, fluent: self.fluent))
+    func addRoutes(to group: HBRouterGroup<SessionsContext>) {
+        group
+            .put(use: self.create)
+        group.group("login")
+            .add(middleware: BasicAuthenticator(fluent: self.fluent))
+            .post(use: self.login)
+        group
+            .add(middleware: SessionAuthenticator(sessionStorage: self.sessionStorage, fluent: self.fluent))
             .get(use: self.current)
     }
 
     /// Create new user
-    func create(_ request: HBRequest) async throws -> UserResponse {
-        guard let createUser = try? request.decode(as: CreateUserRequest.self) else { throw HBHTTPError(.badRequest) }
+    @Sendable func create(_ request: HBRequest, context: SessionsContext) async throws -> UserResponse {
+        guard let createUser = try? await request.decode(as: CreateUserRequest.self, using: context) else { throw HBHTTPError(.badRequest) }
         // check if user exists and if they don't then add new user
-        let existingUser = try await User.query(on: self.fluent.db(on: request.eventLoop))
+        let existingUser = try await User.query(on: self.fluent.db())
             .filter(\.$name == createUser.name)
             .first()
         // if user already exist throw conflict
         guard existingUser == nil else { throw HBHTTPError(.conflict) }
-        
+
         let user = User(from: createUser)
-        try await user.save(on: self.fluent.db(on: request.eventLoop))
-        
-        return UserResponse(from: user)
+        try await user.save(on: self.fluent.db())
+
+        return try UserResponse(from: user)
     }
 
     /// Login user and create session
-    func login(_ request: HBRequest) async throws -> HTTPResponseStatus {
+    @Sendable func login(_ request: HBRequest, context: SessionsContext) async throws -> HBResponse {
         // get authenticated user and return
-        guard let user = request.authGet(User.self),
-              let userId = user.id else { throw HBHTTPError(.unauthorized) }
+        guard let user = context.auth.get(LoggedInUser.self) else { throw HBHTTPError(.unauthorized) }
         // create session lasting 1 hour
-        try await sessionStorage.save(session: userId, expiresIn: .seconds(60), request: request)
-        return .ok
+        let cookie = try await self.sessionStorage.save(session: user.id, expiresIn: .seconds(60))
+        return .init(status: .ok, headers: [.setCookie: cookie.description])
     }
 
     /// Get current logged in user
-    func current(_ request: HBRequest) throws -> UserResponse {
+    @Sendable func current(_ request: HBRequest, context: SessionsContext) throws -> UserResponse {
         // get authenticated user and return
-        guard let user = request.authGet(User.self) else { throw HBHTTPError(.unauthorized) }
-        return UserResponse(from: user)
+        guard let user = context.auth.get(LoggedInUser.self) else { throw HBHTTPError(.unauthorized) }
+        return UserResponse(id: user.id, name: user.name)
     }
 }

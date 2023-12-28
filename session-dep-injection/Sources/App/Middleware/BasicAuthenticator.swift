@@ -17,20 +17,20 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 
-struct BasicAuthenticator: HBAsyncAuthenticator {
+struct BasicAuthenticator<Context: HBAuthRequestContextProtocol>: HBAuthenticator {
     let fluent: HBFluent
 
-    func authenticate(request: HBRequest) async throws -> User? {
+    func authenticate(request: HBRequest, context: Context) async throws -> LoggedInUser? {
         // does request have basic authentication info in the "Authorization" header
-        guard let basic = request.authBasic else { return nil }
+        guard let basic = request.headers.basic else { return nil }
 
         // check if user exists in the database and then verify the entered password
         // against the one stored in the database. If it is correct then login in user
-        let user = try await User.query(on: fluent.db(on: request.eventLoop))
+        let user = try await User.query(on: self.fluent.db())
             .filter(\.$name == basic.username)
             .first()
         guard let user = user else { return nil }
         guard Bcrypt.verify(basic.password, hash: user.passwordHash) else { return nil }
-        return user
+        return try .init(from: user)
     }
 }

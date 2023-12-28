@@ -1,18 +1,18 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "session-dep-injection",
-    platforms: [.macOS("12.0")],
+    platforms: [.macOS(.v14)],
     products: [
         .executable(name: "App", targets: ["App"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.8.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "1.2.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "1.1.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", branch: "2.x.x"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", branch: "2.x.x"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", branch: "2.x.x-working"),
         .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.16.0"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
@@ -41,6 +41,7 @@ let package = Package(
             dependencies: [
                 .byName(name: "App"),
                 .product(name: "HummingbirdXCT", package: "hummingbird"),
+                .product(name: "HummingbirdAuthXCT", package: "hummingbird-auth"),
             ]
         ),
     ]
