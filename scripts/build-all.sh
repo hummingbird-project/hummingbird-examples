@@ -20,9 +20,13 @@ build_example()
     echo "##############################################"
     pushd "$EXAMPLE"
     swift package update
-    swift package edit hummingbird --revision main
-    swift test
-    swift package unedit hummingbird
+    if [[ -n "${CI:-}" ]]; then
+        swift test
+    else
+        swift package edit hummingbird --revision 2.x.x
+        swift test
+        swift package unedit hummingbird
+    fi
     popd
 }
 
