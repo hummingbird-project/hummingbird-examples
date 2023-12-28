@@ -8,11 +8,10 @@ import SotoDynamoDB
 struct TodosApp: HBApplicationProtocol {
     /// Request context which default to using JSONDecoder/Encoder
     struct Context: HBRequestContext {
-        init(eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger) {
+        init(allocator: ByteBufferAllocator, logger: Logger) {
             self.coreContext = .init(
                 requestDecoder: JSONDecoder(),
                 responseEncoder: JSONEncoder(),
-                eventLoop: eventLoop,
                 allocator: allocator,
                 logger: logger
             )
