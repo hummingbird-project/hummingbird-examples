@@ -12,7 +12,7 @@ struct Todos: AsyncParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var port: Int = 8080
 
-    var testing: Bool { false }
+    var inMemoryTesting: Bool { false }
 
     func run() async throws {
         // create application
@@ -26,7 +26,7 @@ struct Todos: AsyncParsableCommand, AppArguments {
 protocol AppArguments {
     var hostname: String { get }
     var port: Int { get }
-    var testing: Bool { get }
+    var inMemoryTesting: Bool { get }
 }
 
 /// Build a HBApplication
@@ -43,7 +43,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some HBApplicat
     }
     // add Todos API
     var postgresRepository: TodoPostgresRepository?
-    if !args.testing {
+    if !args.inMemoryTesting {
         let client = PostgresClient(
             configuration: .init(host: "localhost", username: "todos", password: "todos", database: "hummingbird", tls: .disable),
             backgroundLogger: logger

@@ -65,28 +65,24 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
     /// Update todo. Returns updated todo if successful
     func update(id: UUID, title: String?, order: Int?, completed: Bool?) async throws -> Todo? {
         return try await self.client.withConnection{ connection in 
+            /// if value is non-optional then add SET entry
+            func appendColumn<Value: PostgresDynamicTypeEncodable>(comma: String, column: String, value: Value?, to query: inout PostgresQuery.StringInterpolation) -> String {
+                if let value {
+                    query.appendInterpolation(unescaped: "\(comma) \"\(column)\" = ")
+                    query.appendInterpolation(value)
+                    return ","
+                }
+                return comma
+            }
             // construct query using the StringInterpolation
-            var updatedValue = false
             var query = PostgresQuery.StringInterpolation(literalCapacity: 3, interpolationCount: 3)
             query.appendInterpolation(unescaped: "UPDATE todos SET")
-            if let title {
-                query.appendInterpolation(unescaped: " \"title\" = ")
-                query.appendInterpolation(title)
-                updatedValue = true
-            }
-            if let order {
-                query.appendInterpolation(unescaped: "\(updatedValue ? "," : "") \"order\" = ")
-                query.appendInterpolation(order)
-                updatedValue = true
-            }
-            if let completed {
-                query.appendInterpolation(unescaped: "\(updatedValue ? "," : "") \"completed\" = ")
-                query.appendInterpolation(completed)
-                updatedValue = true
-            }
+            var comma = appendColumn(comma: "", column: "title", value: title, to: &query)
+            comma = appendColumn(comma: comma, column: "order", value: order, to: &query)
+            comma = appendColumn(comma: comma, column: "completed", value: completed, to: &query)
             query.appendInterpolation(unescaped: " WHERE id = ")
             query.appendInterpolation(id)
-            if updatedValue == false {
+            if comma != "," {
                 throw HBHTTPError(.badRequest)
             }
 
@@ -113,6 +109,7 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
                 SELECT "id" FROM todos WHERE "id" = \(id)
                 """, logger: logger
             )
+            // if we didn't find the item with this id then return false
             if try await selectStream.decode((UUID).self, context: .default).first(where: { _ in true} ) == nil {
                 return false
             }
@@ -125,5 +122,13 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
         return try await self.client.withConnection{ connection in
             try await connection.query("DELETE FROM todos;", logger: logger)
         }
+    }
+}
+
+extension PostgresQuery.StringInterpolation {
+    @inlinable
+    public mutating func appendInterpolation<Value: PostgresThrowingDynamicTypeEncodable>(prefix: String, value: Value) throws {
+        self.appendInterpolation(unescaped: prefix)
+        try self.appendInterpolation(value)
     }
 }

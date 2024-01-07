@@ -9,7 +9,7 @@ final class TodosTests: XCTestCase {
     struct TestArguments: AppArguments {
         let hostname = "127.0.0.1"
         let port = 8080
-        let testing = false
+        let inMemoryTesting = false
     }
 
 
