@@ -1,15 +1,12 @@
 import Foundation
 
-
 /// Concrete implementation of `TodoRepository` that stores everything in memory
 actor TodoMemoryRespository: TodoRepository {
     var todos: [UUID: Todo]
 
-
     init() {
         self.todos = [:]
     }
-
 
     /// Create todo.
     func create(title: String, order: Int?, urlPrefix: String) async throws -> Todo {
@@ -19,14 +16,17 @@ actor TodoMemoryRespository: TodoRepository {
         self.todos[id] = todo
         return todo
     }
+
     /// Get todo
     func get(id: UUID) async throws -> Todo? {
         return self.todos[id]
     }
+
     /// List all todos
     func list() async throws -> [Todo] {
         return self.todos.values.map { $0 }
     }
+
     /// Update todo. Returns updated todo if successful
     func update(id: UUID, title: String?, order: Int?, completed: Bool?) async throws -> Todo? {
         if var todo = self.todos[id] {
@@ -44,6 +44,7 @@ actor TodoMemoryRespository: TodoRepository {
         }
         return nil
     }
+
     /// Delete todo. Returns true if successful
     func delete(id: UUID) async throws -> Bool {
         if self.todos[id] != nil {
@@ -52,10 +53,9 @@ actor TodoMemoryRespository: TodoRepository {
         }
         return false
     }
+
     /// List all todos
     func deleteAll() async throws {
         self.todos = [:]
     }
-
-
 }

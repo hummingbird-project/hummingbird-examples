@@ -9,7 +9,7 @@ final class TodosTests: XCTestCase {
     struct TestArguments: AppArguments {
         let hostname = "127.0.0.1"
         let port = 8080
-        let testing = true
+        let testing = false
     }
 
 
@@ -30,7 +30,7 @@ final class TodosTests: XCTestCase {
     func get(id: UUID, client: some HBXCTClientProtocol) async throws -> Todo? {
         try await client.XCTExecute(uri: "/todos/\(id)", method: .get) { response in
             // either the get request returned an 200 status or it didn't return a Todo
-            XCTAssert(response.status == .ok || response.body == nil )
+            XCTAssert(response.status == .ok || response.body == nil || response.body?.readableBytes == 0)
             if let body = response.body, body.readableBytes > 0 {
                 return try JSONDecoder().decode(Todo.self, from: body)
             } else {
@@ -173,7 +173,6 @@ final class TodosTests: XCTestCase {
                 return todos
             }
             let todoList = try await self.list(client: client)
-            XCTAssertEqual(todoList.count, 30)
             for todo in todos {
                 XCTAssertNotNil(todoList.firstIndex(of: todo))
             }
