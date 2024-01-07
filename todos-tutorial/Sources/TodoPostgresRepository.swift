@@ -22,7 +22,7 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
             )
         }
     }
-
+    /// Create todo.
     func create(title: String, order: Int?, urlPrefix: String) async throws -> Todo {
         let id = UUID()
         let url = urlPrefix + id.uuidString
@@ -34,7 +34,7 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
         }
         return Todo(id: id, title: title, order: order, url: url, completed: nil)
     }
-
+    /// Get todo.
     func get(id: UUID) async throws -> Todo? { 
         try await self.client.withConnection{ connection in
             let stream = try await connection.query("""
@@ -47,7 +47,7 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
             return nil
         }
     }
-
+    /// List all todos
     func list() async throws -> [Todo] { 
         try await self.client.withConnection { connection in
             let stream = try await connection.query("""
@@ -62,7 +62,7 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
             return todos
         }
     }
-
+    /// Update todo. Returns updated todo if successful
     func update(id: UUID, title: String?, order: Int?, completed: Bool?) async throws -> Todo? {
         return try await self.client.withConnection{ connection in 
             // construct query using the StringInterpolation
@@ -75,12 +75,12 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
                 updatedValue = true
             }
             if let order {
-                query.appendInterpolation(unescaped: " \"order\" = ")
+                query.appendInterpolation(unescaped: "\(updatedValue ? "," : "") \"order\" = ")
                 query.appendInterpolation(order)
                 updatedValue = true
             }
             if let completed {
-                query.appendInterpolation(unescaped: " \"completed\" = ")
+                query.appendInterpolation(unescaped: "\(updatedValue ? "," : "") \"completed\" = ")
                 query.appendInterpolation(completed)
                 updatedValue = true
             }
@@ -106,7 +106,7 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
             return nil
         }
     }
-
+    /// Delete todo. Returns true if successful
     func delete(id: UUID) async throws -> Bool {
         return try await self.client.withConnection{ connection in
             let selectStream = try await connection.query("""
@@ -120,7 +120,7 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
             return true
         }
     }
-
+    /// Delete all todos
     func deleteAll() async throws {
         return try await self.client.withConnection{ connection in
             try await connection.query("DELETE FROM todos;", logger: logger)

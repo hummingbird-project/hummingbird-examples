@@ -54,7 +54,7 @@ actor TodoMemoryRespository: TodoRepository {
         return false
     }
 
-    /// List all todos
+    /// Delete all todos
     func deleteAll() async throws {
         self.todos = [:]
     }

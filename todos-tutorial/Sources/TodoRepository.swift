@@ -13,6 +13,6 @@ protocol TodoRepository {
     func update(id: UUID, title: String?, order: Int?, completed: Bool?) async throws -> Todo?
     /// Delete todo. Returns true if successful
     func delete(id: UUID) async throws -> Bool
-    /// List all todos
+    /// Delete all todos
     func deleteAll() async throws
 }

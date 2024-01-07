@@ -102,6 +102,11 @@ final class TodosTests: XCTestCase {
             _ = try await self.patch(id: todo.id, completed: true, client: client)
             let editedTodo2 = try await self.get(id: todo.id, client: client)
             XCTAssertEqual(editedTodo2?.completed, true)
+            // revert it
+            _ = try await self.patch(id: todo.id, title: "Deliver parcels to James", completed: false, client: client)
+            let editedTodo3 = try await self.get(id: todo.id, client: client)
+            XCTAssertEqual(editedTodo3?.title, "Deliver parcels to James")
+            XCTAssertEqual(editedTodo3?.completed, false)
         }
     }
 
