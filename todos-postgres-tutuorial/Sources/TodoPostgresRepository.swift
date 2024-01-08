@@ -65,31 +65,15 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
     /// Update todo. Returns updated todo if successful
     func update(id: UUID, title: String?, order: Int?, completed: Bool?) async throws -> Todo? {
         return try await self.client.withConnection{ connection in 
-            /// if value is non-optional then add SET entry
-            func appendColumn<Value: PostgresDynamicTypeEncodable>(comma: String, column: String, value: Value?, to query: inout PostgresQuery.StringInterpolation) -> String {
-                if let value {
-                    query.appendInterpolation(unescaped: "\(comma) \"\(column)\" = ")
-                    query.appendInterpolation(value)
-                    return ","
-                }
-                return comma
-            }
-            // construct query using the StringInterpolation
-            var query = PostgresQuery.StringInterpolation(literalCapacity: 3, interpolationCount: 3)
-            query.appendInterpolation(unescaped: "UPDATE todos SET")
-            var comma = appendColumn(comma: "", column: "title", value: title, to: &query)
-            comma = appendColumn(comma: comma, column: "order", value: order, to: &query)
-            comma = appendColumn(comma: comma, column: "completed", value: completed, to: &query)
-            query.appendInterpolation(unescaped: " WHERE id = ")
-            query.appendInterpolation(id)
-            if comma != "," {
-                throw HBHTTPError(.badRequest)
-            }
-
             // UPDATE query
-            _ = try await connection.query(
-                PostgresQuery(stringInterpolation: query), 
-                logger: logger
+            let query: PostgresQuery = """
+                UPDATE todos SET \(optionalUpdateFields: (("title", title), ("order", order), ("completed", completed))) WHERE id = \(id)
+                """
+            // if bind count is 1 then we aren't updating anything. Return nil
+            if query.binds.count == 1 {
+                return nil
+            }
+            _ = try await connection.query(query, logger: logger
             )
             // SELECT so I can get the full details of the TODO back
             let stream = try await connection.query("""
@@ -126,9 +110,22 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
 }
 
 extension PostgresQuery.StringInterpolation {
-    @inlinable
-    public mutating func appendInterpolation<Value: PostgresThrowingDynamicTypeEncodable>(prefix: String, value: Value) throws {
-        self.appendInterpolation(unescaped: prefix)
-        try self.appendInterpolation(value)
+    /// Append interpolation of a series of fields with optional values for a SQL UPDATE call. 
+    /// If the value is nil it doesn't add the field to the query.
+    /// 
+    /// This call only works if you have more than one field.
+    mutating func appendInterpolation<each Value: PostgresDynamicTypeEncodable>(optionalUpdateFields fields: (repeat (String, Optional<each Value>))) {
+        func appendSelect(id: String, value: Optional<some PostgresDynamicTypeEncodable>, first: Bool) -> Bool {
+            if let value {
+                self.appendInterpolation(unescaped: "\(first ? "": ", ")\(id) = ")
+                self.appendInterpolation(value)
+                return false
+            }
+            return first
+        }
+        var first: Bool = true // indicates whether we should prefix with a comma
+        repeat (
+            first = appendSelect(id: (each fields).0, value: (each fields).1, first: first)
+        )
     }
 }
