@@ -1,7 +1,7 @@
 import Foundation
 
 /// Concrete implementation of `TodoRepository` that stores everything in memory
-actor TodoMemoryRespository: TodoRepository {
+actor TodoMemoryRepository: TodoRepository {
     var todos: [UUID: Todo]
 
     init() {

@@ -52,7 +52,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some HBApplicat
         postgresRepository = repository
         TodoController(repository: repository).addRoutes(to: router.group("todos"))
     } else {
-        TodoController(repository: TodoMemoryRespository()).addRoutes(to: router.group("todos"))
+        TodoController(repository: TodoMemoryRepository()).addRoutes(to: router.group("todos"))
     }
     let staticPostgresRepository = postgresRepository
     // create application
