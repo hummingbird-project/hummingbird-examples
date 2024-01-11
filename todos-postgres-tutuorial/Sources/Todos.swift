@@ -54,18 +54,19 @@ func buildApplication(_ args: some AppArguments) async throws -> some HBApplicat
     } else {
         TodoController(repository: TodoMemoryRepository()).addRoutes(to: router.group("todos"))
     }
-    let staticPostgresRepository = postgresRepository
     // create application
     var app = HBApplication(
         router: router,
         configuration: .init(address: .hostname(args.hostname, port: args.port)),
-        onServerRunning: { _ in
-            try? await staticPostgresRepository?.createTable()
-        },
         logger: logger
     )
+    // if we setup a postgres service then add as a service and run createTable before 
+    // server starts
     if let postgresRepository {
         app.addServices(PostgresClientService(client: postgresRepository.client))
+        app.runBeforeServerStart {
+            try await postgresRepository.createTable()
+        }
     }
     return app
 }

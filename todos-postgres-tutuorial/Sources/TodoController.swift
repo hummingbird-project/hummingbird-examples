@@ -44,7 +44,7 @@ struct TodoController<Context: HBRequestContext, Repository: TodoRepository> {
     @Sendable func update(request: HBRequest, context: Context) async throws -> Todo? {
         let id = try context.parameters.require("id")
         guard let uuid = UUID(uuidString: id) else { throw HBHTTPError(.badRequest) }
-        let request = try await request.decode(as: UpdateRequest.self, using: context)
+        let request = try await request.decode(as: UpdateRequest.self, context: context)
         guard let todo = try await self.repository.update(
             id: uuid, 
             title: request.title, 
@@ -76,7 +76,7 @@ struct TodoController<Context: HBRequestContext, Repository: TodoRepository> {
     }
     /// Create todo entrypoint
     @Sendable func create(request: HBRequest, context: Context) async throws -> HBEditedResponse<Todo> {
-        let request = try await request.decode(as: CreateRequest.self, using: context)
+        let request = try await request.decode(as: CreateRequest.self, context: context)
         let todo = try await self.repository.create(title: request.title, order: request.order, urlPrefix: "http://localhost:8080/todos/")
         return HBEditedResponse(status: .created, response: todo)
     }
