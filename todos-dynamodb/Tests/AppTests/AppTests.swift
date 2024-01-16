@@ -12,8 +12,7 @@ final class AppTests: XCTestCase {
             body: ByteBufferAllocator().buffer(string: json)
         ) { response in
             XCTAssertEqual(response.status, .created)
-            let body = try XCTUnwrap(response.body)
-            return try JSONDecoder().decode(Todo.self, from: body)
+            return try JSONDecoder().decode(Todo.self, from: response.body)
         }
         return try XCTUnwrap(todo.id)
     }
@@ -24,8 +23,7 @@ final class AppTests: XCTestCase {
             method: .get
         ) { response in
             XCTAssertEqual(response.status, .ok)
-            let body = try XCTUnwrap(response.body)
-            return try JSONDecoder().decode(Todo.self, from: body)
+            return try JSONDecoder().decode(Todo.self, from: response.body)
         }
     }
 
@@ -35,8 +33,7 @@ final class AppTests: XCTestCase {
             method: .get
         ) { response in
             XCTAssertEqual(response.status, .ok)
-            let body = try XCTUnwrap(response.body)
-            return try JSONDecoder().decode([Todo].self, from: body)
+            return try JSONDecoder().decode([Todo].self, from: response.body)
         }
     }
 
@@ -48,8 +45,7 @@ final class AppTests: XCTestCase {
             body: buffer
         ) { response in
             XCTAssertEqual(response.status, .ok)
-            let body = try XCTUnwrap(response.body)
-            return try JSONDecoder().decode(Todo.self, from: body)
+            return try JSONDecoder().decode(Todo.self, from: response.body)
         }
     }
 

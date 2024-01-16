@@ -48,7 +48,7 @@ struct TodoController: Sendable {
     }
 
     @Sendable func create(_ request: HBRequest, context: some HBRequestContext) async throws -> HBEditedResponse<Todo> {
-        guard var todo = try? await request.decode(as: Todo.self, using: context) else { throw HBHTTPError(.badRequest) }
+        guard var todo = try? await request.decode(as: Todo.self, context: context) else { throw HBHTTPError(.badRequest) }
         guard let host = request.head.authority else { throw HBHTTPError(.badRequest, message: "No host header") }
         todo.id = UUID()
         todo.completed = false
@@ -71,7 +71,7 @@ struct TodoController: Sendable {
     }
 
     @Sendable func updateId(_ request: HBRequest, context: some HBRequestContext) async throws -> Todo {
-        guard var todo = try? await request.decode(as: EditTodo.self, using: context) else { throw HBHTTPError(.badRequest) }
+        guard var todo = try? await request.decode(as: EditTodo.self, context: context) else { throw HBHTTPError(.badRequest) }
         guard let id = context.parameters.get("id", as: UUID.self) else { throw HBHTTPError(.badRequest) }
         todo.id = id
         let input = DynamoDB.UpdateItemCodableInput(
