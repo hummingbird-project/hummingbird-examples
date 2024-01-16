@@ -41,7 +41,7 @@ func buildApplication(arguments: some AppArguments, configuration: HBApplication
     }
 
     let app = try HBApplication(
-        responder: router.buildResponder(),
+        router: router,
         server: .http2(tlsConfiguration: arguments.tlsConfiguration),
         configuration: configuration
     )
