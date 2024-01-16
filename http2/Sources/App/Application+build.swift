@@ -9,13 +9,13 @@ public protocol AppArguments {
 }
 
 struct ChannelRequestContext: HBRequestContext {
-    init(eventLoop: EventLoop, allocator: ByteBufferAllocator, logger: Logger) {
-        self.coreContext = .init(eventLoop: eventLoop, allocator: allocator, logger: logger)
+    init(allocator: ByteBufferAllocator, logger: Logger) {
+        self.coreContext = .init(allocator: allocator, logger: logger)
         self.channel = nil
     }
 
     init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(eventLoop: channel.eventLoop, allocator: channel.allocator, logger: logger)
+        self.coreContext = .init(allocator: channel.allocator, logger: logger)
         self.channel = channel
     }
 
@@ -37,6 +37,7 @@ import Hummingbird
 func buildApplication(arguments: some AppArguments, configuration: HBApplicationConfiguration) throws -> some HBApplicationProtocol {
     let router = HBRouter(context: ChannelRequestContext.self)
     router.get("/http") { _, context in
+        // return "Using http v\(request.head. == "h2" ? "2.0" : "1.1")"
         return "Using http v\(await context.hasHTTP2Handler ? "2.0" : "1.1")"
     }
 

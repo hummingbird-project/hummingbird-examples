@@ -9,7 +9,7 @@ final class AppTests: XCTestCase {
         try await app.test(.router) { client in
             try await client.XCTExecute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body.map { String(buffer: $0) }, "Hello")
+                XCTAssertEqual(String(buffer: response.body), "Hello")
             }
         }
     }

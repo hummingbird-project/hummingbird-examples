@@ -53,12 +53,12 @@ final class AppTests: XCTestCase {
         try await app.test(.ahc(.https)) { client in
             try await client.XCTExecute(uri: "/http", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body.map { String(buffer: $0) }, "Using http v2.0")
+                XCTAssertEqual(String(buffer: response.body), "Using http v2.0")
             }
 
             try await client.XCTExecute(uri: "/http", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(response.body.map { String(buffer: $0) }, "Using http v2.0")
+                XCTAssertEqual(String(buffer: response.body), "Using http v2.0")
             }
         }
     }
