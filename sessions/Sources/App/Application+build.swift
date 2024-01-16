@@ -57,7 +57,7 @@ func buildApplication(_ arguments: AppArguments, configuration: HBApplicationCon
     let userController = UserController(fluent: fluent, sessionStorage: sessionStorage)
     userController.addRoutes(to: router.group("user"))
 
-    var application = HBApplication(responder: router.buildResponder(), server: .http1())
+    var application = HBApplication(router: router, server: .http1())
     application.addServices(fluent, persist)
     return application
 }
