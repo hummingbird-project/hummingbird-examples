@@ -42,7 +42,7 @@ struct UserController {
 
     /// Create new user
     @Sendable func create(_ request: HBRequest, context: SessionsContext) async throws -> UserResponse {
-        guard let createUser = try? await request.decode(as: CreateUserRequest.self, using: context) else { throw HBHTTPError(.badRequest) }
+        let createUser = try await request.decode(as: CreateUserRequest.self, context: context)
         // check if user exists and if they don't then add new user
         let existingUser = try await User.query(on: self.fluent.db())
             .filter(\.$name == createUser.name)
