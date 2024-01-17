@@ -25,6 +25,7 @@ let package = Package(
             dependencies: [
                 "Todos",
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "HummingbirdXCT", package: "hummingbird"),
             ]
         ),

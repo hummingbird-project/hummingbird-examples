@@ -76,7 +76,7 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
     /// Update todo. Returns updated todo if successful
     func update(id: UUID, title: String?, order: Int?, completed: Bool?) async throws -> Todo? {
         return try await self.client.withConnection { connection in
-            let query: PostgresQuery
+            let query: PostgresQuery?
             // UPDATE query. Work out query based on whick values are not nil
             // The string interpolation is building a PostgresQuery with bindings and is safe from sql injection
             if let title {
@@ -104,11 +104,13 @@ struct TodoPostgresRepository: TodoRepository, Sendable {
                     if let completed {
                         query = "UPDATE todos SET completed = \(completed) WHERE id = \(id)"
                     } else {
-                        return nil
+                        query = nil
                     }
                 }
             }
-            _ = try await connection.query(query, logger: self.logger)
+            if let query {
+                _ = try await connection.query(query, logger: self.logger)
+            }
 
             // SELECT so I can get the full details of the TODO back
             // The string interpolation is building a PostgresQuery with bindings and is safe from sql injection

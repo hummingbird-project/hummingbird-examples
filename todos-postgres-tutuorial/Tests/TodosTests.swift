@@ -101,13 +101,6 @@ final class TodosTests: XCTestCase {
             let editedTodo3 = try await self.get(id: todo.id, client: client)
             XCTAssertEqual(editedTodo3?.title, "Deliver parcels to James")
             XCTAssertEqual(editedTodo3?.completed, false)
-
-            // The patch helper function assumes it is going to work so we have to write our own here
-            let request = UpdateRequest(title: nil, order: nil, completed: nil)
-            let buffer = try JSONEncoder().encodeAsByteBuffer(request, allocator: ByteBufferAllocator())
-            return try await client.XCTExecute(uri: "/todos/\(todo.id)", method: .patch, body: buffer) { response in
-                XCTAssertEqual(response.status, .badRequest)
-            }
         }
     }
 
