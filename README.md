@@ -1,10 +1,11 @@
 # Hummingbird Example Code
 
 Examples converted to Hummingbird 2.0
-- [hello](https://github.com/hummingbird-project/hummingbird-examples/tree/main/hello) - Basic application setup
-- [http2](https://github.com/hummingbird-project/hummingbird-examples/tree/main/http2) - Basic application with HTTP2 upgrade added
-- [session](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session) - Username/password and session authentication. 
-- [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB
+- [hello](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/hello) - Basic application setup
+- [http2](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/http2) - Basic application with HTTP2 upgrade added
+- [sessions](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/sessions) - Username/password and session authentication.
+- [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB
+- [todos-postgres-tutorial](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/todos-postgres-tutorial) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using PostgresNIO. Sample code that goes along with the [Todos tutorial](https://hummingbird-project.github.io/hummingbird-docs/2.0/tutorials/todos).
 
 Examples still working with Hummingbird 1.0
 - [auth-cognito](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-cognito) - Authentication via AWS Cognito.
