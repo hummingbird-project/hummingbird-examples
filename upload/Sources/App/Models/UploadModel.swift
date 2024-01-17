@@ -10,7 +10,7 @@ struct UploadModel: HBResponseCodable {
 }
 
 extension UploadModel: CustomStringConvertible {
-    var description: String { filename }
+    var description: String { self.filename }
 }
 
 extension UploadModel {
@@ -20,11 +20,12 @@ extension UploadModel {
     ///   - allowsOverwrite: set `true` to overwrite any file with the same filename
     /// - Returns: the target directory for uploads
     func destinationURL(searchPath: FileManager.SearchPathDirectory = .documentDirectory, allowsOverwrite: Bool = false) throws -> URL {
-        let fileURL = try FileManager.default.url(for: .documentDirectory,
-                                                             in: .userDomainMask,
-                                                             appropriateFor: nil,
-                                                             create: true)
-            .appendingPathComponent(filename)
+        let fileURL = try FileManager.default.url(
+            for: .documentDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ).appendingPathComponent(self.filename)
 
         guard allowsOverwrite == false else { return fileURL }
         guard FileManager.default.fileExists(atPath: fileURL.path) == false else {
