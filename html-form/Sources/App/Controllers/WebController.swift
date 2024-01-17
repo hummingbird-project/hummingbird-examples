@@ -18,23 +18,28 @@ import HummingbirdMustache
 struct HTML: HBResponseGenerator {
     let html: String
 
-    public func response(from request: HBRequest) throws -> HBResponse {
-        let buffer = request.allocator.buffer(string: self.html)
-        return .init(status: .ok, headers: ["content-type": "text/html"], body: .byteBuffer(buffer))
+    public func response(from request: HBRequest, context: some HBBaseRequestContext) throws -> HBResponse {
+        let buffer = context.allocator.buffer(string: self.html)
+        return .init(status: .ok, headers: [.contentType: "text/html"], body: .init(byteBuffer: buffer))
     }
 }
 
 struct WebController {
     let mustacheLibrary: HBMustacheLibrary
 
-    func input(request: HBRequest) -> HTML {
-        let html = mustacheLibrary.render((), withTemplate: "enter-details")!
+    func addRoutes(to router: HBRouter<some HBRequestContext>) {
+        router.get("/", use: self.input)
+        router.post("/", use: self.post)
+    }
+
+    func input(request: HBRequest, context: some HBRequestContext) -> HTML {
+        let html = self.mustacheLibrary.render((), withTemplate: "enter-details")!
         return HTML(html: html)
     }
 
-    func post(request: HBRequest) throws -> HTML {
-        guard let user = try? request.decode(as: User.self) else { throw HBHTTPError(.badRequest) }
-        let html = mustacheLibrary.render(user, withTemplate: "details-entered")!
+    func post(request: HBRequest, context: some HBRequestContext) async throws -> HTML {
+        let user = try await request.decode(as: User.self, context: context)
+        let html = self.mustacheLibrary.render(user, withTemplate: "details-entered")!
         return HTML(html: html)
     }
 }
