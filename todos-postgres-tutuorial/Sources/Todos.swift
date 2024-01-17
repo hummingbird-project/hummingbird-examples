@@ -12,7 +12,8 @@ struct Todos: AsyncParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var port: Int = 8080
 
-    var inMemoryTesting: Bool { false }
+    @Flag
+    var inMemoryTesting: Bool = false
 
     func run() async throws {
         // create application
@@ -60,7 +61,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some HBApplicat
         configuration: .init(address: .hostname(args.hostname, port: args.port)),
         logger: logger
     )
-    // if we setup a postgres service then add as a service and run createTable before 
+    // if we setup a postgres service then add as a service and run createTable before
     // server starts
     if let postgresRepository {
         app.addServices(PostgresClientService(client: postgresRepository.client))

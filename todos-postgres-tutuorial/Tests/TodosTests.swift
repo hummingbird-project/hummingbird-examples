@@ -1,22 +1,21 @@
-@testable import Todos
 import Foundation
 import Hummingbird
 import HummingbirdXCT
+@testable import Todos
 import XCTest
-
 
 final class TodosTests: XCTestCase {
     struct TestArguments: AppArguments {
         let hostname = "127.0.0.1"
         let port = 8080
-        let inMemoryTesting = false
+        let inMemoryTesting = true
     }
-
 
     struct CreateRequest: Encodable {
         let title: String
         let order: Int?
     }
+
     func create(title: String, order: Int? = nil, client: some HBXCTClientProtocol) async throws -> Todo {
         let request = CreateRequest(title: title, order: order)
         let buffer = try JSONEncoder().encodeAsByteBuffer(request, allocator: ByteBufferAllocator())
@@ -38,7 +37,6 @@ final class TodosTests: XCTestCase {
         }
     }
 
-
     func list(client: some HBXCTClientProtocol) async throws -> [Todo] {
         try await client.XCTExecute(uri: "/todos", method: .get) { response in
             XCTAssertEqual(response.status, .ok)
@@ -46,12 +44,12 @@ final class TodosTests: XCTestCase {
         }
     }
 
-
     struct UpdateRequest: Encodable {
         let title: String?
         let order: Int?
         let completed: Bool?
     }
+
     func patch(id: UUID, title: String? = nil, order: Int? = nil, completed: Bool? = nil, client: some HBXCTClientProtocol) async throws -> Todo? {
         let request = UpdateRequest(title: title, order: order, completed: completed)
         let buffer = try JSONEncoder().encodeAsByteBuffer(request, allocator: ByteBufferAllocator())
@@ -65,20 +63,18 @@ final class TodosTests: XCTestCase {
         }
     }
 
-
     func delete(id: UUID, client: some HBXCTClientProtocol) async throws -> HTTPResponse.Status {
         try await client.XCTExecute(uri: "/todos/\(id)", method: .delete) { response in
             response.status
         }
     }
 
-
-    func deleteAll(client: some HBXCTClientProtocol) async throws -> Void {
+    func deleteAll(client: some HBXCTClientProtocol) async throws {
         try await client.XCTExecute(uri: "/todos", method: .delete) { _ in }
     }
 
     // MARK: Tests
-    
+
     func testCreate() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
@@ -144,7 +140,7 @@ final class TodosTests: XCTestCase {
             XCTAssertEqual(todos2.count, 0)
         }
     }
-    
+
     func testDeletingTodoTwiceReturnsBadRequest() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
@@ -164,7 +160,6 @@ final class TodosTests: XCTestCase {
                 XCTAssertEqual(response.status, .badRequest)
             }
         }
-
     }
 
     func test30ConcurrentlyCreatedTodosAreAllCreated() async throws {
