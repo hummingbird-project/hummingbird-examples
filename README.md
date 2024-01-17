@@ -3,6 +3,7 @@
 Examples converted to Hummingbird 2.0
 - [hello](https://github.com/hummingbird-project/hummingbird-examples/tree/main/hello) - Basic application setup
 - [http2](https://github.com/hummingbird-project/hummingbird-examples/tree/main/http2) - Basic application with HTTP2 upgrade added
+- [session](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session) - Username/password and session authentication. 
 - [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB
 
 Examples still working with Hummingbird 1.0
@@ -16,12 +17,8 @@ Examples still working with Hummingbird 1.0
 - [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit
 - [proxy-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server) - Using AsyncHTTPClient to build a proxy server
 - [proxy-server-core](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server-core) - Version of proxy server only using HummingbirdCore
-- [session](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session) - Username/password and session authentication. 
-- [session-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-async) - Version of session sample using new swift concurrency. 
-- [session-dep-injection](https://github.com/hummingbird-project/hummingbird-examples/tree/main/session-dep-injection) - Version of session sample using dependency injection instead of accessing everything via `HBRequest`. 
 - [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
 - [todos-lambda](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-lambda) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB and running on AWS Lambda.
-- [todos-postgres](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-postgres) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using async/await APIs from PostgresNIO.
 - [upload-async](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload-async) - File uploading and downloading using the async/await APIs
 - [upload-s3](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload-s3) - File uploading and downloading using AWS S3 as backing store.
 - [webauthn](https://github.com/hummingbird-project/hummingbird-examples/tree/main/webauthn) - Web app demonstrating WebAuthn(PassKey) authentication.

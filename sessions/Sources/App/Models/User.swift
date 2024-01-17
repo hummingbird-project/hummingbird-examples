@@ -18,7 +18,7 @@ import Hummingbird
 import HummingbirdAuth
 
 /// Database description of a user
-final class User: Model, HBAuthenticatable {
+final class User: Model {
     static let schema = "user"
 
     @ID(key: .id)
@@ -45,8 +45,20 @@ final class User: Model, HBAuthenticatable {
     }
 }
 
+/// User type to pass around as authenticatable. This is required as Fluent
+/// model types are not Sendable
+struct LoggedInUser: HBAuthenticatable {
+    let id: UUID
+    let name: String
+
+    init(from user: User) throws {
+        self.id = try user.requireID()
+        self.name = user.name
+    }
+}
+
 /// Create user request object decoded from HTTP body
-struct CreateUserRequest: Decodable {
+struct CreateUserRequest: Codable {
     let name: String
     let password: String
 
@@ -58,16 +70,16 @@ struct CreateUserRequest: Decodable {
 
 /// User encoded into HTTP response
 struct UserResponse: HBResponseCodable {
-    let id: UUID?
+    let id: UUID
     let name: String
 
-    internal init(id: UUID?, name: String) {
+    internal init(id: UUID, name: String) {
         self.id = id
         self.name = name
     }
 
-    internal init(from user: User) {
-        self.id = user.id
+    internal init(from user: User) throws {
+        self.id = try user.requireID()
         self.name = user.name
     }
 }
