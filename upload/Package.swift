@@ -28,6 +28,7 @@ let package = Package(
             name: "AppTests",
             dependencies: [
                 .byName(name: "App"),
+                .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdXCT", package: "hummingbird"),
             ]
         ),

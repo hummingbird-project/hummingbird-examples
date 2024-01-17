@@ -47,8 +47,7 @@ struct FileController {
         try await self.fileIO.writeFile(
             contents: request.body,
             path: fileURL.path,
-            context: context,
-            logger: context.logger
+            context: context
         )
         return uploadModel
     }
@@ -66,8 +65,7 @@ struct FileController {
         let uploadURL = try uploadModel.destinationURL(allowsOverwrite: true)
         let body = try await self.fileIO.loadFile(
             path: uploadURL.path,
-            context: context,
-            logger: context.logger
+            context: context
         )
         return HBResponse(
             status: .ok,
