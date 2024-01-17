@@ -13,14 +13,17 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import HTTPTypes
 import Hummingbird
 import HummingbirdFoundation
 
 /// Handles file transfers
 struct FileController {
-    func addRoutes(to group: HBRouterGroup) {
+    let fileIO = HBFileIO()
+
+    func addRoutes(to group: HBRouterGroup<some HBRequestContext>) {
         group.get(":filename", use: self.download)
-        group.post("/", options: .streamBody, use: self.upload)
+        group.post("/", use: self.upload)
     }
 
     // MARK: - Upload
@@ -34,20 +37,18 @@ struct FileController {
     /// then that name will be used as the file name on disk, otherwise
     /// a UUID will be used.
     /// - Returns: A JSONEncoded ``UploadModel``
-    private func upload(_ request: HBRequest) async throws -> UploadModel {
-        guard request.body.stream != nil else { throw HBHTTPError(.unauthorized) }
+    @Sendable private func upload(_ request: HBRequest, context: some HBRequestContext) async throws -> UploadModel {
         let fileName = fileName(for: request)
 
         let uploadModel = UploadModel(filename: fileName)
         let fileURL = try uploadModel.destinationURL()
 
-        request.logger.info(.init(stringLiteral: "Uploading: \(uploadModel)"))
-        let fileIO = HBFileIO(application: request.application)
-        try await fileIO.writeFile(
+        context.logger.info(.init(stringLiteral: "Uploading: \(uploadModel)"))
+        try await self.fileIO.writeFile(
             contents: request.body,
             path: fileURL.path,
-            context: request.context,
-            logger: request.logger
+            context: context,
+            logger: context.logger
         )
         return uploadModel
     }
@@ -59,17 +60,14 @@ struct FileController {
     /// - Returns: HBResponse of chunked bytes if success
     /// Note that this download has no login checks and allows anyone to download
     /// by its filename alone.
-    private func download(_ request: HBRequest) async throws -> HBResponse {
-        guard let filename = request.parameters.get("filename", as: String.self) else {
-            throw HBHTTPError(.badRequest)
-        }
+    @Sendable private func download(_ request: HBRequest, context: some HBRequestContext) async throws -> HBResponse {
+        let filename = try context.parameters.require("filename", as: String.self)
         let uploadModel = UploadModel(filename: filename)
         let uploadURL = try uploadModel.destinationURL(allowsOverwrite: true)
-        let fileIO = HBFileIO(application: request.application)
-        let body = try await fileIO.loadFile(
+        let body = try await self.fileIO.loadFile(
             path: uploadURL.path,
-            context: request.context,
-            logger: request.logger
+            context: context,
+            logger: context.logger
         )
         return HBResponse(
             status: .ok,
@@ -80,10 +78,10 @@ struct FileController {
 
     /// Adds headers for a given filename
     /// IDEA: this is a good place to set the "Content-Type" property
-    private func headers(for filename: String) -> HTTPHeaders {
-        return HTTPHeaders([
-            ("Content-Disposition", "attachment;filename=\"\(filename)\""),
-        ])
+    private func headers(for filename: String) -> HTTPFields {
+        return [
+            .contentDisposition: "attachment;filename=\"\(filename)\"",
+        ]
     }
 }
 
@@ -95,9 +93,13 @@ extension FileController {
     }
 
     private func fileName(for request: HBRequest) -> String {
-        guard let fileName = request.headers["File-Name"].first else {
+        guard let fileName = request.headers[.fileName] else {
             return self.uuidFileName()
         }
         return fileName
     }
+}
+
+extension HTTPField.Name {
+    static var fileName: Self { .init("File-Name")! }
 }
