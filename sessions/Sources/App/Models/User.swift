@@ -52,8 +52,7 @@ struct LoggedInUser: HBAuthenticatable {
     let name: String
 
     init(from user: User) throws {
-        guard let id = try? user.requireID() else { throw HBHTTPError(.unauthorized) }
-        self.id = id
+        self.id = try user.requireID()
         self.name = user.name
     }
 }
@@ -80,8 +79,7 @@ struct UserResponse: HBResponseCodable {
     }
 
     internal init(from user: User) throws {
-        guard let id = try? user.requireID() else { throw HBHTTPError(.unauthorized) }
-        self.id = id
+        self.id = try user.requireID()
         self.name = user.name
     }
 }
