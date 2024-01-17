@@ -2,6 +2,7 @@
 
 Examples converted to Hummingbird 2.0
 - [hello](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/hello) - Basic application setup
+- [html-form](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/html-form) - Link HTML form to Hummingbird application
 - [http2](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/http2) - Basic application with HTTP2 upgrade added
 - [sessions](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/sessions) - Username/password and session authentication.
 - [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB
@@ -12,7 +13,6 @@ Examples still working with Hummingbird 1.0
 - [auth-jwt](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-jwt) - Authentication using JWT.
 - [auth-srp](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-srp) - Secure Remote Password authentication.
 - [graphql-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/graphql-server) - GraphQL server using [Graphiti](https://github.com/GraphQLSwift/Graphiti)
-- [html-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/html-form) - Link HTML form to Hummingbird application
 - [ios-image-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/ios-image-server) - iOS web server that provides access to iPhone photo library.
 - [jobs](https://github.com/hummingbird-project/hummingbird-examples/tree/main/jobs) - Demonstrating offloading of jobs to another server.
 - [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit

@@ -4,22 +4,20 @@ import HummingbirdXCT
 import XCTest
 
 final class AppTests: XCTestCase {
-    func testApp() throws {
-        let app = HBApplication(testing: .live)
-        try app.configure()
+    func testApp() async throws {
+        let app = try await buildApplication(configuration: .init())
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        let urlencoded = "name=Adam&age=34"
-        try app.XCTExecute(
-            uri: "/",
-            method: .POST,
-            headers: ["Content-Type": "application/x-www-form-urlencoded"],
-            body: ByteBufferAllocator().buffer(string: urlencoded)
-        ) { response in
-            XCTAssertEqual(response.headers["content-type"].first, "text/html")
-            XCTAssertEqual(response.status, .ok)
+        try await app.test(.router) { client in
+            let urlencoded = "name=Adam&age=34"
+            try await client.XCTExecute(
+                uri: "/",
+                method: .post,
+                headers: [.contentType: "application/x-www-form-urlencoded"],
+                body: ByteBufferAllocator().buffer(string: urlencoded)
+            ) { response in
+                XCTAssertEqual(response.headers[.contentType], "text/html")
+                XCTAssertEqual(response.status, .ok)
+            }
         }
     }
 }
