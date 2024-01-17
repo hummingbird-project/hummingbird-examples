@@ -59,7 +59,7 @@ struct TodoController: Sendable {
     }
 
     @Sendable func get(_ request: HBRequest, context: some HBRequestContext) async throws -> Todo? {
-        guard let id = context.parameters.get("id", as: String.self) else { throw HBHTTPError(.badRequest) }
+        let id = try context.parameters.require("id")
         let input = DynamoDB.QueryInput(
             consistentRead: true,
             expressionAttributeValues: [":id": .s(id)],
@@ -72,8 +72,7 @@ struct TodoController: Sendable {
 
     @Sendable func updateId(_ request: HBRequest, context: some HBRequestContext) async throws -> Todo {
         var todo = try await request.decode(as: EditTodo.self, context: context)
-        guard let id = context.parameters.get("id", as: UUID.self) else { throw HBHTTPError(.badRequest) }
-        todo.id = id
+        todo.id = try context.parameters.require("id", as: UUID.self)
         let input = DynamoDB.UpdateItemCodableInput(
             conditionExpression: "attribute_exists(id)",
             key: ["id"],
@@ -103,7 +102,7 @@ struct TodoController: Sendable {
     }
 
     @Sendable func deleteId(_ request: HBRequest, context: some HBRequestContext) async throws -> HTTPResponse.Status {
-        guard let id = context.parameters.get("id", as: String.self) else { throw HBHTTPError(.badRequest) }
+        let id = try context.parameters.require("id")
 
         let input = DynamoDB.DeleteItemInput(
             conditionExpression: "attribute_exists(id)",

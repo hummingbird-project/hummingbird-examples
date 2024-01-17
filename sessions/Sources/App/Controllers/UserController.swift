@@ -59,7 +59,7 @@ struct UserController {
     /// Login user and create session
     @Sendable func login(_ request: HBRequest, context: SessionsContext) async throws -> HBResponse {
         // get authenticated user and return
-        guard let user = context.auth.get(LoggedInUser.self) else { throw HBHTTPError(.unauthorized) }
+        let user = try context.auth.require(LoggedInUser.self)
         // create session lasting 1 hour
         let cookie = try await self.sessionStorage.save(session: user.id, expiresIn: .seconds(60))
         return .init(status: .ok, headers: [.setCookie: cookie.description])
@@ -68,7 +68,7 @@ struct UserController {
     /// Get current logged in user
     @Sendable func current(_ request: HBRequest, context: SessionsContext) throws -> UserResponse {
         // get authenticated user and return
-        guard let user = context.auth.get(LoggedInUser.self) else { throw HBHTTPError(.unauthorized) }
+        let user = try context.auth.require(LoggedInUser.self)
         return UserResponse(id: user.id, name: user.name)
     }
 }
