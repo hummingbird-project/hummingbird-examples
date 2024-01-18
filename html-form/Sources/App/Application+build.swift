@@ -8,11 +8,12 @@ struct HTMLFormRequestContext: HBRequestContext {
 
     init(allocator: ByteBufferAllocator, logger: Logger) {
         self.coreContext = .init(
-            requestDecoder: RequestDecoder(),
             allocator: allocator,
             logger: logger
         )
     }
+
+    var requestDecoder: RequestDecoder { .init() }
 }
 
 public func buildApplication(configuration: HBApplicationConfiguration) async throws -> some HBApplicationProtocol {
