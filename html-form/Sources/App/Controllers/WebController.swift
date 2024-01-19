@@ -32,12 +32,12 @@ struct WebController {
         router.post("/", use: self.post)
     }
 
-    func input(request: HBRequest, context: some HBRequestContext) -> HTML {
+    @Sendable func input(request: HBRequest, context: some HBRequestContext) -> HTML {
         let html = self.mustacheLibrary.render((), withTemplate: "enter-details")!
         return HTML(html: html)
     }
 
-    func post(request: HBRequest, context: some HBRequestContext) async throws -> HTML {
+    @Sendable func post(request: HBRequest, context: some HBRequestContext) async throws -> HTML {
         let user = try await request.decode(as: User.self, context: context)
         let html = self.mustacheLibrary.render(user, withTemplate: "details-entered")!
         return HTML(html: html)

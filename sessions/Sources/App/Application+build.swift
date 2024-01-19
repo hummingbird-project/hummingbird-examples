@@ -13,8 +13,6 @@ protocol AppArguments {
 struct SessionsContext: HBRequestContext, HBAuthRequestContextProtocol {
     init(allocator: ByteBufferAllocator, logger: Logger) {
         self.coreContext = .init(
-            requestDecoder: JSONDecoder(),
-            responseEncoder: JSONEncoder(),
             allocator: allocator,
             logger: logger
         )
@@ -22,6 +20,8 @@ struct SessionsContext: HBRequestContext, HBAuthRequestContextProtocol {
     }
 
     var coreContext: HBCoreRequestContext
+    var requestDecoder: JSONDecoder { .init() }
+    var responseEncoder: JSONEncoder { .init() }
     /// Login cache
     public var auth: HBLoginCache
 }
