@@ -10,7 +10,7 @@ let package = Package(
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", branch: "2.x.x"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
         .package(url: "https://github.com/orlandos-nl/mongokitten.git", from: "7.0.0"),
-        .package(url: "https://github.com/Joannis/swift-openapi-hummingbird.git", branch: "feature/jo/support-hb-2.x.x"),
+        .package(url: "https://github.com/swift-server/swift-openapi-hummingbird.git", branch: "2.x.x"),
         .package(url: "https://github.com/apple/swift-openapi-generator.git", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-openapi-runtime.git", from: "1.3.0"),
     ],
