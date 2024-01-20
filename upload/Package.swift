@@ -15,7 +15,6 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdFoundation", package: "hummingbird"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of

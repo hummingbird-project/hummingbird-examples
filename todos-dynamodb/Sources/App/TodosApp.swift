@@ -6,19 +6,7 @@ import ServiceLifecycle
 import SotoDynamoDB
 
 struct TodosApp: HBApplicationProtocol {
-    /// Request context which default to using JSONDecoder/Encoder
-    struct Context: HBRequestContext {
-        init(allocator: ByteBufferAllocator, logger: Logger) {
-            self.coreContext = .init(
-                allocator: allocator,
-                logger: logger
-            )
-        }
-
-        var requestDecoder: JSONDecoder { .init() }
-        var responseEncoder: JSONEncoder { .init() }
-        var coreContext: HBCoreRequestContext
-    }
+    typealias Context = HBBasicRequestContext
 
     init(configuration: HBApplicationConfiguration, eventLoopGroupProvider: EventLoopGroupProvider = .singleton) {
         self.configuration = configuration

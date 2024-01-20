@@ -15,7 +15,6 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "PostgresNIO", package: "postgres-nio"),
                 .product(name: "_ConnectionPoolModule", package: "postgres-nio"),
             ]
@@ -25,7 +24,6 @@ let package = Package(
             dependencies: [
                 "Todos",
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "HummingbirdXCT", package: "hummingbird"),
             ]
         ),

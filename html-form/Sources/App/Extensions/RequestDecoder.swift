@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdFoundation
 
 struct RequestDecoder: HBRequestDecoder {
     let decoder = URLEncodedFormDecoder()
