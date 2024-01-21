@@ -2,7 +2,6 @@ import FluentSQLiteDriver
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
-import HummingbirdFoundation
 
 protocol AppArguments {
     var migrate: Bool { get }
@@ -20,8 +19,6 @@ struct SessionsContext: HBRequestContext, HBAuthRequestContextProtocol {
     }
 
     var coreContext: HBCoreRequestContext
-    var requestDecoder: JSONDecoder { .init() }
-    var responseEncoder: JSONEncoder { .init() }
     /// Login cache
     public var auth: HBLoginCache
 }

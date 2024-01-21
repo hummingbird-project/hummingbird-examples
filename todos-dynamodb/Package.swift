@@ -18,7 +18,6 @@ let package = Package(
             name: "App",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "SotoDynamoDB", package: "soto"),
             ],
@@ -34,7 +33,6 @@ let package = Package(
             dependencies: [
                 .byName(name: "App"),
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "SotoDynamoDB", package: "soto"),
                 .product(name: "HummingbirdXCT", package: "hummingbird"),

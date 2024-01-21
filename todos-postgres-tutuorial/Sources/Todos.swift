@@ -35,7 +35,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some HBApplicat
     var logger = Logger(label: "Todos")
     logger.logLevel = .debug
     // create router
-    let router = HBRouter(context: TodoRequestContext.self)
+    let router = HBRouter()
     // add logging middleware
     router.middlewares.add(HBLogRequestsMiddleware(.info))
     // add hello route

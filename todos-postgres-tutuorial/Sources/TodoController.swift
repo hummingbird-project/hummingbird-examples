@@ -1,21 +1,19 @@
 import Foundation
 import Hummingbird
 
-
 struct TodoController<Context: HBRequestContext, Repository: TodoRepository> {
     // Todo repository
     let repository: Repository
 
-
     // add Todos API to router group
     func addRoutes(to group: HBRouterGroup<Context>) {
         group
-            .get(":id", use: get)
-            .get(use: list)
-            .post(use: create)
-            .patch(":id", use: update)
-            .delete(":id", use: delete)
-            .delete(use: deleteAll)
+            .get(":id", use: self.get)
+            .get(use: self.list)
+            .post(use: self.create)
+            .patch(":id", use: self.update)
+            .delete(":id", use: self.delete)
+            .delete(use: self.deleteAll)
     }
 
     /// Delete all todos entrypoint
@@ -26,9 +24,8 @@ struct TodoController<Context: HBRequestContext, Repository: TodoRepository> {
 
     /// Delete todo entrypoint
     @Sendable func delete(request: HBRequest, context: Context) async throws -> HTTPResponse.Status {
-        let id = try context.parameters.require("id")
-        guard let uuid = UUID(uuidString: id) else { throw HBHTTPError(.badRequest) }
-        if try await self.repository.delete(id: uuid) {
+        let id = try context.parameters.require("id", as: UUID.self)
+        if try await self.repository.delete(id: id) {
             return .ok
         } else {
             return .badRequest
@@ -40,15 +37,15 @@ struct TodoController<Context: HBRequestContext, Repository: TodoRepository> {
         let order: Int?
         let completed: Bool?
     }
+
     /// Update todo entrypoint
     @Sendable func update(request: HBRequest, context: Context) async throws -> Todo? {
-        let id = try context.parameters.require("id")
-        guard let uuid = UUID(uuidString: id) else { throw HBHTTPError(.badRequest) }
+        let id = try context.parameters.require("id", as: UUID.self)
         let request = try await request.decode(as: UpdateRequest.self, context: context)
         guard let todo = try await self.repository.update(
-            id: uuid, 
-            title: request.title, 
-            order: request.order, 
+            id: id,
+            title: request.title,
+            order: request.order,
             completed: request.completed
         ) else {
             throw HBHTTPError(.badRequest)
@@ -58,22 +55,20 @@ struct TodoController<Context: HBRequestContext, Repository: TodoRepository> {
 
     /// Get todo entrypoint
     @Sendable func get(request: HBRequest, context: Context) async throws -> Todo? {
-        let id = try context.parameters.require("id")
-        guard let uuid = UUID(uuidString: id) else { throw HBHTTPError(.badRequest) }
-        return try await self.repository.get(id: uuid)
+        let id = try context.parameters.require("id", as: UUID.self)
+        return try await self.repository.get(id: id)
     }
-
 
     /// Get list of todos entrypoint
     @Sendable func list(request: HBRequest, context: Context) async throws -> [Todo] {
         return try await self.repository.list()
     }
 
-
     struct CreateRequest: Decodable {
         let title: String
         let order: Int?
     }
+
     /// Create todo entrypoint
     @Sendable func create(request: HBRequest, context: Context) async throws -> HBEditedResponse<Todo> {
         let request = try await request.decode(as: CreateRequest.self, context: context)
