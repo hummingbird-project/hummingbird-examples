@@ -1,5 +1,4 @@
 import Hummingbird
-import HummingbirdFoundation
 import NIOCore
 import NIOPosix
 import ServiceLifecycle

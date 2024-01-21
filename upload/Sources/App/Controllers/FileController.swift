@@ -15,7 +15,6 @@
 import Foundation
 import HTTPTypes
 import Hummingbird
-import HummingbirdFoundation
 
 /// Handles file transfers
 struct FileController {
