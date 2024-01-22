@@ -27,7 +27,6 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "MongoKitten", package: "mongokitten"),
                 .product(name: "OpenAPIHummingbird", package: "swift-openapi-hummingbird"),
                 .target(name: "TodosOpenAPI"),
