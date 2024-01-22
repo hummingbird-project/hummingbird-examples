@@ -6,6 +6,7 @@ Examples converted to Hummingbird 2.0
 - [http2](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/http2) - Basic application with HTTP2 upgrade added.
 - [sessions](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/sessions) - Username/password and session authentication.
 - [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB.
+- [todos-mongokitten-openapi](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/todos-mongokitten-openapi) - Todos application, using MongoDB driver [MongoKitten](https://github.com/orlandos-nl/MongoKitten) and the [OpenAPI runtime](https://github.com/apple/swift-openapi-runtime).
 - [todos-postgres-tutorial](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/todos-postgres-tutorial) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using PostgresNIO. Sample code that goes along with the [Todos tutorial](https://hummingbird-project.github.io/hummingbird-docs/2.0/tutorials/todos).
 - [upload](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/upload) - File uploading and downloading.
 
