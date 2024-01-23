@@ -18,3 +18,4 @@ Routes are as follows
 - POST /user/mfa/enable - Enable software MFA for user
 - POST /user/mfa/disable - Disable software MFA for user
 
+This example requires that you setup an AWS Cognito userpool and application client with ADMIN_USER_PASSWORD, REFRESH_TOKEN and USER_SRP authentication methods all enabled. You should then set environment variables `COGNITO_USER_POOL_ID` to the userpool id, `COGNITO_CLIENT_ID` to the application client id and if you added a client secret `COGNITO_CLIENT_SECRET` to that.
