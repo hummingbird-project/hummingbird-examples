@@ -17,27 +17,34 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
+import HummingbirdRouter
 import WebAuthn
 
 struct HBWebAuthnController {
-    typealias Context = HBAuthRequestContext
+    typealias Context = WebAuthnRequestContext
 
     let webauthn: WebAuthnManager
     let fluent: HBFluent
     let sessionStorage: HBSessionStorage
 
-    func add(to group: HBRouterGroup<HBAuthRequestContext>) {
-        group
-            .post("signup", use: self.signin)
-            .get("login", use: self.beginAuthentication)
-        group
-            .add(middleware: WebAuthnSessionStateAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
-            .post("register/start", use: self.beginRegistration)
-            .post("register/finish", use: self.finishRegistration)
-            .post("login", use: self.finishAuthentication)
-        group
-            .add(middleware: WebAuthnSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
-            .get("logout", use: self.logout)
+    var endpoints: some HBMiddlewareProtocol<Context> {
+        RouteGroup("user") {
+            Post("signup", handler: self.signin)
+            Get("login", handler: self.beginAuthentication)
+            Post("login") {
+                WebAuthnSessionStateAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
+                self.finishAuthentication
+            }
+            Get("logout") {
+                WebAuthnSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
+                self.logout
+            }
+            RouteGroup("register") {
+                WebAuthnSessionStateAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
+                Post("start", handler: self.beginRegistration)
+                Post("finish", handler: self.finishRegistration)
+            }
+        }
     }
 
     struct SignInInput: Decodable {
@@ -59,7 +66,7 @@ struct HBWebAuthnController {
             session: session,
             expiresIn: .seconds(600)
         )
-        var response = HBResponse.redirect(to: "/api/register/start", type: .temporary)
+        var response = HBResponse.redirect(to: "/api/user/register/start", type: .temporary)
         response.setCookie(cookie)
         return response
     }

@@ -16,14 +16,17 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 import HummingbirdMustache
+import HummingbirdRouter
 
 /// Redirects to login page if no user has been authenticated
 struct RedirectMiddleware<Context: HBAuthRequestContextProtocol>: HBMiddlewareProtocol {
     let to: String
     func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+        // check if authenticated
         if context.auth.has(AuthenticatedUser.self) {
             return try await next(request, context)
         } else {
+            // if not authenticated then redirect to login page
             return .redirect(to: "\(self.to)?from=\(request.uri)", type: .found)
         }
     }
@@ -31,7 +34,7 @@ struct RedirectMiddleware<Context: HBAuthRequestContextProtocol>: HBMiddlewarePr
 
 /// Serves HTML pages
 struct HTMLController {
-    typealias Context = HBAuthRequestContext
+    typealias Context = WebAuthnRequestContext
 
     let homeTemplate: HBMustacheTemplate
     let fluent: HBFluent
@@ -50,6 +53,14 @@ struct HTMLController {
         self.homeTemplate = homeTemplate
         self.fluent = fluent
         self.sessionStorage = sessionStorage
+    }
+
+    var endpoints: some HBMiddlewareProtocol<Context> {
+        Get("/") {
+            WebAuthnSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
+            RedirectMiddleware(to: "/login.html")
+            self.home
+        }
     }
 
     /// Add routes for webpages

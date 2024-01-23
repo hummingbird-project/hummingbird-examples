@@ -18,6 +18,7 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 import HummingbirdMustache
+import HummingbirdRouter
 import WebAuthn
 
 /// Application arguments protocol. We use a protocol so we can call
@@ -55,85 +56,36 @@ func buildApplication(_ arguments: AppArguments) async throws -> some HBApplicat
     let library = try HBMustacheLibrary(directory: "templates")
     assert(library.getTemplate(named: "home") != nil, "Set your working directory to the root folder of this example to get it to work")
 
-    // create router
-    let router = HBRouter(context: HBAuthRequestContext.self)
-    // add logging middleware
-    router.middlewares.add(HBLogRequestsMiddleware(.info))
-    // add file middleware to server HTML files
-    router.middlewares.add(HBFileMiddleware(searchForIndexHtml: true, logger: logger))
-    // add health check endpoint
-    router.get("/health") { _, _ -> HTTPResponse.Status in
-        return .ok
+    let router = HBRouterBuilder(context: WebAuthnRequestContext.self) {
+        // add logging middleware
+        HBLogRequestsMiddleware(.info)
+        // add file middleware to server HTML files
+        HBFileMiddleware(searchForIndexHtml: true, logger: logger)
+        // health check endpoint
+        Get("/health") { _, _ -> HTTPResponse.Status in
+            return .ok
+        }
+        HTMLController(
+            mustacheLibrary: library,
+            fluent: fluent,
+            sessionStorage: sessionStorage
+        ).endpoints
+        RouteGroup("api") {
+            HBWebAuthnController(
+                webauthn: .init(
+                    config: .init(
+                        relyingPartyID: "localhost",
+                        relyingPartyName: "Hummingbird WebAuthn example",
+                        relyingPartyOrigin: "http://localhost:8080"
+                    )
+                ),
+                fluent: fluent,
+                sessionStorage: sessionStorage
+            ).endpoints
+        }
     }
-
-    // Add HTML routes
-    HTMLController(mustacheLibrary: library, fluent: fluent, sessionStorage: sessionStorage).addRoutes(to: router.group())
-    // Add WebAuthn routes
-    HBWebAuthnController(
-        webauthn: .init(
-            config: .init(
-                relyingPartyID: "localhost",
-                relyingPartyName: "Hummingbird WebAuthn example",
-                relyingPartyOrigin: "http://localhost:8080"
-            )
-        ),
-        fluent: fluent,
-        sessionStorage: sessionStorage
-    ).add(to: router.group("api"))
 
     var app = HBApplication(router: router)
     app.addServices(fluent, memoryPersist)
     return app
 }
-
-/* extension HBApplication {
-     /// configure your application
-     /// add middleware
-     /// setup the encoder/decoder
-     /// add your routes
-     func configure(_ arguments: AppArguments) throws {
-         // Add TLS
-         // try server.addTLS(tlsConfiguration: self.getTLSConfig(arguments))
-
-         self.encoder = JSONEncoder()
-         self.decoder = JSONDecoder()
-
-         self.addFluent()
-         // add sqlite database
-         if arguments.inMemoryDatabase {
-             self.fluent.databases.use(.sqlite(.memory), as: .sqlite)
-         } else {
-             self.fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
-         }
-         // add migrations
-         self.fluent.migrations.add(CreateUser())
-         self.fluent.migrations.add(CreateWebAuthnCredential())
-         try self.fluent.migrate().wait()
-
-         self.addSessions(using: .memory)
-
-         self.router.middlewares.add(HBLogRequestsMiddleware(.info))
-         self.router.middlewares.add(HBFileMiddleware(searchForIndexHtml: true, application: self))
-         self.router.get("/health") { _ -> HTTPResponseStatus in
-             return .ok
-         }
-
-         // load mustache template library
-         let library = try HBMustacheLibrary(directory: "templates")
-         assert(library.getTemplate(named: "home") != nil, "Set your working directory to the root folder of this example to get it to work")
-
-         // Add WebAuthn routes
-         HTMLController(mustacheLibrary: library).addRoutes(to: self.router)
-         // Add WebAuthn routes
-         HBWebAuthnController(
-             webauthn: .init(
-                 config: .init(
-                     relyingPartyID: "localhost",
-                     relyingPartyName: "Hummingbird WebAuthn example",
-                     relyingPartyOrigin: "http://localhost:8080"
-                 )
-             )
-         ).add(to: self.router.group("api"))
-     }
- }
- */

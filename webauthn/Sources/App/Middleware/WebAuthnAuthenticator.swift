@@ -18,7 +18,8 @@ import HummingbirdAuth
 import HummingbirdFluent
 import WebAuthn
 
-// cannot use User in `HBAuthenticatable` as it is not Sendable
+/// cannot conform fluent model `User` to `HBAuthenticatable` as it is not Sendable
+/// so create a copy to store in login cache
 struct AuthenticatedUser: HBAuthenticatable, Codable {
     var id: UUID
     var username: String
@@ -28,7 +29,7 @@ struct AuthenticatedUser: HBAuthenticatable, Codable {
     }
 }
 
-/// Authentication state
+/// Authentication state stored in login cache
 enum AuthenticationSession: Sendable, Codable, HBAuthenticatable, HBResponseEncodable {
     case signedUp(user: AuthenticatedUser)
     case registering(user: AuthenticatedUser, challenge: [UInt8])
@@ -90,7 +91,7 @@ struct WebAuthnSessionStateAuthenticator<Context: HBAuthRequestContextProtocol>:
     }
 }
 
-/// Authenticator that will return an authenticated user
+/// Authenticator that will return an authenticated user from a WebAuthnSession
 struct WebAuthnSessionAuthenticator<Context: HBAuthRequestContextProtocol>: HBSessionAuthenticator {
     typealias Session = WebAuthnSession
 
