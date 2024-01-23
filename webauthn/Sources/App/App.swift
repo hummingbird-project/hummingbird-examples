@@ -16,7 +16,7 @@ import ArgumentParser
 import Hummingbird
 
 @main
-struct App: ParsableCommand, AppArguments {
+struct App: AsyncParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var hostname: String = "127.0.0.1"
 
@@ -29,15 +29,8 @@ struct App: ParsableCommand, AppArguments {
     var privateKey: String { "certs/server.key" }
     var certificateChain: String { "certs/server.crt" }
 
-    func run() throws {
-        let app = HBApplication(
-            configuration: .init(
-                address: .hostname(self.hostname, port: self.port),
-                serverName: "Hummingbird"
-            )
-        )
-        try app.configure(self)
-        try app.start()
-        app.wait()
+    func run() async throws {
+        let app = try await buildApplication(self)
+        try await app.runService()
     }
 }

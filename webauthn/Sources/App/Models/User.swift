@@ -1,10 +1,11 @@
 import FluentSQLiteDriver
 import Foundation
+import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 import WebAuthn
 
-final class User: Model, HBAuthenticatable, HBResponseEncodable {
+final class User: Model, HBResponseEncodable {
     static let schema = "user"
 
     @ID(key: .id)
@@ -17,11 +18,5 @@ final class User: Model, HBAuthenticatable, HBResponseEncodable {
 
     init(username: String) {
         self.username = username
-    }
-}
-
-extension User {
-    var publicKeyCredentialUserEntity: PublicKeyCredentialUserEntity {
-        .init(id: .init(self.id!.uuidString.utf8), name: self.username, displayName: self.username)
     }
 }
