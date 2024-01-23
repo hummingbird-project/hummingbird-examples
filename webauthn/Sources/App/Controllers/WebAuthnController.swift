@@ -27,6 +27,7 @@ struct HBWebAuthnController {
     let fluent: HBFluent
     let sessionStorage: HBSessionStorage
 
+    // return RouteGroup with user login endpoints
     var endpoints: some HBMiddlewareProtocol<Context> {
         RouteGroup("user") {
             Post("signup", handler: self.signin)
