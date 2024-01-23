@@ -55,20 +55,13 @@ struct HTMLController {
         self.sessionStorage = sessionStorage
     }
 
+    // return Route for home page
     var endpoints: some HBMiddlewareProtocol<Context> {
         Get("/") {
             WebAuthnSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
             RedirectMiddleware(to: "/login.html")
             self.home
         }
-    }
-
-    /// Add routes for webpages
-    func addRoutes(to group: HBRouterGroup<Context>) {
-        group
-            .add(middleware: WebAuthnSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
-            .add(middleware: RedirectMiddleware(to: "/login.html"))
-            .get("/", use: self.home)
     }
 
     /// Home page listing todos and with add todo UI
