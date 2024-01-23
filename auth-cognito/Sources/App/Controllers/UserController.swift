@@ -1,6 +1,7 @@
 import ExtrasBase64
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdRouter
 import SotoCognitoAuthenticationKit
 import SotoCognitoAuthenticationSRP
 
@@ -14,29 +15,37 @@ struct UserController {
     let cognitoAuthenticatable: CognitoAuthenticatable
     let cognitoIdentityProvider: CognitoIdentityProvider
 
-    /// Add UserController routews
-    func addRoutes(to group: HBRouterGroup<Context>) {
-        group.put(use: self.create)
-            .patch(use: self.resend)
-            .post("signup", use: self.signUp)
-            .post("confirm", use: self.confirmSignUp)
-            .post("refresh", use: self.refresh)
-            .post("respond", use: self.respond)
-            .post("respond/password", use: self.respondNewPassword)
-            .post("respond/mfa", use: self.respondSoftwareMfa)
-        group.group().add(middleware: CognitoBasicAuthenticator(cognitoAuthenticatable: self.cognitoAuthenticatable))
-            .post("login", use: self.login)
-        group.group().add(middleware: CognitoBasicSRPAuthenticator(cognitoAuthenticatable: self.cognitoAuthenticatable))
-            .post("login/srp", use: self.loginSRP)
-        group.group().add(middleware: CognitoAccessAuthenticator(cognitoAuthenticatable: self.cognitoAuthenticatable))
-            .get("access", use: self.authenticateAccess)
-            .patch("attributes", use: self.attributes)
-            .get("mfa/setup", use: self.mfaGetSecretCode)
-            .put("mfa/setup", use: self.mfaVerifyToken)
-            .post("mfa/enable", use: self.enableMfa)
-            .post("mfa/disable", use: self.disableMfa)
-        group.group().add(middleware: CognitoIdAuthenticator<User>(cognitoAuthenticatable: self.cognitoAuthenticatable))
-            .get("id", use: self.authenticateId)
+    var endpoints: some HBMiddlewareProtocol<Context> {
+        RouteGroup("user") {
+            Put(handler: self.create)
+            Patch(handler: self.resend)
+            Post("signup", handler: self.signUp)
+            Post("confirm", handler: self.confirmSignUp)
+            Post("refresh", handler: self.refresh)
+            Post("respond", handler: self.respond)
+            Post("respond/password", handler: self.respondNewPassword)
+            Post("respond/mfa", handler: self.respondSoftwareMfa)
+            Post("login") {
+                CognitoBasicAuthenticator(cognitoAuthenticatable: self.cognitoAuthenticatable)
+                self.login
+            }
+            Post("login/srp") {
+                CognitoBasicSRPAuthenticator(cognitoAuthenticatable: self.cognitoAuthenticatable)
+                self.login
+            }
+            Get("id") {
+                CognitoIdAuthenticator<User>(cognitoAuthenticatable: self.cognitoAuthenticatable)
+                self.authenticateId
+            }
+            // all routes below require access authentication
+            CognitoAccessAuthenticator(cognitoAuthenticatable: self.cognitoAuthenticatable)
+            Get("access", handler: self.authenticateAccess)
+            Patch("attributes", handler: self.attributes)
+            Get("mfa/setup", handler: self.mfaGetSecretCode)
+            Put("mfa/setup", handler: self.mfaVerifyToken)
+            Post("mfa/enable", handler: self.enableMfa)
+            Post("mfa/disable", handler: self.disableMfa)
+        }
     }
 
     /// create a user

@@ -17,6 +17,7 @@ let package = Package(
             name: "App",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "HummingbirdRouter", package: "hummingbird"),
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
                 .product(name: "SotoCognitoAuthenticationKit", package: "soto-cognito-authentication-kit"),
                 .product(name: "SotoCognitoAuthenticationSRP", package: "soto-cognito-authentication-kit"),

@@ -1,6 +1,6 @@
 # Authentication with SotoCognitoAuthenticationKit
 
-Example of app using SotoCognitoAuthenticationKit. App includes four authenticators (basic username and password, basic username and password using SRP (Secure Remote Password) for authentication, JWT Access Token and JWT Id Token.
+Example of app using SotoCognitoAuthenticationKit. App includes four authenticators (basic username and password, basic username and password using SRP (Secure Remote Password) for authentication, JWT Access Token and JWT Id Token. This example also uses the result builder router from HummingbirdRouter.
 
 Routes are as follows
 

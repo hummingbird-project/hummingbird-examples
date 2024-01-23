@@ -1,12 +1,17 @@
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdRouter
 import Logging
 import NIOCore
 import SotoCognitoAuthenticationKit
 
-struct AuthCognitoRequestContext: HBAuthRequestContextProtocol, HBRemoteAddressRequestContext {
+/// Request context
+struct AuthCognitoRequestContext: HBAuthRequestContextProtocol, HBRemoteAddressRequestContext, HBRouterRequestContext {
     var coreContext: HBCoreRequestContext
+    /// required by authentication framework
     var auth: HBLoginCache
+    /// required by result builder router
+    var routerContext: HBRouterBuilderContext
     let channel: Channel?
     /// Connected host address
     var remoteAddress: SocketAddress? {
@@ -14,19 +19,24 @@ struct AuthCognitoRequestContext: HBAuthRequestContextProtocol, HBRemoteAddressR
         return channel.remoteAddress
     }
 
+    /// initializer required by router testing
     init(allocator: ByteBufferAllocator, logger: Logger) {
         self.coreContext = .init(allocator: allocator, logger: logger)
         self.auth = .init()
+        self.routerContext = .init()
         self.channel = nil
     }
 
+    /// initializer required by live server
     init(channel: Channel, logger: Logger) {
         self.coreContext = .init(allocator: channel.allocator, logger: logger)
         self.auth = .init()
+        self.routerContext = .init()
         self.channel = channel
     }
 }
 
+/// Wrapper for cognito context data
 struct HBCognitoContextData: CognitoContextData {
     let request: HBRequest
     let context: AuthCognitoRequestContext

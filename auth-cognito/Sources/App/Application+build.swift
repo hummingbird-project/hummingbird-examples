@@ -1,5 +1,6 @@
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdRouter
 import ServiceLifecycle
 import SotoCognitoAuthenticationKit
 
@@ -32,10 +33,10 @@ func buildApplication(configuration: HBApplicationConfiguration) throws -> some 
     )
     let authenticatable = CognitoAuthenticatable(configuration: config)
 
-    let router = HBRouter(context: AuthCognitoRequestContext.self)
-    router.middlewares.add(AWSErrorMiddleware())
-    UserController(cognitoAuthenticatable: authenticatable, cognitoIdentityProvider: cognitoIdentityProvider)
-        .addRoutes(to: router.group("user"))
+    let router = HBRouterBuilder(context: AuthCognitoRequestContext.self) {
+        AWSErrorMiddleware()
+        UserController(cognitoAuthenticatable: authenticatable, cognitoIdentityProvider: cognitoIdentityProvider).endpoints
+    }
 
     var app = HBApplication(router: router)
     app.addServices(AWSClientService(client: awsClient))
