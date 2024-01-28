@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -14,15 +14,37 @@
 
 import AWSLambdaEvents
 import AWSLambdaRuntime
-import HummingbirdFoundation
 import HummingbirdLambda
+import SotoDynamoDB
 
 @main
-public struct AppLambda: HBLambda {
-    public typealias Event = APIGatewayRequest
-    public typealias Output = APIGatewayResponse
+struct AppLambda: HBAPIGatewayLambda {
+    let awsClient: AWSClient
 
-    public init(_ app: HBApplication) throws {
-        try app.configure()
+    init(context: LambdaInitializationContext) {
+        self.awsClient = AWSClient(httpClientProvider: .createNewWithEventLoopGroup(context.eventLoop))
+    }
+
+    func buildResponder() -> some HBResponder<Context> {
+        let dynamoDB = DynamoDB(client: awsClient, region: .euwest1)
+
+        let router = HBRouter(context: Context.self)
+        // middleware
+        router.middlewares.add(HBLogRequestsMiddleware(.debug))
+        router.middlewares.add(HBCORSMiddleware(
+            allowOrigin: .originBased,
+            allowHeaders: [.contentType],
+            allowMethods: [.get, .options, .post, .delete, .patch]
+        ))
+        router.get("/") { _, _ in
+            return "Hello"
+        }
+        TodoController(dynamoDB: dynamoDB).addRoutes(to: router.group("todos"))
+
+        return router.buildResponder()
+    }
+
+    func shutdown() async throws {
+        try await self.awsClient.shutdown()
     }
 }
