@@ -13,20 +13,7 @@
 ##
 ##===----------------------------------------------------------------------===##
 
-set -eu
+here=$(dirname "$0")
 
-base=$(pwd)
-executable=HummingbirdTodosLambda
-swift_docker=swift:5.3-amazonlinux2
-
-echo "-------------------------------------------------------------------------"
-echo "building \"$executable\" lambda"
-echo "-------------------------------------------------------------------------"
-docker run --rm -v "$base":/src -w /src/ $swift_docker bash -cl "swift package update"
-docker run --rm -v "$base":/src -w /src/ $swift_docker bash -cl "swift build --product $executable -c release -Xswiftc -static-stdlib"
-echo "done"
-
-echo "-------------------------------------------------------------------------"
-echo "packaging \"$executable\" lambda"
-echo "-------------------------------------------------------------------------"
-./scripts/package.sh $executable
+cd "$here"/..
+swift package --disable-sandbox archive

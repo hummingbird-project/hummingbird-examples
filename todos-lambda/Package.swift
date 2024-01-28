@@ -9,7 +9,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-alpha.1"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-lambda.git", branch: "2.x.x"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-lambda.git", branch: "2.x.x-request-headers"),
         .package(url: "https://github.com/soto-project/soto.git", from: "7.0.0-alpha"),
     ],
     targets: [

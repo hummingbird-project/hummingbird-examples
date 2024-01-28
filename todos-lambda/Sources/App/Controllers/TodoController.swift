@@ -23,16 +23,16 @@ struct TodoController {
     typealias Context = HBBasicLambdaRequestContext<APIGatewayRequest>
 
     let dynamoDB: DynamoDB
-    let tableName = "hummingbird-todos"
+    let tableName: String
 
     func addRoutes(to group: HBRouterGroup<Context>) {
         group
-            .get(use: self.list)
             .post(use: self.create)
-            .delete(use: self.deleteAll)
             .get("{id}", use: self.get)
+            .get(use: self.list)
             .patch("{id}", use: self.updateId)
             .delete("{id}", use: self.deleteId)
+            .delete(use: self.deleteAll)
     }
 
     @Sendable func list(_ request: HBRequest, context: Context) async throws -> [Todo] {
