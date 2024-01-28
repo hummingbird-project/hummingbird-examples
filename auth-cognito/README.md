@@ -1,6 +1,6 @@
 # Authentication with SotoCognitoAuthenticationKit
 
-Example of app using SotoCognitoAuthenticationKit. App includes four authenticators (basic username and password, basic username and password using SRP (Secure Remote Password) for authentication, JWT Access Token and JWT Id Token.
+Example of app using SotoCognitoAuthenticationKit. App includes four authenticators (basic username and password, basic username and password using SRP (Secure Remote Password) for authentication, JWT Access Token and JWT Id Token. This example also uses the result builder router from HummingbirdRouter.
 
 Routes are as follows
 
@@ -18,3 +18,4 @@ Routes are as follows
 - POST /user/mfa/enable - Enable software MFA for user
 - POST /user/mfa/disable - Disable software MFA for user
 
+This example requires that you setup an AWS Cognito userpool and application client with ADMIN_USER_PASSWORD, REFRESH_TOKEN and USER_SRP authentication methods all enabled. You should then set environment variables `COGNITO_USER_POOL_ID` to the userpool id, `COGNITO_CLIENT_ID` to the application client id and if you added a client secret `COGNITO_CLIENT_SECRET` to that.
