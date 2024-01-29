@@ -1,6 +1,6 @@
-# Todos DynamoDB using Async/Await
+# Todos DynamoDB
 
-This is an implementation of the [TodoBackend](http://www.todobackend.com/) API using DynamoDB to store the todo data. This sample uses the async/await APIs of Hummingbird. It has six routes
+This is an implementation of the [TodoBackend](http://www.todobackend.com/) API using DynamoDB to store the todo data. It has six routes
 
 - GET /todos: Lists all the todos in the database
 - POST /todos: Creates a new todo

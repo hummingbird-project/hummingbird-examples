@@ -1,0 +1,86 @@
+AWSTemplateFormatVersion : '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: A sample SAM template for deploying Hummingbird Lambda Todos function.
+
+Globals:
+  Function:
+    Timeout: 3
+    MemorySize: 256
+
+Resources:
+  # Todos Function
+  hbTodosFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      Handler: Provided
+      Runtime: provided.al2
+      Architectures: 
+        - arm64
+      CodeUri: ../.build/plugins/AWSLambdaPackager/outputs/AWSLambdaPackager/App/App.zip
+      # Instructs new versions to be published to an alias named "live".
+      AutoPublishAlias: live
+      Events:
+        Hello:
+          Type: Api
+          Properties:
+            Path: /
+            Method: get
+        Options:
+          Type: Api
+          Properties:
+            Path: /
+            Method: options
+        Create:
+          Type: Api
+          Properties:
+            Path: /todos
+            Method: post
+        Get:
+          Type: Api
+          Properties:
+            Path: /todos/{id}
+            Method: get
+        List:
+          Type: Api
+          Properties:
+            Path: /todos/
+            Method: get
+        Patch:
+          Type: Api
+          Properties:
+            Path: /todos/{id}
+            Method: patch
+        Delete:
+          Type: Api
+          Properties:
+            Path: /todos/{id}
+            Method: delete
+        DeleteAll:
+          Type: Api
+          Properties:
+            Path: /todos
+            Method: delete
+      Environment:
+        Variables:
+          TODOS_TABLE_NAME: !Ref TodosTable
+      Policies:
+        - DynamoDBCrudPolicy: # More info about SAM policy templates: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/serverless-policy-templates.html
+            TableName: !Ref TodosTable
+
+  TodosTable:
+    Type: AWS::Serverless::SimpleTable # More info about SimpleTable Resource: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-resource-simpletable.html
+    Properties:
+      PrimaryKey:
+        Name: id
+        Type: String
+
+Outputs:
+  TodosFunctionApi:
+    Description: "API Gateway endpoint URL for Prod stage for Todo function"
+    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  TodosFunction:
+    Description: "Todos function name"
+    Value: !GetAtt hbTodosFunction.Arn
+  TodosTable:
+    Description: "Hummingbird Todos Lambda Table"
+    Value: !GetAtt TodosTable.Arn
