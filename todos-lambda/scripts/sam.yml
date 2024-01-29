@@ -25,6 +25,11 @@ Resources:
           Properties:
             Path: /
             Method: get
+        Options:
+          Type: Api
+          Properties:
+            Path: /
+            Method: options
         Create:
           Type: Api
           Properties:
@@ -44,7 +49,7 @@ Resources:
           Type: Api
           Properties:
             Path: /todos/{id}
-            Method: path
+            Method: patch
         Delete:
           Type: Api
           Properties:
@@ -70,27 +75,9 @@ Resources:
         Type: String
 
 Outputs:
-  HelloFunctionApi:
-    Description: "API Gateway endpoint URL for Prod stage for Hello function"
+  TodosFunctionApi:
+    Description: "API Gateway endpoint URL for Prod stage for Todo function"
     Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
-  CreateFunctionApi:
-    Description: "API Gateway endpoint URL for Prod stage for Create function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/todos/"
-  GetFunctionApi:
-    Description: "API Gateway endpoint URL for Prod stage for Get function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/todos/{id}"
-  ListFunctionApi:
-    Description: "API Gateway endpoint URL for Prod stage for List function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/todos/"
-  PatchFunctionApi:
-    Description: "API Gateway endpoint URL for Prod stage for Patch function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/todos/{id}"
-  DeleteFunctionApi:
-    Description: "API Gateway endpoint URL for Prod stage for Delete function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/todos/{id}"
-  DeleteAllFunctionApi:
-    Description: "API Gateway endpoint URL for Prod stage for DeleteAll function"
-    Value: !Sub "https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/todos/"
   TodosFunction:
     Description: "Todos function name"
     Value: !GetAtt hbTodosFunction.Arn

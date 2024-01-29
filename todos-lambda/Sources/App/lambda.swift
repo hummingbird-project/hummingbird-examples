@@ -40,6 +40,11 @@ struct AppLambda: HBAPIGatewayLambda {
         router.get("/") { _, _ in
             return "Hello"
         }
+        router.middlewares.add(HBCORSMiddleware(
+            allowOrigin: .originBased,
+            allowHeaders: [.contentType],
+            allowMethods: [.get, .options, .post, .delete, .patch]
+        ))
         TodoController(dynamoDB: dynamoDB, tableName: tableName).addRoutes(to: router.group("todos"))
 
         return router.buildResponder()
