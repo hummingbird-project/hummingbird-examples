@@ -20,22 +20,25 @@ import HummingbirdFluent
 import NIO
 
 /// CRUD routes for todos
-struct TodoController {
-    func addRoutes(to group: HBRouterGroup) {
+struct TodoController<Context: HBAuthRequestContextProtocol> {
+    let fluent: HBFluent
+    let sessionStorage: HBSessionStorage
+
+    func addRoutes(to group: HBRouterGroup<Context>) {
         group
-            .add(middleware: SessionAuthenticator())
+            .add(middleware: SessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
             .add(middleware: IsAuthenticatedMiddleware(User.self))
             .get(use: self.list)
             .get(":id", use: self.get)
-            .post(options: .editResponse, use: self.create)
+            .post(use: self.create)
             .patch(":id", use: self.update)
             .delete(":id", use: self.deleteId)
     }
 
     /// List all todos created by current user
-    func list(_ request: HBRequest) async throws -> [Todo] {
-        let user = try request.authRequire(User.self)
-        return try await user.$todos.get(on: request.db)
+    @Sendable func list(_ request: HBRequest, context: Context) async throws -> [Todo] {
+        let user = try context.auth.require(User.self)
+        return try await user.$todos.get(on: self.fluent.db())
     }
 
     struct CreateTodoRequest: HBResponseCodable {
@@ -43,23 +46,23 @@ struct TodoController {
     }
 
     /// Create new todo
-    func create(_ request: HBRequest) async throws -> Todo {
-        let user = try request.authRequire(User.self)
-        guard let todoRequest = try? request.decode(as: CreateTodoRequest.self) else { throw HBHTTPError(.badRequest) }
-        guard let host = request.headers["host"].first else { throw HBHTTPError(.badRequest, message: "No host header") }
+    @Sendable func create(_ request: HBRequest, context: Context) async throws -> HBEditedResponse<Todo> {
+        let user = try context.auth.require(User.self)
+        let todoRequest = try await request.decode(as: CreateTodoRequest.self, context: context)
+        guard let host = request.head.authority else { throw HBHTTPError(.badRequest, message: "No host header") }
         let todo = try Todo(title: todoRequest.title, ownerID: user.requireID())
-        _ = try await todo.save(on: request.db)
+        let db = self.fluent.db()
+        _ = try await todo.save(on: db)
         todo.completed = false
         todo.url = "http://\(host)/api/todos/\(todo.id!)"
-        try await todo.update(on: request.db)
-        request.response.status = .created
-        return todo
+        try await todo.update(on: db)
+        return .init(status: .created, response: todo)
     }
 
     /// Get todo
-    func get(_ request: HBRequest) async throws -> Todo? {
-        guard let id = request.parameters.get("id", as: UUID.self) else { throw HBHTTPError(.badRequest) }
-        return try await Todo.query(on: request.db)
+    @Sendable func get(_ request: HBRequest, context: Context) async throws -> Todo? {
+        let id = try context.parameters.require("id", as: UUID.self)
+        return try await Todo.query(on: self.fluent.db())
             .filter(\.$id == id)
             .with(\.$owner)
             .first()
@@ -71,36 +74,38 @@ struct TodoController {
     }
 
     /// Edit todo
-    func update(_ request: HBRequest) async throws -> Todo {
-        guard let id = request.parameters.get("id", as: UUID.self) else { throw HBHTTPError(.badRequest) }
-        guard let editTodo = try? request.decode(as: EditTodoRequest.self) else { throw HBHTTPError(.badRequest) }
-        guard let todo = try await Todo.query(on: request.db)
+    @Sendable func update(_ request: HBRequest, context: Context) async throws -> Todo {
+        let id = try context.parameters.require("id", as: UUID.self)
+        let editTodo = try await request.decode(as: EditTodoRequest.self, context: context)
+        let db = self.fluent.db()
+        guard let todo = try await Todo.query(on: db)
             .filter(\.$id == id)
             .with(\.$owner)
             .first()
         else {
             throw HBHTTPError(.notFound)
         }
-        let user = try request.authRequire(User.self)
+        let user = try context.auth.require(User.self)
         guard todo.owner.id == user.id else { throw HBHTTPError(.unauthorized) }
         todo.update(title: editTodo.title, completed: editTodo.completed)
-        try await todo.update(on: request.db)
+        try await todo.update(on: db)
         return todo
     }
 
     /// delete todo
-    func deleteId(_ request: HBRequest) async throws -> HTTPResponseStatus {
-        guard let id = request.parameters.get("id", as: UUID.self) else { throw HBHTTPError(.badRequest) }
-        guard let todo = try await Todo.query(on: request.db)
+    @Sendable func deleteId(_ request: HBRequest, context: Context) async throws -> HTTPResponse.Status {
+        let id = try context.parameters.require("id", as: UUID.self)
+        let db = self.fluent.db()
+        guard let todo = try await Todo.query(on: db)
             .filter(\.$id == id)
             .with(\.$owner)
             .first()
         else {
             throw HBHTTPError(.notFound)
         }
-        let user = try request.authRequire(User.self)
+        let user = try context.auth.require(User.self)
         guard todo.owner.id == user.id else { throw HBHTTPError(.unauthorized) }
-        try await todo.delete(on: request.db)
+        try await todo.delete(on: db)
         return .ok
     }
 }

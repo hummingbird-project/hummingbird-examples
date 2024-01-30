@@ -16,15 +16,22 @@ import Hummingbird
 import HummingbirdMustache
 
 /// Generate an HTML page for a thrown error
-struct ErrorPageMiddleware: HBMiddleware {
-    let template: HBMustacheTemplate
+struct ErrorPageMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+    let errorTemplate: HBMustacheTemplate
+    let mustacheLibrary: HBMustacheLibrary
 
-    func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        return next.respond(to: request).flatMapErrorThrowing { error in
+    func handle(
+        _ request: HBRequest,
+        context: Context,
+        next: (HBRequest, Context) async throws -> HBResponse
+    ) async throws -> HBResponse {
+        do {
+            return try await next(request, context)
+        } catch {
             // if error is thrown from further down the middlware chain then either return
             // page with status code and message or a 501 with a description of the thrown error
             let values: [String: Any]
-            let status: HTTPResponseStatus
+            let status: HTTPResponse.Status
             if let error = error as? HBHTTPError {
                 status = error.status
                 values = [
@@ -34,13 +41,13 @@ struct ErrorPageMiddleware: HBMiddleware {
             } else {
                 status = .internalServerError
                 values = [
-                    "statusCode": HTTPResponseStatus.internalServerError,
+                    "statusCode": HTTPResponse.Status.internalServerError,
                     "message": "\(error)",
                 ]
             }
             // render HTML and return
-            let html = self.template.render(values)
-            var response = try HTML(html: html).response(from: request)
+            let html = self.errorTemplate.render(values, library: self.mustacheLibrary)
+            var response = try HTML(html: html).response(from: request, context: context)
             response.status = status
             return response
         }
