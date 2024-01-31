@@ -79,7 +79,7 @@ enum WebAuthnSession: Codable {
 }
 
 /// Authenticator that will return current state of authentication
-struct WebAuthnSessionStateAuthenticator<Context: HBAuthRequestContextProtocol>: HBSessionAuthenticator {
+struct WebAuthnSessionStateAuthenticator<Context: HBAuthRequestContext>: HBSessionAuthenticator {
     typealias Session = WebAuthnSession
     /// fluent reference
     let fluent: HBFluent
@@ -92,7 +92,7 @@ struct WebAuthnSessionStateAuthenticator<Context: HBAuthRequestContextProtocol>:
 }
 
 /// Authenticator that will return an authenticated user from a WebAuthnSession
-struct WebAuthnSessionAuthenticator<Context: HBAuthRequestContextProtocol>: HBSessionAuthenticator {
+struct WebAuthnSessionAuthenticator<Context: HBAuthRequestContext>: HBSessionAuthenticator {
     typealias Session = WebAuthnSession
 
     /// fluent reference

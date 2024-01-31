@@ -18,7 +18,7 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 
-struct SessionAuthenticator<Context: HBAuthRequestContextProtocol>: HBSessionAuthenticator {
+struct SessionAuthenticator<Context: HBAuthRequestContext>: HBSessionAuthenticator {
     typealias Session = UUID
     typealias Value = LoggedInUser
 
