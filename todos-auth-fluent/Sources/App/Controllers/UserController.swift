@@ -34,7 +34,7 @@ struct UserController<Context: HBAuthRequestContextProtocol> {
     }
 
     /// Create new user
-    /// CURRENTLY NOT USED, as user creation is done by ``WebController.signupDetails``
+    /// Used in tests, as user creation is done by ``WebController.signupDetails``
     @Sendable func create(_ request: HBRequest, context: Context) async throws -> HBEditedResponse<UserResponse> {
         let createUser = try await request.decode(as: CreateUserRequest.self, context: context)
 
@@ -49,13 +49,12 @@ struct UserController<Context: HBAuthRequestContextProtocol> {
     }
 
     /// Login user and create session
-    /// CURRENTLY NOT USED, as user creation is done by ``WebController.loginDetails``
+    /// Used in tests, as user creation is done by ``WebController.loginDetails``
     @Sendable func login(_ request: HBRequest, context: Context) async throws -> HBResponse {
         // get authenticated user and return
         let user = try context.auth.require(User.self)
-        guard let userId = user.id else { throw HBHTTPError(.unauthorized) }
         // create session lasting 1 hour
-        let cookie = try await self.sessionStorage.save(session: userId, expiresIn: .seconds(3600))
+        let cookie = try await self.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
         var response = HBResponse(status: .ok)
         response.setCookie(cookie)
         return response
@@ -65,9 +64,8 @@ struct UserController<Context: HBAuthRequestContextProtocol> {
     @Sendable func logout(_ request: HBRequest, context: Context) async throws -> HTTPResponse.Status {
         // get authenticated user and return
         let user = try context.auth.require(User.self)
-        guard let userId = user.id else { throw HBHTTPError(.unauthorized) }
         // create session finishing now
-        try await self.sessionStorage.update(session: userId, expiresIn: .seconds(0), request: request)
+        try await self.sessionStorage.update(session: user.requireID(), expiresIn: .seconds(0), request: request)
         return .ok
     }
 
