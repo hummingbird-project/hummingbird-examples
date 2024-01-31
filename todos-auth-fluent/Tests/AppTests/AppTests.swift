@@ -1,4 +1,4 @@
-import App
+@testable import App
 import Hummingbird
 import HummingbirdAuthXCT
 import HummingbirdXCT
@@ -6,68 +6,60 @@ import XCTest
 
 final class AppTests: XCTestCase {
     struct TestArguments: AppArguments {
+        var hostname: String { "localhost" }
+        var port: Int { 8080 }
         var migrate: Bool { true }
         var inMemoryDatabase: Bool { true }
     }
 
     enum TestError: Error {
-        case unexpectedStatus(HTTPResponseStatus)
+        case unexpectedStatus(HTTPResponse.Status)
     }
 
-    func testApplication(_ test: (HBApplication) throws -> Void) throws {
-        let app = HBApplication(testing: .live)
-        try app.configure(TestArguments())
-
-        try app.XCTStart()
-        defer { app.XCTStop() }
-        try test(app)
-    }
-
-    func createUser(_ user: CreateUserRequest, app: HBApplication) throws -> CreateUserResponse {
-        try app.XCTExecute(
+    func createUser(_ user: CreateUserRequest, client: some HBXCTClientProtocol) async throws -> CreateUserResponse {
+        try await client.XCTExecute(
             uri: "/api/users",
-            method: .POST,
-            headers: ["content-type": "application/json"],
+            method: .post,
+            headers: [.contentType: "application/json"],
             body: JSONEncoder().encodeAsByteBuffer(user, allocator: ByteBufferAllocator())
         ) { response in
             XCTAssertEqual(response.status, .created)
-            let buffer = try XCTUnwrap(response.body)
-            return try JSONDecoder().decode(CreateUserResponse.self, from: buffer)
+            return try JSONDecoder().decode(CreateUserResponse.self, from: response.body)
         }
     }
 
-    func login(username: String, password: String, app: HBApplication) throws -> String? {
-        try app.XCTExecute(
+    func login(username: String, password: String, client: some HBXCTClientProtocol) async throws -> String? {
+        try await client.XCTExecute(
             uri: "/api/users/login",
-            method: .POST,
-            headers: ["content-type": "application/json"],
+            method: .post,
+            headers: [.contentType: "application/json"],
             auth: .basic(username: username, password: password)
         ) { response in
             XCTAssertEqual(response.status, .ok)
-            return response.headers["set-cookie"].first
+            return response.headers[.setCookie]
         }
     }
 
-    func urlEncodedLogin(username: String, password: String, app: HBApplication) throws -> String? {
-        try app.XCTExecute(
+    func urlEncodedLogin(username: String, password: String, client: some HBXCTClientProtocol) async throws -> String? {
+        try await client.XCTExecute(
             uri: "/login",
-            method: .POST,
-            headers: ["content-type": "application/x-www-form-urlencoded"],
+            method: .post,
+            headers: [.contentType: "application/x-www-form-urlencoded"],
             body: ByteBuffer(string: "email=\(username)&password=\(password)")
         ) { response in
             XCTAssertEqual(response.status, .found)
-            return response.headers["set-cookie"].first
+            return response.headers[.setCookie]
         }
     }
 
-    func createTodo(_ todo: CreateTodoRequest, cookie: String? = nil, app: HBApplication) throws -> Todo {
-        var headers: HTTPHeaders = ["content-type": "application/json"]
+    func createTodo(_ todo: CreateTodoRequest, cookie: String? = nil, client: some HBXCTClientProtocol) async throws -> Todo {
+        var headers: HTTPFields = [.contentType: "application/json"]
         if let cookie = cookie {
-            headers.add(name: "cookie", value: cookie)
+            headers[.cookie] = cookie
         }
-        return try app.XCTExecute(
+        return try await client.XCTExecute(
             uri: "/api/todos",
-            method: .POST,
+            method: .post,
             headers: headers,
             body: JSONEncoder().encodeAsByteBuffer(todo, allocator: ByteBufferAllocator())
         ) { response in
@@ -77,152 +69,149 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func getTodo(_ id: String, cookie: String? = nil, app: HBApplication) throws -> Todo? {
-        return try app.XCTExecute(
+    func getTodo(_ id: String, cookie: String? = nil, client: some HBXCTClientProtocol) async throws -> Todo? {
+        return try await client.XCTExecute(
             uri: "/api/todos/\(id)",
-            method: .GET,
-            headers: cookie.map { ["cookie": $0] } ?? [:]
+            method: .get,
+            headers: cookie.map { [.cookie: $0] } ?? [:]
         ) { response in
             guard response.status == .ok else { throw TestError.unexpectedStatus(response.status) }
-            if let buffer = response.body {
-                return try JSONDecoder().decode(Todo.self, from: buffer)
-            }
-            return nil
+            return try JSONDecoder().decode(Todo.self, from: response.body)
         }
     }
 
-    func deleteTodo(_ id: String, cookie: String? = nil, app: HBApplication) throws {
-        return try app.XCTExecute(
+    func deleteTodo(_ id: String, cookie: String? = nil, client: some HBXCTClientProtocol) async throws {
+        return try await client.XCTExecute(
             uri: "/api/todos/\(id)",
-            method: .DELETE,
-            headers: cookie.map { ["cookie": $0] } ?? [:]
+            method: .delete,
+            headers: cookie.map { [.cookie: $0] } ?? [:]
         ) { response in
             guard response.status == .ok else { throw TestError.unexpectedStatus(response.status) }
         }
     }
 
-    func editTodo(_ id: String, _ todo: EditTodoRequest, cookie: String? = nil, app: HBApplication) throws -> Todo? {
-        var headers: HTTPHeaders = ["content-type": "application/json"]
+    func editTodo(_ id: String, _ todo: EditTodoRequest, cookie: String? = nil, client: some HBXCTClientProtocol) async throws -> Todo? {
+        var headers: HTTPFields = [.contentType: "application/json"]
         if let cookie = cookie {
-            headers.add(name: "cookie", value: cookie)
+            headers[.cookie] = cookie
         }
-        return try app.XCTExecute(
+        return try await client.XCTExecute(
             uri: "/api/todos/\(id)",
-            method: .PATCH,
+            method: .patch,
             headers: headers,
             body: JSONEncoder().encodeAsByteBuffer(todo, allocator: ByteBufferAllocator())
         ) { response in
             guard response.status == .ok else { throw TestError.unexpectedStatus(response.status) }
-            if let buffer = response.body {
-                return try JSONDecoder().decode(Todo.self, from: buffer)
-            }
-            return nil
+            return try JSONDecoder().decode(Todo.self, from: response.body)
         }
     }
 
     // MARK: tests
 
-    func testCreateUser() throws {
-        try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
+    func testCreateUser() async throws {
+        let app = try await buildApplication(TestArguments())
+        try await app.test(.router) { client in
+            _ = try await self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), client: client)
         }
     }
 
-    func testLogin() throws {
-        try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
-            _ = try self.login(username: "t@jones.com", password: "password123", app: app)
+    func testLogin() async throws {
+        let app = try await buildApplication(TestArguments())
+        try await app.test(.router) { client in
+            _ = try await self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), client: client)
+            _ = try await self.login(username: "t@jones.com", password: "password123", client: client)
         }
     }
 
-    func testURLEncodedLogin() throws {
-        try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
-            let cookie = try self.urlEncodedLogin(username: "t@jones.com", password: "password123", app: app)
+    func testURLEncodedLogin() async throws {
+        let app = try await buildApplication(TestArguments())
+        try await app.test(.router) { client in
+            _ = try await self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), client: client)
+            let cookie = try await self.urlEncodedLogin(username: "t@jones.com", password: "password123", client: client)
             XCTAssertNotNil(cookie)
         }
     }
 
-    func testSession() throws {
-        try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
-            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
-            try app.XCTExecute(
+    func testSession() async throws {
+        let app = try await buildApplication(TestArguments())
+        try await app.test(.router) { client in
+            _ = try await self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), client: client)
+            let cookie = try await self.login(username: "t@jones.com", password: "password123", client: client)
+            try await client.XCTExecute(
                 uri: "/api/users/",
-                method: .GET,
-                headers: cookie.map { ["cookie": $0] } ?? [:]
+                method: .get,
+                headers: cookie.map { [.cookie: $0] } ?? [:]
             ) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
     }
 
-    func testCreateTodo() throws {
-        try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
-            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
-            let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
+    func testCreateTodo() async throws {
+        let app = try await buildApplication(TestArguments())
+        try await app.test(.router) { client in
+            _ = try await self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), client: client)
+            let cookie = try await self.login(username: "t@jones.com", password: "password123", client: client)
+            let todo = try await self.createTodo(.init(title: "Write more tests"), cookie: cookie, client: client)
             XCTAssertEqual(todo.title, "Write more tests")
         }
     }
 
-    func testGetTodo() throws {
-        try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
-            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
-            let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
-            let getTodo = try self.getTodo(todo.id, cookie: cookie, app: app)
+    func testGetTodo() async throws {
+        let app = try await buildApplication(TestArguments())
+        try await app.test(.router) { client in
+            _ = try await self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), client: client)
+            let cookie = try await self.login(username: "t@jones.com", password: "password123", client: client)
+            let todo = try await self.createTodo(.init(title: "Write more tests"), cookie: cookie, client: client)
+            let getTodo = try await self.getTodo(todo.id, cookie: cookie, client: client)
             XCTAssertEqual(getTodo?.title, "Write more tests")
         }
     }
 
-    func testDeleteTodo() throws {
-        try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
-            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
-            let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
-            try self.deleteTodo(todo.id, cookie: cookie, app: app)
+    func testDeleteTodo() async throws {
+        let app = try await buildApplication(TestArguments())
+        try await app.test(.router) { client in
+            _ = try await self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), client: client)
+            let cookie = try await self.login(username: "t@jones.com", password: "password123", client: client)
+            let todo = try await self.createTodo(.init(title: "Write more tests"), cookie: cookie, client: client)
+            try await self.deleteTodo(todo.id, cookie: cookie, client: client)
 
-            XCTAssertThrowsError(_ = try self.getTodo(todo.id, cookie: cookie, app: app)) { error in
-                switch error {
-                case TestError.unexpectedStatus(let status):
-                    XCTAssertEqual(status, .noContent)
-                default:
-                    XCTFail("Wrong error")
-                }
+            do {
+                _ = try await self.getTodo(todo.id, cookie: cookie, client: client)
+            } catch TestError.unexpectedStatus(let status) {
+                XCTAssertEqual(status, .noContent)
+            } catch {
+                XCTFail("Error: \(error)")
             }
         }
     }
 
-    func testEditTodo() throws {
-        try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
-            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
-            let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
-            _ = try self.editTodo(todo.id, .init(title: "Written tests", completed: true), cookie: cookie, app: app)
-            let editedTodo = try self.getTodo(todo.id, cookie: cookie, app: app)
+    func testEditTodo() async throws {
+        let app = try await buildApplication(TestArguments())
+        try await app.test(.router) { client in
+            _ = try await self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), client: client)
+            let cookie = try await self.login(username: "t@jones.com", password: "password123", client: client)
+            let todo = try await self.createTodo(.init(title: "Write more tests"), cookie: cookie, client: client)
+            _ = try await self.editTodo(todo.id, .init(title: "Written tests", completed: true), cookie: cookie, client: client)
+            let editedTodo = try await self.getTodo(todo.id, cookie: cookie, client: client)
 
             XCTAssertEqual(editedTodo?.title, "Written tests")
             XCTAssertEqual(editedTodo?.completed, true)
         }
     }
 
-    func testUnauthorizedEditTodo() throws {
-        try self.testApplication { app in
-            _ = try self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), app: app)
-            _ = try self.createUser(.init(name: "Lulu", email: "lu@lu.com", password: "admin"), app: app)
-            let cookie = try self.login(username: "t@jones.com", password: "password123", app: app)
-            let todo = try self.createTodo(.init(title: "Write more tests"), cookie: cookie, app: app)
-            let cookie2 = try self.login(username: "lu@lu.com", password: "admin", app: app)
-            XCTAssertThrowsError(
-                _ = try self.editTodo(todo.id, .init(title: "Written tests", completed: true), cookie: cookie2, app: app)
-            ) { error in
-                switch error {
-                case TestError.unexpectedStatus(let status):
-                    XCTAssertEqual(status, .unauthorized)
-                default:
-                    XCTFail("Wrong error")
-                }
+    func testUnauthorizedEditTodo() async throws {
+        let app = try await buildApplication(TestArguments())
+        try await app.test(.router) { client in
+            _ = try await self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), client: client)
+            _ = try await self.createUser(.init(name: "Lulu", email: "lu@lu.com", password: "admin"), client: client)
+            let cookie = try await self.login(username: "t@jones.com", password: "password123", client: client)
+            let todo = try await self.createTodo(.init(title: "Write more tests"), cookie: cookie, client: client)
+            let cookie2 = try await self.login(username: "lu@lu.com", password: "admin", client: client)
+            do {
+                _ = try await self.editTodo(todo.id, .init(title: "Written tests", completed: true), cookie: cookie2, client: client)
+            } catch TestError.unexpectedStatus(let status) {
+                XCTAssertEqual(status, .unauthorized)
             }
         }
     }

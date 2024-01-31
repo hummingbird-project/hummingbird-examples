@@ -15,29 +15,38 @@
 import FluentKit
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdFluent
 import HummingbirdMustache
 
 /// Redirects to login page if no user has been authenticated
-struct RedirectMiddleware: HBMiddleware {
+struct RedirectMiddleware<Context: HBAuthRequestContextProtocol>: HBMiddlewareProtocol {
     let to: String
-    func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        if request.authHas(User.self) {
-            return next.respond(to: request)
+    func handle(
+        _ request: HBRequest,
+        context: Context,
+        next: (HBRequest, Context) async throws -> Output
+    ) async throws -> HBResponse {
+        if context.auth.has(User.self) {
+            return try await next(request, context)
         } else {
-            return request.eventLoop.makeSucceededFuture(.redirect(to: "\(self.to)?from=\(request.uri)", type: .found))
+            return .redirect(to: "\(self.to)?from=\(request.uri)", type: .found)
         }
     }
 }
 
 /// Serves HTML pages
-struct WebController {
+struct WebController<Context: HBAuthRequestContextProtocol> {
+    let fluent: HBFluent
+    let sessionStorage: HBSessionStorage
+    let mustacheLibrary: HBMustacheLibrary
     let todosTemplate: HBMustacheTemplate
     let loginTemplate: HBMustacheTemplate
     let signupTemplate: HBMustacheTemplate
     let errorTemplate: HBMustacheTemplate
 
-    init(mustacheLibrary: HBMustacheLibrary) {
+    init(mustacheLibrary: HBMustacheLibrary, fluent: HBFluent, sessionStorage: HBSessionStorage) {
         // get the mustache templates from the library
+        self.mustacheLibrary = mustacheLibrary
         guard let todosTemplate = mustacheLibrary.getTemplate(named: "todos"),
               let loginTemplate = mustacheLibrary.getTemplate(named: "login"),
               let signupTemplate = mustacheLibrary.getTemplate(named: "signup"),
@@ -49,42 +58,46 @@ struct WebController {
         self.loginTemplate = loginTemplate
         self.signupTemplate = signupTemplate
         self.errorTemplate = errorTemplate
+
+        self.fluent = fluent
+        self.sessionStorage = sessionStorage
     }
 
     /// Add routes for webpages
-    func addRoutes(to router: HBRouterBuilder) {
+    func addRoutes(to router: HBRouter<Context>) {
         router.group()
-            .add(middleware: ErrorPageMiddleware(template: self.errorTemplate))
+            .add(middleware: ErrorPageMiddleware(errorTemplate: self.errorTemplate, mustacheLibrary: self.mustacheLibrary))
             .get("/login", use: self.login)
-            .post("/login", options: .editResponse, use: self.loginDetails)
+            .post("/login", use: self.loginDetails)
             .get("/signup", use: self.signup)
             .post("/signup", use: self.signupDetails)
-            .add(middleware: SessionAuthenticator())
+            .add(middleware: SessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
             .add(middleware: RedirectMiddleware(to: "/login"))
             .get("/", use: self.home)
     }
 
+    struct Todo {
+        let title: String
+        let completed: Bool
+    }
+
     /// Home page listing todos and with add todo UI
-    func home(request: HBRequest) async throws -> HTML {
-        struct Todo {
-            let title: String
-            let completed: Bool
-        }
+    @Sendable func home(request: HBRequest, context: Context) async throws -> HTML {
         // get user and list of todos attached to user from database
-        let user = try request.authRequire(User.self)
-        let todos = try await user.$todos.get(on: request.db)
+        let user = try context.auth.require(User.self)
+        let todos = try await user.$todos.get(on: self.fluent.db())
         // Render todos template and return as HTML
         let object: [String: Any] = [
             "name": user.name,
             "todos": todos,
         ]
-        let html = self.todosTemplate.render(object)
+        let html = self.todosTemplate.render(object, library: self.mustacheLibrary)
         return HTML(html: html)
     }
 
     /// Login page
-    func login(request: HBRequest) async throws -> HTML {
-        let html = self.loginTemplate.render(())
+    @Sendable func login(request: HBRequest, context: Context) async throws -> HTML {
+        let html = self.loginTemplate.render((), library: self.mustacheLibrary)
         return HTML(html: html)
     }
 
@@ -94,24 +107,27 @@ struct WebController {
     }
 
     /// Login POST page
-    func loginDetails(request: HBRequest) async throws -> HBResponse {
-        let details = try request.decode(as: LoginDetails.self)
+    @Sendable func loginDetails(request: HBRequest, context: Context) async throws -> HBResponse {
+        let details = try await request.decode(as: LoginDetails.self, context: context)
         // check if user exists in the database and then verify the entered password
         // against the one stored in the database. If it is correct then login in user
         if let user = try await User.login(
             email: details.email,
             password: details.password,
-            request: request
+            db: fluent.db()
         ) {
             // create session lasting 1 hour
-            try await request.session.save(session: user.requireID(), expiresIn: .minutes(60))
+            let cookie = try await self.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
             // redirect to home page
-            return .redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
+            var response = HBResponse.redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
+            response.setCookie(cookie)
+            return response
         } else {
             // login failed return login HTML with failed comment
-            let html = self.loginTemplate.render(["failed": true])
-            request.response.status = .unauthorized
-            return try HTML(html: html).response(from: request)
+            let html = self.loginTemplate.render(["failed": true], library: self.mustacheLibrary)
+            var response = try HTML(html: html).response(from: request, context: context)
+            response.status = .unauthorized
+            return response
         }
     }
 
@@ -122,21 +138,21 @@ struct WebController {
     }
 
     /// Signup page
-    func signup(request: HBRequest) async throws -> HTML {
-        let html = self.signupTemplate.render(())
+    @Sendable func signup(request: HBRequest, context: Context) async throws -> HTML {
+        let html = self.signupTemplate.render((), library: self.mustacheLibrary)
         return HTML(html: html)
     }
 
     /// Signup POST page
-    func signupDetails(request: HBRequest) async throws -> HBResponse {
-        let details = try request.decode(as: SignupDetails.self)
+    @Sendable func signupDetails(request: HBRequest, context: Context) async throws -> HBResponse {
+        let details = try await request.decode(as: SignupDetails.self, context: context)
         do {
             // create new user
             _ = try await User.create(
                 name: details.name,
                 email: details.email,
                 password: details.password,
-                request: request
+                db: self.fluent.db()
             )
             // redirect to login page
             return .redirect(to: "/login", type: .found)
@@ -144,8 +160,8 @@ struct WebController {
             // if user creation throws a conflict ie the email is already being used by
             // another user then return signup page with error message
             if error.status == .conflict {
-                let html = self.signupTemplate.render(["failed": true])
-                return try HTML(html: html).response(from: request)
+                let html = self.signupTemplate.render(["failed": true], library: self.mustacheLibrary)
+                return try HTML(html: html).response(from: request, context: context)
             } else {
                 throw error
             }

@@ -13,19 +13,18 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdFoundation
 
 /// Request body decoder
 struct RequestDecoder: HBRequestDecoder {
-    func decode<T>(_ type: T.Type, from request: HBRequest) throws -> T where T: Decodable {
+    func decode<T>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) async throws -> T where T: Decodable {
         /// if no content-type header exists or it is an unknown content-type return bad request
-        guard let header = request.headers["content-type"].first else { throw HBHTTPError(.badRequest) }
+        guard let header = request.headers[.contentType] else { throw HBHTTPError(.badRequest) }
         guard let mediaType = HBMediaType(from: header) else { throw HBHTTPError(.badRequest) }
         switch mediaType {
         case .applicationJson:
-            return try JSONDecoder().decode(type, from: request)
+            return try await JSONDecoder().decode(type, from: request, context: context)
         case .applicationUrlEncoded:
-            return try URLEncodedFormDecoder().decode(type, from: request)
+            return try await URLEncodedFormDecoder().decode(type, from: request, context: context)
         default:
             throw HBHTTPError(.badRequest)
         }
