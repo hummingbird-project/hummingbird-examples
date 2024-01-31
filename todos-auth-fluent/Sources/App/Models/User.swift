@@ -17,6 +17,7 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
+import NIOPosix
 
 /// Database description of a user
 final class User: Model, HBAuthenticatable {
@@ -64,7 +65,7 @@ extension User {
         guard existingUser == nil else { throw HBHTTPError(.conflict) }
 
         // Encrypt password on a separate thread
-        let passwordHash = try await Bcrypt.hash(password, cost: 12)
+        let passwordHash = try await try await NIOThreadPool.singleton.runIfActive { Bcrypt.hash(password, cost: 12) }
         // Create user and save to database
         let user = User(name: name, email: email, passwordHash: passwordHash)
         try await user.save(on: db)
@@ -80,9 +81,18 @@ extension User {
             .first()
         guard let user = user else { return nil }
         // Verify the password against the hash stored in the database
-        guard try await Bcrypt.verify(password, hash: user.passwordHash) else { return nil }
+        let verified = try await NIOThreadPool.singleton.runIfActive { Bcrypt.verify(password, hash: user.passwordHash) }
+        guard verified else { return nil }
         return user
     }
+}
+
+/// Authenticatable data from User
+struct UserAuthenticatable: HBAuthenticatable {
+    let id: UUID?
+    let email: String
+    let name: String
+    let passwordHash: String
 }
 
 /// Create user request object decoded from HTTP body
