@@ -20,7 +20,7 @@ import HummingbirdFluent
 import NIOPosix
 
 /// Database description of a user
-final class User: Model, HBAuthenticatable {
+final class User: Model, HBAuthenticatable, @unchecked Sendable {
     static let schema = "user"
 
     @ID(key: .id)
@@ -65,7 +65,7 @@ extension User {
         guard existingUser == nil else { throw HBHTTPError(.conflict) }
 
         // Encrypt password on a separate thread
-        let passwordHash = try await try await NIOThreadPool.singleton.runIfActive { Bcrypt.hash(password, cost: 12) }
+        let passwordHash = try await NIOThreadPool.singleton.runIfActive { Bcrypt.hash(password, cost: 12) }
         // Create user and save to database
         let user = User(name: name, email: email, passwordHash: passwordHash)
         try await user.save(on: db)
