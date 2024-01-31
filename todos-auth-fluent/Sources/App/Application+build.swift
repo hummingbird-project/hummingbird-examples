@@ -33,7 +33,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some HBApp
     }
     let sessionStorage = HBSessionStorage(fluentPersist)
     // router
-    let router = HBRouter(context: HBAuthRequestContext.self)
+    let router = HBRouter(context: TodosAuthRequestContext.self)
 
     // add logging middleware
     router.middlewares.add(HBLogRequestsMiddleware(.info))
