@@ -10,7 +10,7 @@ struct HummingbirdArguments: AsyncParsableCommand {
     var port: Int = 8080
 
     func run() async throws {
-        let app = try buildApplication(
+        let app = try await buildApplication(
             configuration: .init(
                 address: .hostname(self.hostname, port: self.port),
                 serverName: "Hummingbird"

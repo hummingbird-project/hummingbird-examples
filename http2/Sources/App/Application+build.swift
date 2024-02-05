@@ -43,7 +43,7 @@ func buildApplication(arguments: some AppArguments, configuration: HBApplication
 
     let app = try HBApplication(
         router: router,
-        server: .http2(tlsConfiguration: arguments.tlsConfiguration),
+        server: .http2Upgrade(tlsConfiguration: arguments.tlsConfiguration),
         configuration: configuration
     )
     return app
