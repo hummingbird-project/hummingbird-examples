@@ -4,7 +4,7 @@ import HummingbirdRouter
 import Logging
 import NIOCore
 
-struct WebAuthnRequestContext: HBAuthRequestContextProtocol, HBRouterRequestContext {
+struct WebAuthnRequestContext: HBAuthRequestContext, HBRouterRequestContext {
     var coreContext: HBCoreRequestContext
     var auth: HBLoginCache
     var routerContext: HBRouterBuilderContext

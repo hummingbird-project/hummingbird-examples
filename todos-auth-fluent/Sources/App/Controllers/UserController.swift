@@ -19,7 +19,7 @@ import HummingbirdAuth
 import HummingbirdFluent
 import NIO
 
-struct UserController<Context: HBAuthRequestContextProtocol> {
+struct UserController<Context: HBAuthRequestContext> {
     let fluent: HBFluent
     let sessionStorage: HBSessionStorage
 

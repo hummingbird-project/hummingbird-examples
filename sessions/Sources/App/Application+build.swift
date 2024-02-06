@@ -9,7 +9,7 @@ protocol AppArguments {
 }
 
 /// Request context which default to using JSONDecoder/Encoder
-struct SessionsContext: HBRequestContext, HBAuthRequestContextProtocol {
+struct SessionsContext: HBRequestContext, HBAuthRequestContext {
     init(allocator: ByteBufferAllocator, logger: Logger) {
         self.coreContext = .init(
             allocator: allocator,

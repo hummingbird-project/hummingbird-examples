@@ -17,7 +17,7 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 
-struct BasicAuthenticator<Context: HBAuthRequestContextProtocol>: HBAuthenticator {
+struct BasicAuthenticator<Context: HBAuthRequestContext>: HBAuthenticator {
     let fluent: HBFluent
 
     func authenticate(request: HBRequest, context: Context) async throws -> LoggedInUser? {

@@ -6,7 +6,7 @@ import NIOCore
 import SotoCognitoAuthenticationKit
 
 /// Request context
-struct AuthCognitoRequestContext: HBAuthRequestContextProtocol, HBRemoteAddressRequestContext, HBRouterRequestContext {
+struct AuthCognitoRequestContext: HBAuthRequestContext, HBRemoteAddressRequestContext, HBRouterRequestContext {
     var coreContext: HBCoreRequestContext
     /// required by authentication framework
     var auth: HBLoginCache

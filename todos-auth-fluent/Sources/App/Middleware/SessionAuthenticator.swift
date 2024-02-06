@@ -20,7 +20,7 @@ import HummingbirdFluent
 
 /// Session authentication. Get UUID attached to session id in request and return
 /// the associated user
-struct SessionAuthenticator<Context: HBAuthRequestContextProtocol>: HBSessionAuthenticator {
+struct SessionAuthenticator<Context: HBAuthRequestContext>: HBSessionAuthenticator {
     typealias Session = UUID
     typealias Value = User
 

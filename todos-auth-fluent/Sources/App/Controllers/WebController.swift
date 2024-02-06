@@ -19,7 +19,7 @@ import HummingbirdFluent
 import HummingbirdMustache
 
 /// Redirects to login page if no user has been authenticated
-struct RedirectMiddleware<Context: HBAuthRequestContextProtocol>: HBMiddlewareProtocol {
+struct RedirectMiddleware<Context: HBAuthRequestContext>: HBMiddlewareProtocol {
     let to: String
     func handle(
         _ request: HBRequest,
@@ -35,7 +35,7 @@ struct RedirectMiddleware<Context: HBAuthRequestContextProtocol>: HBMiddlewarePr
 }
 
 /// Serves HTML pages
-struct WebController<Context: HBAuthRequestContextProtocol> {
+struct WebController<Context: HBAuthRequestContext> {
     let fluent: HBFluent
     let sessionStorage: HBSessionStorage
     let mustacheLibrary: HBMustacheLibrary
