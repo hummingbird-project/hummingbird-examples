@@ -50,7 +50,7 @@ struct UserController {
         // if user already exist throw conflict
         guard existingUser == nil else { throw HBHTTPError(.conflict) }
 
-        let user = User(from: createUser)
+        let user = try await User(from: createUser)
         try await user.save(on: self.fluent.db())
 
         return try UserResponse(from: user)

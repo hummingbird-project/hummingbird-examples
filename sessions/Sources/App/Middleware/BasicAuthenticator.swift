@@ -16,6 +16,7 @@ import FluentKit
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
+import NIOPosix
 
 struct BasicAuthenticator<Context: HBAuthRequestContext>: HBAuthenticator {
     let fluent: HBFluent
@@ -30,7 +31,8 @@ struct BasicAuthenticator<Context: HBAuthRequestContext>: HBAuthenticator {
             .filter(\.$name == basic.username)
             .first()
         guard let user = user else { return nil }
-        guard Bcrypt.verify(basic.password, hash: user.passwordHash) else { return nil }
+        // Do Bcrypt verify on a separate thread to not block the general task executor 
+        guard try await NIOThreadPool.singleton.runIfActive({ Bcrypt.verify(basic.password, hash: user.passwordHash) }) else { return nil }
         return try .init(from: user)
     }
 }
