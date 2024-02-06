@@ -1,18 +1,18 @@
-// swift-tools-version:5.6
+// swift-tools-version:5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "auth-jwt",
-    platforms: [.macOS(.v12)],
+    platforms: [.macOS(.v14)],
     products: [
         .executable(name: "App", targets: ["App"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.0.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "1.0.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "1.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-alpha.2"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0-alpha.1"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0-alpha.1"),
         .package(url: "https://github.com/vapor/jwt-kit.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.19.0"),
@@ -28,7 +28,6 @@ let package = Package(
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
                 .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
-                .product(name: "HummingbirdFoundation", package: "hummingbird"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "JWTKit", package: "jwt-kit"),

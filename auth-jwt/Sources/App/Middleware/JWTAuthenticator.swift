@@ -16,10 +16,11 @@ import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdFluent
 import JWTKit
 import NIOFoundationCompat
 
-struct JWTPayloadData: JWTPayload, Equatable, HBAuthenticatable {
+struct JWTPayloadData: JWTPayload, Equatable {
     enum CodingKeys: String, CodingKey {
         case subject = "sub"
         case expiration = "exp"
@@ -34,52 +35,57 @@ struct JWTPayloadData: JWTPayload, Equatable, HBAuthenticatable {
     }
 }
 
-struct JWTAuthenticator: HBAsyncAuthenticator {
+struct JWTAuthenticator<Context: HBAuthRequestContextProtocol>: HBAuthenticator, @unchecked Sendable {
     let jwtSigners: JWTSigners
+    let fluent: HBFluent
 
-    init() {
+    init(fluent: HBFluent) {
         self.jwtSigners = JWTSigners()
+        self.fluent = fluent
     }
 
-    init(_ signer: JWTSigner, kid: JWKIdentifier? = nil) {
+    init(_ signer: JWTSigner, kid: JWKIdentifier? = nil, fluent: HBFluent) {
         self.jwtSigners = JWTSigners()
         self.jwtSigners.use(signer, kid: kid)
+        self.fluent = fluent
     }
 
-    init(jwksData: ByteBuffer) throws {
+    init(jwksData: ByteBuffer, fluent: HBFluent) throws {
         let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
         self.jwtSigners = JWTSigners()
         try self.jwtSigners.use(jwks: jwks)
+        self.fluent = fluent
     }
 
     func useSigner(_ signer: JWTSigner, kid: JWKIdentifier) {
         self.jwtSigners.use(signer, kid: kid)
     }
 
-    func authenticate(request: HBRequest) async throws -> User? {
+    func authenticate(request: HBRequest, context: Context) async throws -> AuthenticatedUser? {
         // get JWT from bearer authorisation
-        guard let jwtToken = request.authBearer?.token else { throw HBHTTPError(.unauthorized) }
+        guard let jwtToken = request.headers.bearer?.token else { throw HBHTTPError(.unauthorized) }
 
         let payload: JWTPayloadData
         do {
             payload = try self.jwtSigners.verify(jwtToken, as: JWTPayloadData.self)
         } catch {
-            request.logger.debug("couldn't verify token")
+            context.logger.debug("couldn't verify token")
             throw HBHTTPError(.unauthorized)
         }
+        let db = fluent.db()
         // check if user exists and return if it exists
-        if let existingUser = try await User.query(on: request.db)
+        if let existingUser = try await User.query(on: db)
             .filter(\.$name == payload.subject.value)
             .first()
         {
-            return existingUser
+            return try .init(from: existingUser)
         }
 
         // if user doesn't exist then JWT was created by a another service and we should create a user
         // for it, with no associated password
         let user = User(id: nil, name: payload.subject.value, passwordHash: nil)
-        try await user.save(on: request.db)
+        try await user.save(on: db)
 
-        return user
+        return try .init(from: user)
     }
 }

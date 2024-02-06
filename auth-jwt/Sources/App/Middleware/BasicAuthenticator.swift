@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2021-2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -15,20 +15,24 @@
 import FluentKit
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdFluent
+import NIOPosix
 
-struct BasicAuthenticator: HBAsyncAuthenticator {
-    func authenticate(request: HBRequest) async throws -> User? {
+struct BasicAuthenticator<Context: HBAuthRequestContextProtocol>: HBAuthenticator {
+    let fluent: HBFluent
+
+    func authenticate(request: HBRequest, context: Context) async throws -> AuthenticatedUser? {
         // does request have basic authentication info in the "Authorization" header
-        guard let basic = request.authBasic else { return nil }
+        guard let basic = request.headers.basic else { return nil }
 
         // check if user exists in the database and then verify the entered password
         // against the one stored in the database. If it is correct then login in user
-        let user = try await User.query(on: request.db)
+        let user = try await User.query(on: self.fluent.db())
             .filter(\.$name == basic.username)
             .first()
-        // can only verify password if user has password associated with it
-        guard let passwordHash = user?.passwordHash else { return nil }
-        guard Bcrypt.verify(basic.password, hash: passwordHash) else { return nil }
-        return user
+        guard let user = user, let passwordHash = user.passwordHash else { return nil }
+        // Do Bcrypt verify on a separate thread to not block the general task executor 
+        guard try await NIOThreadPool.singleton.runIfActive({ Bcrypt.verify(basic.password, hash: passwordHash) }) else { return nil }
+        return try .init(from: user)
     }
 }
