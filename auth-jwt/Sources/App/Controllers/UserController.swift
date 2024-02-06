@@ -20,7 +20,7 @@ import HummingbirdFluent
 import JWTKit
 import NIO
 
-struct UserController<Context: HBAuthRequestContextProtocol> {
+struct UserController<Context: HBAuthRequestContext> {
     let jwtSigners: JWTSigners
     let kid: JWKIdentifier
     let fluent: HBFluent

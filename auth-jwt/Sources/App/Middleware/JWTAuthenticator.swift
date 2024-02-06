@@ -35,7 +35,7 @@ struct JWTPayloadData: JWTPayload, Equatable {
     }
 }
 
-struct JWTAuthenticator<Context: HBAuthRequestContextProtocol>: HBAuthenticator, @unchecked Sendable {
+struct JWTAuthenticator<Context: HBAuthRequestContext>: HBAuthenticator, @unchecked Sendable {
     let jwtSigners: JWTSigners
     let fluent: HBFluent
 

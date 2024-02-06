@@ -18,7 +18,7 @@ import HummingbirdAuth
 import HummingbirdFluent
 import NIOPosix
 
-struct BasicAuthenticator<Context: HBAuthRequestContextProtocol>: HBAuthenticator {
+struct BasicAuthenticator<Context: HBAuthRequestContext>: HBAuthenticator {
     let fluent: HBFluent
 
     func authenticate(request: HBRequest, context: Context) async throws -> AuthenticatedUser? {

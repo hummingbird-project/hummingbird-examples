@@ -36,7 +36,7 @@ func buildApplication(_ args: AppArguments) async throws -> some HBApplicationPr
         try await fluent.migrate()
     }
 
-    let jwtAuthenticator: JWTAuthenticator<HBAuthRequestContext>
+    let jwtAuthenticator: JWTAuthenticator<HBBasicAuthRequestContext>
     let jwtLocalSignerKid = JWKIdentifier("_hb_local_")
     if let jwksUrl = env.get("JWKS_URL") {
         do {
@@ -54,7 +54,7 @@ func buildApplication(_ args: AppArguments) async throws -> some HBApplicationPr
     jwtAuthenticator.useSigner(.hs256(key: "my-secret-key"), kid: jwtLocalSignerKid)
 
 
-    let router = HBRouter(context: HBAuthRequestContext.self)
+    let router = HBRouter(context: HBBasicAuthRequestContext.self)
     router.middlewares.add(HBLogRequestsMiddleware(.debug))
     router.middlewares.add(
         HBCORSMiddleware(
