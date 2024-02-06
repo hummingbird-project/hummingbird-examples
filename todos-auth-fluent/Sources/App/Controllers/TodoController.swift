@@ -20,7 +20,7 @@ import HummingbirdFluent
 import NIO
 
 /// CRUD routes for todos
-struct TodoController<Context: HBAuthRequestContextProtocol> {
+struct TodoController<Context: HBAuthRequestContext> {
     let fluent: HBFluent
     let sessionStorage: HBSessionStorage
 
