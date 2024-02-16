@@ -18,7 +18,8 @@ import SotoDynamoDB
 
 extension AWSClient: Service {
     public func run() async throws {
-        await GracefulShutdownWaiter().wait()
+        /// Ignore cancellation error
+        try? await gracefulShutdown()
         try await self.shutdown()
     }
 }

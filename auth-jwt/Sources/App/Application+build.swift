@@ -91,7 +91,8 @@ struct HTTPClientService: Service {
     let client: HTTPClient
 
     func run() async throws {
-        await GracefulShutdownWaiter().wait()
+        /// Ignore cancellation error
+        try? await gracefulShutdown()
         try await client.shutdown()
     }
 }
