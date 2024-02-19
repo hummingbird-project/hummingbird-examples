@@ -16,6 +16,7 @@ import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import NIOPosix
 
 /// Database description of a user
 final class User: Model {
@@ -38,10 +39,12 @@ final class User: Model {
         self.passwordHash = passwordHash
     }
 
-    internal init(from userRequest: CreateUserRequest) {
+    internal init(from userRequest: CreateUserRequest) async throws {
         self.id = nil
         self.name = userRequest.name
-        self.passwordHash = Bcrypt.hash(userRequest.password, cost: 12)
+
+        // Do Bcrypt hash on a separate thread to not block the general task executor 
+        self.passwordHash = try await NIOThreadPool.singleton.runIfActive { Bcrypt.hash(userRequest.password, cost: 12) }
     }
 }
 

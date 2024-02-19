@@ -18,7 +18,7 @@ import Hummingbird
 import HummingbirdAuth
 
 /// Database description of a user
-final class User: Model, HBAuthenticatable {
+final class User: Model {
     static let schema = "user"
 
     @ID(key: .id)
@@ -68,6 +68,18 @@ struct UserResponse: HBResponseCodable {
 
     internal init(from user: User) {
         self.id = user.id
+        self.name = user.name
+    }
+}
+
+/// User stored in authentication login cache. Use this instead of User because
+/// User is not Sendable
+struct AuthenticatedUser: HBAuthenticatable {
+    let id: UUID
+    let name: String
+
+    init(from user: User) throws {
+        self.id = try user.requireID()
         self.name = user.name
     }
 }
