@@ -6,11 +6,8 @@ import NIOCore
 struct HTMLFormRequestContext: HBRequestContext {
     var coreContext: HBCoreRequestContext
 
-    init(allocator: ByteBufferAllocator, logger: Logger) {
-        self.coreContext = .init(
-            allocator: allocator,
-            logger: logger
-        )
+    init(channel: Channel, logger: Logger) {
+        self.coreContext = .init(allocator: channel.allocator, logger: logger)
     }
 
     var requestDecoder: RequestDecoder { .init() }

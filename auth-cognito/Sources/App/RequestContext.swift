@@ -19,14 +19,6 @@ struct AuthCognitoRequestContext: HBAuthRequestContext, HBRemoteAddressRequestCo
         return channel.remoteAddress
     }
 
-    /// initializer required by router testing
-    init(allocator: ByteBufferAllocator, logger: Logger) {
-        self.coreContext = .init(allocator: allocator, logger: logger)
-        self.auth = .init()
-        self.routerContext = .init()
-        self.channel = nil
-    }
-
     /// initializer required by live server
     init(channel: Channel, logger: Logger) {
         self.coreContext = .init(allocator: channel.allocator, logger: logger)

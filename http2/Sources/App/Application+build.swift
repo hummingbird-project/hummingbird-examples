@@ -9,11 +9,6 @@ public protocol AppArguments {
 }
 
 struct ChannelRequestContext: HBRequestContext {
-    init(allocator: ByteBufferAllocator, logger: Logger) {
-        self.coreContext = .init(allocator: allocator, logger: logger)
-        self.channel = nil
-    }
-
     init(channel: Channel, logger: Logger) {
         self.coreContext = .init(allocator: channel.allocator, logger: logger)
         self.channel = channel
