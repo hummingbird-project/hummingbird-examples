@@ -2,6 +2,7 @@ import FluentSQLiteDriver
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
+import NIOCore
 
 protocol AppArguments {
     var migrate: Bool { get }
