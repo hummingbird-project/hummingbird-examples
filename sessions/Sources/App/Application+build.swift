@@ -2,6 +2,7 @@ import FluentSQLiteDriver
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
+import NIOCore
 
 protocol AppArguments {
     var migrate: Bool { get }
@@ -10,11 +11,8 @@ protocol AppArguments {
 
 /// Request context which default to using JSONDecoder/Encoder
 struct SessionsContext: HBRequestContext, HBAuthRequestContext {
-    init(allocator: ByteBufferAllocator, logger: Logger) {
-        self.coreContext = .init(
-            allocator: allocator,
-            logger: logger
-        )
+    init(channel: Channel, logger: Logger) {
+        self.coreContext = .init(allocator: channel.allocator, logger: logger)
         self.auth = .init()
     }
 

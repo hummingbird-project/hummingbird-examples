@@ -14,6 +14,10 @@ Examples converted to Hummingbird 2.0
 - [upload](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/upload) - File uploading and downloading.
 - [webauthn](https://github.com/hummingbird-project/hummingbird-examples/tree/2.x.x/webauthn) - Web app demonstrating WebAuthn(PassKey) authentication.
 
+And finally
+
+- [todos-auth-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-auth-fluent) - This is a more complete example which shows authentication, CRUD operations and mustache rendering all in one app.
+
 Examples still working with Hummingbird 1.0
 - [auth-srp](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-srp) - Secure Remote Password authentication.
 - [graphql-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/graphql-server) - GraphQL server using [Graphiti](https://github.com/GraphQLSwift/Graphiti)
@@ -26,7 +30,3 @@ Examples still working with Hummingbird 1.0
 - [upload-s3](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload-s3) - File uploading and downloading using AWS S3 as backing store.
 - [websocket-chat](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-chat) - Simple chat application using WebSockets.
 - [websocket-echo](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-echo) - Simple WebSocket based echo server.
-
-And finally
-
-- [todos-auth-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-auth-fluent) - This is a more complete example which shows authentication, CRUD operations and mustache rendering all in one app.

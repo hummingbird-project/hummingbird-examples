@@ -9,8 +9,8 @@ struct WebAuthnRequestContext: HBAuthRequestContext, HBRouterRequestContext {
     var auth: HBLoginCache
     var routerContext: HBRouterBuilderContext
 
-    init(allocator: ByteBufferAllocator, logger: Logger) {
-        self.coreContext = .init(allocator: allocator, logger: logger)
+    init(channel: Channel, logger: Logger) {
+        self.coreContext = .init(allocator: channel.allocator, logger: logger)
         self.auth = .init()
         self.routerContext = .init()
     }
