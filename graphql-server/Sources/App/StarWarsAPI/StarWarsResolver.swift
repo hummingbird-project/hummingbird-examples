@@ -6,8 +6,8 @@ extension Character {
         nil
     }
 
-    public func getFriends(context: StarWarsContext, arguments: NoArguments) -> [Character] {
-        []
+    public func getFriends(context: StarWarsContext, arguments: NoArguments) async throws -> [Character] {
+        try await context.getFriends(of: self)
     }
 }
 
