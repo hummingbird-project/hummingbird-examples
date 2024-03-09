@@ -1,55 +1,45 @@
-import App
+@testable import App
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import XCTest
 
 final class AppTests: XCTestCase {
-    func testGraphQLSuccess() throws {
-        let app = HBApplication(testing: .live)
-        try app.configure()
-
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        let testQuery = """
-        {
-            "query": "{hero(episode:NEWHOPE){name}}",
-            "variables": {}
-        }
-        """
-        let testBody = ByteBuffer(string: testQuery)
-        let expectedResult = #"{"data":{"hero":{"name":"R2-D2"}}}"#
-        try app.XCTExecute(
-            uri: "/graphql",
-            method: .POST,
-            headers: .init(dictionaryLiteral: ("Content-Type", "application/json; charset=utf-8")),
-            body: testBody
-        ) { res in
-            XCTAssertEqual(res.status, .ok)
-
-            let body = try XCTUnwrap(res.body)
-
-            let testBodyString = body.getString(at: 0, length: body.capacity)?.trimmingCharacters(in: .whitespacesAndNewlines)
-            XCTAssertEqual(testBodyString, expectedResult)
+    func testGraphQLSuccess() async throws {
+        let app = buildApplication(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
+        try await app.test(.router) { client in
+            let testQuery = """
+            {
+                "query": "{hero(episode:NEWHOPE){name}}",
+                "variables": {}
+            }
+            """
+            let testBody = ByteBuffer(string: testQuery)
+            let expectedResult = #"{"data":{"hero":{"name":"R2-D2"}}}"#
+            try await client.execute(
+                uri: "/graphql",
+                method: .post,
+                headers: [.contentType: "application/json; charset=utf-8"],
+                body: testBody
+            ) { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(String(buffer: res.body).trimmingCharacters(in: .whitespacesAndNewlines), expectedResult)
+            }
         }
     }
 
-    func testGraphQLQueryError() throws {
-        let app = HBApplication(testing: .live)
-        try app.configure()
-
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        let badQuery = #"{ FAIL"#
-        let badRequestBody = ByteBuffer(string: badQuery)
-        try app.XCTExecute(
-            uri: "/graphql",
-            method: .POST,
-            headers: .init(dictionaryLiteral: ("Content-Type", "application/json; charset=utf-8")),
-            body: badRequestBody
-        ) { res in
-            XCTAssertEqual(res.status, .badRequest)
+    func testGraphQLQueryError() async throws {
+        let app = buildApplication(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
+        try await app.test(.router) { client in
+            let badQuery = #"{ FAIL"#
+            let badRequestBody = ByteBuffer(string: badQuery)
+            try await client.execute(
+                uri: "/graphql",
+                method: .post,
+                headers: [.contentType: "application/json; charset=utf-8"],
+                body: badRequestBody
+            ) { res in
+                XCTAssertEqual(res.status, .badRequest)
+            }
         }
     }
 }
