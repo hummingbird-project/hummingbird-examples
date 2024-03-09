@@ -23,54 +23,56 @@ extension UUID: LosslessStringConvertible {
     }
 }
 
-struct TodoController {
+struct TodoController: Sendable {
     let tableName = "hummingbird-todos"
-    func addRoutes(to group: HBRouterGroup) {
+    let dynamoDB: DynamoDB
+
+    init(dynamoDB: DynamoDB) {
+        self.dynamoDB = dynamoDB
+    }
+
+    func addRoutes(to group: HBRouterGroup<some HBRequestContext>) {
         group
             .get(use: self.list)
-            .post(options: .editResponse, use: self.create)
+            .post(use: self.create)
             .delete(use: self.deleteAll)
             .get(":id", use: self.get)
             .patch(":id", use: self.updateId)
             .delete(":id", use: self.deleteId)
     }
 
-    func list(_ request: HBRequest) -> EventLoopFuture<[Todo]> {
+    @Sendable func list(_ request: HBRequest, context: some HBRequestContext) async throws -> [Todo] {
         let input = DynamoDB.ScanInput(tableName: self.tableName)
-        return request.aws.dynamoDB.scan(input, type: Todo.self, logger: request.logger, on: request.eventLoop)
-            .map { $0.items ?? [] }
+        let response = try await self.dynamoDB.scan(input, type: Todo.self, logger: context.logger)
+        return response.items ?? []
     }
 
-    func create(_ request: HBRequest) -> EventLoopFuture<Todo> {
-        guard var todo = try? request.decode(as: Todo.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        guard let host = request.headers["host"].first else { return request.failure(HBHTTPError(.badRequest, message: "No host header")) }
+    @Sendable func create(_ request: HBRequest, context: some HBRequestContext) async throws -> HBEditedResponse<Todo> {
+        var todo = try await request.decode(as: Todo.self, context: context)
+        guard let host = request.head.authority else { throw HBHTTPError(.badRequest, message: "No host header") }
         todo.id = UUID()
         todo.completed = false
         todo.url = "http://\(host)/todos/\(todo.id!)"
         let input = DynamoDB.PutItemCodableInput(item: todo, tableName: self.tableName)
-        return request.aws.dynamoDB.putItem(input, logger: request.logger, on: request.eventLoop)
-            .map { _ in
-                request.response.status = .created
-                return todo
-            }
+        _ = try await self.dynamoDB.putItem(input, logger: context.logger)
+        return HBEditedResponse(status: .created, response: todo)
     }
 
-    func get(_ request: HBRequest) -> EventLoopFuture<Todo?> {
-        guard let id = request.parameters.get("id", as: String.self) else { return request.failure(HBHTTPError(.badRequest)) }
+    @Sendable func get(_ request: HBRequest, context: some HBRequestContext) async throws -> Todo? {
+        let id = try context.parameters.require("id")
         let input = DynamoDB.QueryInput(
             consistentRead: true,
             expressionAttributeValues: [":id": .s(id)],
             keyConditionExpression: "id = :id",
             tableName: self.tableName
         )
-        return request.aws.dynamoDB.query(input, type: Todo.self, logger: request.logger, on: request.eventLoop)
-            .map { $0.items?.first }
+        let response = try await self.dynamoDB.query(input, type: Todo.self, logger: context.logger)
+        return response.items?.first
     }
 
-    func updateId(_ request: HBRequest) -> EventLoopFuture<Todo> {
-        guard var todo = try? request.decode(as: EditTodo.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        guard let id = request.parameters.get("id", as: UUID.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        todo.id = id
+    @Sendable func updateId(_ request: HBRequest, context: some HBRequestContext) async throws -> Todo {
+        var todo = try await request.decode(as: EditTodo.self, context: context)
+        todo.id = try context.parameters.require("id", as: UUID.self)
         let input = DynamoDB.UpdateItemCodableInput(
             conditionExpression: "attribute_exists(id)",
             key: ["id"],
@@ -78,51 +80,40 @@ struct TodoController {
             tableName: self.tableName,
             updateItem: todo
         )
-        return request.aws.dynamoDB.updateItem(input, logger: request.logger, on: request.eventLoop)
-            .flatMapErrorThrowing { error in
-                if let error = error as? DynamoDBErrorType, error == .conditionalCheckFailedException {
-                    throw HBHTTPError(.notFound)
-                }
-                throw error
-            }
-            .flatMapThrowing { response in
-                guard let attributes = response.attributes else { throw HBHTTPError(.internalServerError) }
-                return try DynamoDBDecoder().decode(Todo.self, from: attributes)
-            }
+        do {
+            let response = try await self.dynamoDB.updateItem(input, logger: context.logger)
+            guard let attributes = response.attributes else { throw HBHTTPError(.internalServerError) }
+            return try DynamoDBDecoder().decode(Todo.self, from: attributes)
+        } catch let error as DynamoDBErrorType where error == .conditionalCheckFailedException {
+            throw HBHTTPError(.notFound)
+        }
     }
 
-    func deleteAll(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
-        let input = DynamoDB.ScanInput(tableName: self.tableName)
-        return request.aws.dynamoDB.scan(input, logger: request.logger, on: request.eventLoop)
-            .map(\.items)
-            .unwrap(orReplace: [])
-            .flatMap { items -> EventLoopFuture<Void> in
-                let requestItems: [DynamoDB.WriteRequest] = items.compactMap { item in
-                    item["id"].map { .init(deleteRequest: .init(key: ["id": $0])) }
-                }
-                guard requestItems.count > 0 else { return request.success(()) }
-                let input = DynamoDB.BatchWriteItemInput(requestItems: [self.tableName: requestItems])
-                return request.aws.dynamoDB.batchWriteItem(input, logger: request.logger, on: request.eventLoop)
-                    .map { _ in }
-            }
-            .map { _ in .ok }
+    @Sendable func deleteAll(_ request: HBRequest, context: some HBRequestContext) async throws -> HTTPResponse.Status {
+        let scanInput = DynamoDB.ScanInput(tableName: self.tableName)
+        let items = try await self.dynamoDB.scan(scanInput, logger: context.logger).items ?? []
+        let requestItems: [DynamoDB.WriteRequest] = items.compactMap { item in
+            item["id"].map { .init(deleteRequest: .init(key: ["id": $0])) }
+        }
+        guard requestItems.count > 0 else { return .ok }
+        let writeInput = DynamoDB.BatchWriteItemInput(requestItems: [self.tableName: requestItems])
+        _ = try await self.dynamoDB.batchWriteItem(writeInput, logger: context.logger)
+        return .ok
     }
 
-    func deleteId(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
-        guard let id = request.parameters.get("id", as: String.self) else { return request.failure(HBHTTPError(.badRequest)) }
+    @Sendable func deleteId(_ request: HBRequest, context: some HBRequestContext) async throws -> HTTPResponse.Status {
+        let id = try context.parameters.require("id")
 
         let input = DynamoDB.DeleteItemInput(
             conditionExpression: "attribute_exists(id)",
             key: ["id": .s(id)],
             tableName: self.tableName
         )
-        return request.aws.dynamoDB.deleteItem(input, logger: request.logger, on: request.eventLoop)
-            .flatMapErrorThrowing { error in
-                if let error = error as? DynamoDBErrorType, error == .conditionalCheckFailedException {
-                    throw HBHTTPError(.notFound)
-                }
-                throw error
-            }
-            .map { _ in .ok }
+        do {
+            _ = try await self.dynamoDB.deleteItem(input, logger: context.logger)
+            return .ok
+        } catch let error as DynamoDBErrorType where error == .conditionalCheckFailedException {
+            throw HBHTTPError(.notFound)
+        }
     }
 }

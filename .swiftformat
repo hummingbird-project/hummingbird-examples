@@ -8,14 +8,13 @@
 --exclude .build
 
 # rules
---disable redundantReturn, extensionAccessControl
+--disable redundantReturn, extensionAccessControl, unusedArguments
 
 # format options
 --ifdef no-indent
 --nospaceoperators ...,..<
 --patternlet inline
 --self insert
---stripunusedargs unnamed-only
 
 #--maxwidth 150
 --wraparguments before-first

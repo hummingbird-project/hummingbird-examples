@@ -17,14 +17,7 @@ struct HummingbirdArguments: AsyncParsableCommand, AppArguments {
     var inMemoryDatabase: Bool = false
 
     func run() async throws {
-        let app = HBApplication(
-            configuration: .init(
-                address: .hostname(self.hostname, port: self.port),
-                serverName: "Hummingbird"
-            )
-        )
-        try await app.configure(arguments: self)
-        try app.start()
-        app.wait()
+        let app = try await buildApplication(self)
+        try await app.runService()
     }
 }

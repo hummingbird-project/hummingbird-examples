@@ -3,12 +3,12 @@ import Hummingbird
 import NIOSSL
 
 @main
-struct HummingbirdArguments: ParsableCommand, AppArguments {
+struct HummingbirdArguments: AsyncParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var hostname: String = "127.0.0.1"
 
     @Option(name: .shortAndLong)
-    var port: Int = 8080
+    var port: Int = 8081
 
     @Option(name: .shortAndLong, help: "PEM file containing certificate chain")
     var certificateChain: String
@@ -27,16 +27,14 @@ struct HummingbirdArguments: ParsableCommand, AppArguments {
         }
     }
 
-    func run() throws {
-        let app = HBApplication(
+    func run() async throws {
+        let app = try buildApplication(
+            arguments: self,
             configuration: .init(
                 address: .hostname(self.hostname, port: self.port),
-                serverName: "Hummingbird",
-                idleTimeoutConfiguration: .init(readTimeout: .seconds(5), writeTimeout: .seconds(5))
+                serverName: "Hummingbird"
             )
         )
-        try app.configure(self)
-        try app.start()
-        app.wait()
+        try await app.runService()
     }
 }

@@ -13,45 +13,61 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import HummingbirdAuth
+import HummingbirdFluent
 import HummingbirdMustache
+import HummingbirdRouter
 
 /// Redirects to login page if no user has been authenticated
-struct RedirectMiddleware: HBMiddleware {
+struct RedirectMiddleware<Context: HBAuthRequestContext>: HBMiddlewareProtocol {
     let to: String
-    func apply(to request: HBRequest, next: HBResponder) -> EventLoopFuture<HBResponse> {
-        if request.authHas(User.self) {
-            return next.respond(to: request)
+    func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+        // check if authenticated
+        if context.auth.has(AuthenticatedUser.self) {
+            return try await next(request, context)
         } else {
-            return request.eventLoop.makeSucceededFuture(.redirect(to: "\(self.to)?from=\(request.uri)", type: .found))
+            // if not authenticated then redirect to login page
+            return .redirect(to: "\(self.to)?from=\(request.uri)", type: .found)
         }
     }
 }
 
 /// Serves HTML pages
 struct HTMLController {
-    let homeTemplate: HBMustacheTemplate
+    typealias Context = WebAuthnRequestContext
 
-    init(mustacheLibrary: HBMustacheLibrary) {
+    let homeTemplate: HBMustacheTemplate
+    let fluent: HBFluent
+    let sessionStorage: HBSessionStorage
+
+    init(
+        mustacheLibrary: HBMustacheLibrary,
+        fluent: HBFluent,
+        sessionStorage: HBSessionStorage
+    ) {
         // get the mustache templates from the library
         guard let homeTemplate = mustacheLibrary.getTemplate(named: "home")
         else {
             preconditionFailure("Failed to load mustache templates")
         }
         self.homeTemplate = homeTemplate
+        self.fluent = fluent
+        self.sessionStorage = sessionStorage
     }
 
-    /// Add routes for webpages
-    func addRoutes(to router: HBRouterBuilder) {
-        router.group()
-            .add(middleware: WebAuthnSessionAuthenticator())
-            .add(middleware: RedirectMiddleware(to: "/login.html"))
-            .get("/", use: self.home)
+    // return Route for home page
+    var endpoints: some HBMiddlewareProtocol<Context> {
+        Get("/") {
+            WebAuthnSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
+            RedirectMiddleware(to: "/login.html")
+            self.home
+        }
     }
 
     /// Home page listing todos and with add todo UI
-    func home(request: HBRequest) async throws -> HTML {
+    @Sendable func home(request: HBRequest, context: Context) async throws -> HTML {
         // get user
-        let user = try request.authRequire(User.self)
+        let user = try context.auth.require(AuthenticatedUser.self)
         // Render home template and return as HTML
         let object: [String: Any] = [
             "name": user.username,

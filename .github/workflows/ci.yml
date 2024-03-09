@@ -1,17 +1,10 @@
 name: CI
 
 on:
-  push:
-    branches:
-    - main
-    paths:
-    - '**.swift'
   pull_request:
     branches:
     - main
-    paths:
-    - '**.swift'
-    - '**.yml'
+    - 2.x.x
   workflow_dispatch:
 
 jobs:
@@ -20,16 +13,21 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'swift:5.8'
+          - 'swift:5.9'
     container:
       image: ${{ matrix.image }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    # https://github.com/actions/checkout/issues/766
+    - name: Mark the workspace as safe
+      run: git config --global --add safe.directory ${GITHUB_WORKSPACE}
     - name: Install dependencies
       run: |
         apt-get update -qq
         apt-get install -q -y libsqlite3-dev
     - name: Build Examples
       run: |
-        ./scripts/build-all.sh
+        ./scripts/build-all.sh -u origin/${GITHUB_BASE_REF}

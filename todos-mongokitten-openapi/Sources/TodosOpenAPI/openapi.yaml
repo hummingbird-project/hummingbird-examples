@@ -1,0 +1,128 @@
+openapi: '3.1.0'
+info:
+  title: GreetingService
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080
+    description: Local
+paths:
+  /todos:
+    post:
+      operationId: createTodo
+      requestBody:
+        description: A todo to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodoContents'
+      responses:
+        '200':
+          description: A success response with the created todo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+    get:
+      operationId: getTodos
+      responses:
+        '200':
+          description: A success response with a list of todos.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Todo'
+  /todos/{id}:
+    get:
+      operationId: getTodo
+      parameters:
+        - $ref: '#/components/parameters/TodoId'
+      responses:
+        '200':
+          description: A success response with a todo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '400':
+          description: A bad request response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: A message describing the error.
+        '404':
+          description: This todo does not exist
+    put:
+      operationId: updateTodo
+      parameters:
+        - $ref: '#/components/parameters/TodoId'
+      requestBody:
+        description: The todo's new values.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TodoContents'
+      responses:
+        '200':
+          description: A success response with the updated todo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Todo'
+        '400':
+          description: A bad request response.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: A message describing the error.
+        '404':
+          description: This todo does not exist
+components:
+  parameters:
+    TodoId:
+      name: id
+      in: path
+      description: The id of the Todo.
+      required: true
+      schema:
+        type: string
+  schemas:
+    TodoContents:
+      type: object
+      description: A value with the todo contents.
+      properties:
+        items:
+          type: array
+          description: A list of todo items.
+          items:
+            type: string
+            description: A string containing the todo item contents.
+      required:
+        - items
+    Todo:
+      type: object
+      description: A value with the todo contents.
+      properties:
+        id:
+          type: string
+          description: The id of the todo.
+        items:
+          type: array
+          description: A list of todo items.
+          items:
+            type: string
+            description: A string containing the todo item contents.
+      required:
+        - id
+        - items

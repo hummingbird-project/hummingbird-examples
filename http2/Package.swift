@@ -1,19 +1,17 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 let package = Package(
     name: "http2",
-    platforms: [.macOS(.v10_14)],
+    platforms: [.macOS(.v14)],
     products: [
         .executable(name: "App", targets: ["App"]),
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-certificates.git", from: "1.0.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-core.git", from: "1.0.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "1.0.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-xct-async-http-client.git", from: "0.1.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-alpha.3"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
     ],
     targets: [
@@ -21,7 +19,7 @@ let package = Package(
             name: "App",
             dependencies: [
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdHTTP2", package: "hummingbird-core"),
+                .product(name: "HummingbirdHTTP2", package: "hummingbird"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             swiftSettings: [
@@ -37,7 +35,6 @@ let package = Package(
                 .byName(name: "App"),
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "HummingbirdXCT", package: "hummingbird"),
-                .product(name: "HBXCTAsyncHTTPClient", package: "hummingbird-xct-async-http-client"),
             ]
         ),
     ]

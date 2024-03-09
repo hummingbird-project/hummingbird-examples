@@ -25,7 +25,7 @@ async function register(username) {
             "username": username
         }
         // signup api call
-        const response = await fetch('/api/signup', {
+        const response = await fetch('/api/user/signup', {
             method: 'POST',
             headers: {"content-type": "application/json"},
             body: JSON.stringify(data)
@@ -43,7 +43,7 @@ async function register(username) {
         const result = await navigator.credentials.create({publicKey: publicKeyCredentialCreationOptions});
         const registrationCredential = createRegistrationCredentialForServer(result);
         // finish registration api call
-        const finishResponse = await fetch('/api/register/finish', {
+        const finishResponse = await fetch('/api/user/register/finish', {
             method: "POST",
             headers: {"content-type": "application/json"},
             body: JSON.stringify(registrationCredential)
@@ -63,7 +63,7 @@ async function register(username) {
 async function login() {
     try {
         // initiate login
-        const response = await fetch('/api/login')
+        const response = await fetch('/api/user/login')
         if (response.status !== 200) {
             throw Error(`Error: status code: ${response.status}`)
         }
@@ -74,7 +74,7 @@ async function login() {
         });
         const credential = createAuthenicationCredentialForServer(result);
         // finish login
-        const finishResponse = await fetch('/api/login', {
+        const finishResponse = await fetch('/api/user/login', {
             method: 'POST',
             headers: {"content-type": 'application/json'},
             body: JSON.stringify(credential)
@@ -94,7 +94,7 @@ async function login() {
 async function logout() {
     try {
         // initiate login
-        const response = await fetch('/api/logout')
+        const response = await fetch('/api/user/logout')
         if (response.status !== 200) {
             throw Error(`Error: status code: ${response.status}`)
         }
@@ -109,7 +109,7 @@ async function logout() {
  */
 async function test() {
     try {
-        const response = await fetch('/api/test')
+        const response = await fetch('/api/user/test')
         if (response.status !== 200) {
             throw Error(`Error: status code: ${response.status}`)
         }
@@ -121,8 +121,8 @@ async function test() {
 }
 
 /**
- * Convert server response from /api/beginregister to PublicKeyCredentialCreationOptions
- * @param {*} response Server response from /api/beginregister   
+ * Convert server response from /api/user/beginregister to PublicKeyCredentialCreationOptions
+ * @param {*} response Server response from /api/user/beginregister   
  * @returns PublicKeyCredentialCreationOptions
  */
 function createPublicKeyCredentialCreationOptionsFromServerResponse(response) {
@@ -142,9 +142,9 @@ function createPublicKeyCredentialCreationOptionsFromServerResponse(response) {
 }
 
 /**
- * Convert return value from navigator.credentials.create to input JSON for /api/finishregister
+ * Convert return value from navigator.credentials.create to input JSON for /api/user/finishregister
  * @param {*} registrationCredential Result of navigator.credentials.create
- * @returns Input for /api/finishregister
+ * @returns Input for /api/user/finishregister
  */
 function createRegistrationCredentialForServer(registrationCredential) {
     return {
@@ -160,8 +160,8 @@ function createRegistrationCredentialForServer(registrationCredential) {
 }
 
 /**
- * Convert return value from GET /api/login to PublicKeyCredentialRequestOptions
- * @param {*} response Server response from GET /api/login
+ * Convert return value from GET /api/user/login to PublicKeyCredentialRequestOptions
+ * @param {*} response Server response from GET /api/user/login
  * @returns PublicKeyCredentialRequestOptions
  */
 function createPublicKeyCredentialRequestOptionsFromServerResponse(response) {
@@ -173,9 +173,9 @@ function createPublicKeyCredentialRequestOptionsFromServerResponse(response) {
 }
 
 /**
- * Convert return value of navigator.credentials.get to input JSON for POST /api/login
+ * Convert return value of navigator.credentials.get to input JSON for POST /api/user/login
  * @param {*} credential Result of navigator.credentials.get
- * @returns Input for POST /api/login
+ * @returns Input for POST /api/user/login
  */
 function createAuthenicationCredentialForServer(credential) {
     return {

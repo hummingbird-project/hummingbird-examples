@@ -15,60 +15,64 @@
 import FluentKit
 import Foundation
 import Hummingbird
+import HummingbirdAuth
+import HummingbirdFluent
 import NIO
 
-struct UserController {
+struct UserController<Context: HBAuthRequestContext> {
+    let fluent: HBFluent
+    let sessionStorage: HBSessionStorage
+
     /// Add routes for user controller
-    func addRoutes(to group: HBRouterGroup) {
-        group.post(options: .editResponse, use: self.create)
-        group.group("login").add(middleware: BasicAuthenticator())
-            .post(options: .editResponse, use: self.login)
-        group.add(middleware: SessionAuthenticator())
+    func addRoutes(to group: HBRouterGroup<Context>) {
+        group.post(use: self.create)
+        group.group("login").add(middleware: BasicAuthenticator(fluent: self.fluent))
+            .post(use: self.login)
+        group.add(middleware: SessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
             .get(use: self.current)
             .post("logout", use: self.logout)
     }
 
     /// Create new user
-    /// CURRENTLY NOT USED, as user creation is done by ``WebController.signupDetails``
-    func create(_ request: HBRequest) async throws -> UserResponse {
-        guard let createUser = try? request.decode(as: CreateUserRequest.self) else { throw HBHTTPError(.badRequest) }
+    /// Used in tests, as user creation is done by ``WebController.signupDetails``
+    @Sendable func create(_ request: HBRequest, context: Context) async throws -> HBEditedResponse<UserResponse> {
+        let createUser = try await request.decode(as: CreateUserRequest.self, context: context)
 
         let user = try await User.create(
             name: createUser.name,
             email: createUser.email,
             password: createUser.password,
-            request: request
+            db: self.fluent.db()
         )
 
-        request.response.status = .created
-        return UserResponse(from: user)
+        return .init(status: .created, response: UserResponse(from: user))
     }
 
     /// Login user and create session
-    /// CURRENTLY NOT USED, as user creation is done by ``WebController.loginDetails``
-    func login(_ request: HBRequest) async throws -> HTTPResponseStatus {
+    /// Used in tests, as user creation is done by ``WebController.loginDetails``
+    @Sendable func login(_ request: HBRequest, context: Context) async throws -> HBResponse {
         // get authenticated user and return
-        guard let user = request.authGet(User.self),
-              let userId = user.id else { throw HBHTTPError(.unauthorized) }
+        let user = try context.auth.require(User.self)
         // create session lasting 1 hour
-        try await request.session.save(session: userId, expiresIn: .minutes(60))
-        return .ok
+        let cookie = try await self.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
+        var response = HBResponse(status: .ok)
+        response.setCookie(cookie)
+        return response
     }
 
     /// Login user and create session
-    func logout(_ request: HBRequest) async throws -> HTTPResponseStatus {
+    @Sendable func logout(_ request: HBRequest, context: Context) async throws -> HTTPResponse.Status {
         // get authenticated user and return
-        guard let user = request.authGet(User.self) else { throw HBHTTPError(.unauthorized) }
-        guard let userId = user.id else { throw HBHTTPError(.unauthorized) }
+        let user = try context.auth.require(User.self)
         // create session finishing now
-        try await request.session.update(session: userId, expiresIn: .seconds(0))
+        try await self.sessionStorage.update(session: user.requireID(), expiresIn: .seconds(0), request: request)
         return .ok
     }
 
     /// Get current logged in user
-    func current(_ request: HBRequest) throws -> UserResponse {
+    @Sendable func current(_ request: HBRequest, context: Context) throws -> UserResponse {
         // get authenticated user and return
-        guard let user = request.authGet(User.self) else { throw HBHTTPError(.unauthorized) }
+        let user = try context.auth.require(User.self)
         return UserResponse(from: user)
     }
 }

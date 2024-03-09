@@ -10,86 +10,76 @@ final class AppTests: XCTestCase {
     struct TestAppArguments: AppArguments {
         let inMemoryDatabase: Bool = true
         let migrate: Bool = true
+        let hostname: String = "127.0.0.1"
+        let port = 8080
     }
 
     func testApp() async throws {
-        let app = HBApplication(testing: .live)
-        try await app.configure(arguments: TestAppArguments())
+        let app = try await buildApplication(TestAppArguments())
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        try app.XCTExecute(uri: "/", method: .GET) { response in
-            XCTAssertEqual(response.status, .ok)
-            XCTAssertEqual(response.body.map { String(buffer: $0) }, "Hello")
+        try await app.test(.router) { client in
+            try await client.XCTExecute(uri: "/", method: .get) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(String(buffer: response.body), "Hello")
+            }
         }
     }
 
     func testCreateUser() async throws {
-        let app = HBApplication(testing: .live)
-        try await app.configure(arguments: TestAppArguments())
+        let app = try await buildApplication(TestAppArguments())
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
-        try app.XCTExecute(uri: "/user", method: .PUT, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
-            XCTAssertEqual(response.status, .created)
-            let body = try XCTUnwrap(response.body)
-            let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: body)
-            XCTAssertEqual(userResponse.name, "adam")
+        try await app.test(.router) { client in
+            let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
+            try await client.XCTExecute(uri: "/user", method: .put, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
+                XCTAssertEqual(response.status, .created)
+                let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: response.body)
+                XCTAssertEqual(userResponse.name, "adam")
+            }
         }
     }
 
     func testAuthenticateWithLocallyCreatedJWT() async throws {
-        let app = HBApplication(testing: .live)
-        try await app.configure(arguments: TestAppArguments())
+        let app = try await buildApplication(TestAppArguments())
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
-
-        let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
-        try app.XCTExecute(uri: "/user", method: .PUT, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
-            XCTAssertEqual(response.status, .created)
-            let body = try XCTUnwrap(response.body)
-            let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: body)
-            XCTAssertEqual(userResponse.name, "adam")
-        }
-        let token = try app.XCTExecute(
-            uri: "/user/login",
-            method: .POST,
-            auth: .basic(username: "adam", password: "testpassword")
-        ) { response in
-            XCTAssertEqual(response.status, .ok)
-            let body = try XCTUnwrap(response.body)
-            let responseBody = try JSONDecoder().decode([String: String].self, from: body)
-            return try XCTUnwrap(responseBody["token"])
-        }
-        try app.XCTExecute(uri: "/auth", method: .GET, auth: .bearer(token)) { response in
-            XCTAssertEqual(response.status, .ok)
+        try await app.test(.router) { client in
+            let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
+            try await client.XCTExecute(uri: "/user", method: .put, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
+                XCTAssertEqual(response.status, .created)
+                let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: response.body)
+                XCTAssertEqual(userResponse.name, "adam")
+            }
+            let token = try await client.XCTExecute(
+                uri: "/user/login",
+                method: .post,
+                auth: .basic(username: "adam", password: "testpassword")
+            ) { response in
+                XCTAssertEqual(response.status, .ok)
+                let responseBody = try JSONDecoder().decode([String: String].self, from: response.body)
+                return try XCTUnwrap(responseBody["token"])
+            }
+            try await client.XCTExecute(uri: "/auth", method: .get, auth: .bearer(token)) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
         }
     }
 
     func testAuthenticateWithServiceCreatedJWT() async throws {
-        let app = HBApplication(testing: .live)
-        try await app.configure(arguments: TestAppArguments())
+        let app = try await buildApplication(TestAppArguments())
 
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        try await app.test(.router) { client in
+            // create JWT
+            let payload = JWTPayloadData(
+                subject: .init(value: "John Smith"),
+                expiration: .init(value: Date(timeIntervalSinceNow: 12 * 60 * 60))
+            )
+            let signers = JWTSigners()
+            signers.use(.hs256(key: "my-secret-key"), kid: "_hb_local_")
+            let token = try signers.sign(payload, kid: "_hb_local_")
 
-        // create JWT
-        let payload = JWTPayloadData(
-            subject: .init(value: "John Smith"),
-            expiration: .init(value: Date(timeIntervalSinceNow: 12 * 60 * 60))
-        )
-        let signers = JWTSigners()
-        signers.use(.hs256(key: "my-secret-key"), kid: "_hb_local_")
-        let token = try signers.sign(payload, kid: "_hb_local_")
-
-        try app.XCTExecute(uri: "/auth", method: .GET, auth: .bearer(token)) { response in
-            XCTAssertEqual(response.status, .ok)
-            let body = try XCTUnwrap(response.body)
-            XCTAssertEqual(String(buffer: body), "Authenticated (Subject: John Smith)")
+            try await client.XCTExecute(uri: "/auth", method: .get, auth: .bearer(token)) { response in
+                XCTAssertEqual(response.status, .ok)
+                XCTAssertEqual(String(buffer: response.body), "Authenticated (Subject: John Smith)")
+            }
         }
     }
 }

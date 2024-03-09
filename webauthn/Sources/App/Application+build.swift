@@ -1,0 +1,91 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Hummingbird server framework project
+//
+// Copyright (c) 2021-2023 the Hummingbird authors
+// Licensed under Apache License v2.0
+//
+// See LICENSE.txt for license information
+// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+//===----------------------------------------------------------------------===//
+
+import FluentSQLiteDriver
+import Foundation
+import Hummingbird
+import HummingbirdAuth
+import HummingbirdFluent
+import HummingbirdMustache
+import HummingbirdRouter
+import WebAuthn
+
+/// Application arguments protocol. We use a protocol so we can call
+/// `HBApplication.configure` inside Tests as well as in the App executable.
+/// Any variables added here also have to be added to `App` in App.swift and
+/// `TestArguments` in AppTest.swift
+public protocol AppArguments {
+    var hostname: String { get }
+    var port: Int { get }
+    var inMemoryDatabase: Bool { get }
+    var certificateChain: String { get }
+    var privateKey: String { get }
+}
+
+func buildApplication(_ arguments: AppArguments) async throws -> some HBApplicationProtocol {
+    var logger = Logger(label: "webauthn")
+    logger.logLevel = .debug
+
+    let fluent = HBFluent(logger: logger)
+    // add sqlite database
+    if arguments.inMemoryDatabase {
+        fluent.databases.use(.sqlite(.memory), as: .sqlite)
+    } else {
+        fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
+    }
+    await fluent.migrations.add(CreateUser())
+    await fluent.migrations.add(CreateWebAuthnCredential())
+    try await fluent.migrate()
+
+    // sessions are stored in memory
+    let memoryPersist = HBMemoryPersistDriver()
+    let sessionStorage = HBSessionStorage(memoryPersist)
+
+    // load mustache template library
+    let library = try HBMustacheLibrary(directory: "templates")
+    assert(library.getTemplate(named: "home") != nil, "Set your working directory to the root folder of this example to get it to work")
+
+    let router = HBRouterBuilder(context: WebAuthnRequestContext.self) {
+        // add logging middleware
+        HBLogRequestsMiddleware(.info)
+        // add file middleware to server HTML files
+        HBFileMiddleware(searchForIndexHtml: true, logger: logger)
+        // health check endpoint
+        Get("/health") { _, _ -> HTTPResponse.Status in
+            return .ok
+        }
+        HTMLController(
+            mustacheLibrary: library,
+            fluent: fluent,
+            sessionStorage: sessionStorage
+        ).endpoints
+        RouteGroup("api") {
+            HBWebAuthnController(
+                webauthn: .init(
+                    config: .init(
+                        relyingPartyID: "localhost",
+                        relyingPartyName: "Hummingbird WebAuthn example",
+                        relyingPartyOrigin: "http://localhost:8080"
+                    )
+                ),
+                fluent: fluent,
+                sessionStorage: sessionStorage
+            ).endpoints
+        }
+    }
+
+    var app = HBApplication(router: router)
+    app.addServices(fluent, memoryPersist)
+    return app
+}
