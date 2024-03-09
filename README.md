@@ -30,3 +30,5 @@ Examples still working with Hummingbird 1.0
 - [upload-s3](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload-s3) - File uploading and downloading using AWS S3 as backing store.
 - [websocket-chat](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-chat) - Simple chat application using WebSockets.
 - [websocket-echo](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-echo) - Simple WebSocket based echo server.
+
+The full set of Hummingbird 1.0 examples can be found at https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x
