@@ -155,7 +155,7 @@ final class AppTests: XCTestCase {
         try await app.test(.router) { client in
             try await self.testQuery(
                 "query FetchSomeIDQuery($someId:String!){human(id:$someId){name}}",
-                variables: ["someId": 1002],
+                variables: ["someId": "1002"],
                 expectedResult: #"{"data":{"human":{"name":"Han Solo"}}}"#,
                 client: client
             )
