@@ -1,7 +1,7 @@
 @testable import App
 import Crypto
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import NIOHTTP2
 import NIOSSL
 import X509
@@ -51,12 +51,12 @@ final class AppTests: XCTestCase {
         let app = try buildApplication(arguments: TestAppArguments(), configuration: .init())
 
         try await app.test(.ahc(.https)) { client in
-            try await client.XCTExecute(uri: "/http", method: .get) { response in
+            try await client.execute(uri: "/http", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "Using http v2.0")
             }
 
-            try await client.XCTExecute(uri: "/http", method: .get) { response in
+            try await client.execute(uri: "/http", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "Using http v2.0")
             }

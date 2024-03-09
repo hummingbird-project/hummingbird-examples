@@ -53,7 +53,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some HBApplicat
     let sessionStorage = HBSessionStorage(memoryPersist)
 
     // load mustache template library
-    let library = try HBMustacheLibrary(directory: "templates")
+    let library = try await HBMustacheLibrary(directory: "templates")
     assert(library.getTemplate(named: "home") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     let router = HBRouterBuilder(context: WebAuthnRequestContext.self) {

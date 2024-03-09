@@ -1,6 +1,6 @@
 import Foundation
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 @testable import Todos
 import XCTest
 
@@ -16,17 +16,17 @@ final class TodosTests: XCTestCase {
         let order: Int?
     }
 
-    func create(title: String, order: Int? = nil, client: some HBXCTClientProtocol) async throws -> Todo {
+    func create(title: String, order: Int? = nil, client: some HBTestClientProtocol) async throws -> Todo {
         let request = CreateRequest(title: title, order: order)
         let buffer = try JSONEncoder().encodeAsByteBuffer(request, allocator: ByteBufferAllocator())
-        return try await client.XCTExecute(uri: "/todos", method: .post, body: buffer) { response in
+        return try await client.execute(uri: "/todos", method: .post, body: buffer) { response in
             XCTAssertEqual(response.status, .created)
             return try JSONDecoder().decode(Todo.self, from: response.body)
         }
     }
 
-    func get(id: UUID, client: some HBXCTClientProtocol) async throws -> Todo? {
-        try await client.XCTExecute(uri: "/todos/\(id)", method: .get) { response in
+    func get(id: UUID, client: some HBTestClientProtocol) async throws -> Todo? {
+        try await client.execute(uri: "/todos/\(id)", method: .get) { response in
             // either the get request returned an 200 status or it didn't return a Todo
             XCTAssert(response.status == .ok || response.body.readableBytes == 0)
             if response.body.readableBytes > 0 {
@@ -37,8 +37,8 @@ final class TodosTests: XCTestCase {
         }
     }
 
-    func list(client: some HBXCTClientProtocol) async throws -> [Todo] {
-        try await client.XCTExecute(uri: "/todos", method: .get) { response in
+    func list(client: some HBTestClientProtocol) async throws -> [Todo] {
+        try await client.execute(uri: "/todos", method: .get) { response in
             XCTAssertEqual(response.status, .ok)
             return try JSONDecoder().decode([Todo].self, from: response.body)
         }
@@ -50,10 +50,10 @@ final class TodosTests: XCTestCase {
         let completed: Bool?
     }
 
-    func patch(id: UUID, title: String? = nil, order: Int? = nil, completed: Bool? = nil, client: some HBXCTClientProtocol) async throws -> Todo? {
+    func patch(id: UUID, title: String? = nil, order: Int? = nil, completed: Bool? = nil, client: some HBTestClientProtocol) async throws -> Todo? {
         let request = UpdateRequest(title: title, order: order, completed: completed)
         let buffer = try JSONEncoder().encodeAsByteBuffer(request, allocator: ByteBufferAllocator())
-        return try await client.XCTExecute(uri: "/todos/\(id)", method: .patch, body: buffer) { response in
+        return try await client.execute(uri: "/todos/\(id)", method: .patch, body: buffer) { response in
             XCTAssertEqual(response.status, .ok)
             if response.body.readableBytes > 0 {
                 return try JSONDecoder().decode(Todo.self, from: response.body)
@@ -63,14 +63,14 @@ final class TodosTests: XCTestCase {
         }
     }
 
-    func delete(id: UUID, client: some HBXCTClientProtocol) async throws -> HTTPResponse.Status {
-        try await client.XCTExecute(uri: "/todos/\(id)", method: .delete) { response in
+    func delete(id: UUID, client: some HBTestClientProtocol) async throws -> HTTPResponse.Status {
+        try await client.execute(uri: "/todos/\(id)", method: .delete) { response in
             response.status
         }
     }
 
-    func deleteAll(client: some HBXCTClientProtocol) async throws {
-        try await client.XCTExecute(uri: "/todos", method: .delete) { _ in }
+    func deleteAll(client: some HBTestClientProtocol) async throws {
+        try await client.execute(uri: "/todos", method: .delete) { _ in }
     }
 
     // MARK: Tests
@@ -149,7 +149,7 @@ final class TodosTests: XCTestCase {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             // The get helper function doesnt allow me to supply random strings
-            return try await client.XCTExecute(uri: "/todos/NotAUUID", method: .get) { response in
+            return try await client.execute(uri: "/todos/NotAUUID", method: .get) { response in
                 XCTAssertEqual(response.status, .badRequest)
             }
         }
@@ -183,7 +183,7 @@ final class TodosTests: XCTestCase {
             // The patch helper function assumes it is going to work so we have to write our own here
             let request = UpdateRequest(title: "Update", order: nil, completed: nil)
             let buffer = try JSONEncoder().encodeAsByteBuffer(request, allocator: ByteBufferAllocator())
-            return try await client.XCTExecute(uri: "/todos/\(UUID())", method: .patch, body: buffer) { response in
+            return try await client.execute(uri: "/todos/\(UUID())", method: .patch, body: buffer) { response in
                 XCTAssertEqual(response.status, .badRequest)
             }
         }

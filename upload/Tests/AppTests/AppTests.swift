@@ -1,6 +1,6 @@
 @testable import App
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import XCTest
 
 final class AppTests: XCTestCase {
@@ -22,7 +22,7 @@ final class AppTests: XCTestCase {
             }
             let buffer = ByteBuffer(string: textString)
 
-            try await client.XCTExecute(
+            try await client.execute(
                 uri: "/files",
                 method: .post,
                 headers: [.fileName: testFileName],
@@ -33,7 +33,7 @@ final class AppTests: XCTestCase {
                 XCTAssertTrue(bodyString.contains(testFileName))
             }
 
-            try await client.XCTExecute(uri: "/files/\(testFileName)", method: .get) { response in
+            try await client.execute(uri: "/files/\(testFileName)", method: .get) { response in
                 let downloadString = String(buffer: response.body)
                 XCTAssertEqual(downloadString, textString, "Downloaded bytes should match uploaded bytes")
             }

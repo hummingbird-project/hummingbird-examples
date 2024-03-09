@@ -1,8 +1,8 @@
 @testable import App
 import Foundation
 import Hummingbird
-import HummingbirdAuthXCT
-import HummingbirdXCT
+import HummingbirdAuthTesting
+import HummingbirdTesting
 import JWTKit
 import XCTest
 
@@ -18,7 +18,7 @@ final class AppTests: XCTestCase {
         let app = try await buildApplication(TestAppArguments())
 
         try await app.test(.router) { client in
-            try await client.XCTExecute(uri: "/", method: .get) { response in
+            try await client.execute(uri: "/", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "Hello")
             }
@@ -30,7 +30,7 @@ final class AppTests: XCTestCase {
 
         try await app.test(.router) { client in
             let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
-            try await client.XCTExecute(uri: "/user", method: .put, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
+            try await client.execute(uri: "/user", method: .put, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
                 XCTAssertEqual(response.status, .created)
                 let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: response.body)
                 XCTAssertEqual(userResponse.name, "adam")
@@ -43,12 +43,12 @@ final class AppTests: XCTestCase {
 
         try await app.test(.router) { client in
             let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
-            try await client.XCTExecute(uri: "/user", method: .put, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
+            try await client.execute(uri: "/user", method: .put, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
                 XCTAssertEqual(response.status, .created)
                 let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: response.body)
                 XCTAssertEqual(userResponse.name, "adam")
             }
-            let token = try await client.XCTExecute(
+            let token = try await client.execute(
                 uri: "/user/login",
                 method: .post,
                 auth: .basic(username: "adam", password: "testpassword")
@@ -57,7 +57,7 @@ final class AppTests: XCTestCase {
                 let responseBody = try JSONDecoder().decode([String: String].self, from: response.body)
                 return try XCTUnwrap(responseBody["token"])
             }
-            try await client.XCTExecute(uri: "/auth", method: .get, auth: .bearer(token)) { response in
+            try await client.execute(uri: "/auth", method: .get, auth: .bearer(token)) { response in
                 XCTAssertEqual(response.status, .ok)
             }
         }
@@ -76,7 +76,7 @@ final class AppTests: XCTestCase {
             signers.use(.hs256(key: "my-secret-key"), kid: "_hb_local_")
             let token = try signers.sign(payload, kid: "_hb_local_")
 
-            try await client.XCTExecute(uri: "/auth", method: .get, auth: .bearer(token)) { response in
+            try await client.execute(uri: "/auth", method: .get, auth: .bearer(token)) { response in
                 XCTAssertEqual(response.status, .ok)
                 XCTAssertEqual(String(buffer: response.body), "Authenticated (Subject: John Smith)")
             }

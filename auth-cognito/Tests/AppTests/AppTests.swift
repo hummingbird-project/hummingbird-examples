@@ -1,7 +1,6 @@
 import App
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import XCTest
 
-final class AppTests: XCTestCase {
-}
+final class AppTests: XCTestCase {}
