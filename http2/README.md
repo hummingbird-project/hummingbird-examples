@@ -8,10 +8,10 @@ Run `./scripts/generate-certs.sh`. This wil create all the require files in a ce
 
 The sample requires you provide the paths to the various certificates
 ```
-swift run Server --certificate-chain certs/server.crt --private-key certs/server.key
+swift run App --certificate-chain certs/server.crt --private-key certs/server.key
 ```
 
 To test the sample you can use `curl`. You need to provide the root trust certificate that the server certificate and key were generated from.
 ```
-curl --cacert certs/ca.crt https://localhost:8080/http
+curl --cacert certs/ca.crt https://localhost:8081/http
 ```
