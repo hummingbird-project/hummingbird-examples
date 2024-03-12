@@ -3,22 +3,22 @@ import HummingbirdMustache
 import Logging
 import NIOCore
 
-struct HTMLFormRequestContext: HBRequestContext {
-    var coreContext: HBCoreRequestContext
+struct HTMLFormRequestContext: RequestContext {
+    var coreContext: CoreRequestContext
 
     init(channel: Channel, logger: Logger) {
         self.coreContext = .init(allocator: channel.allocator, logger: logger)
     }
 
-    var requestDecoder: RequestDecoder { .init() }
+    var requestDecoder: URLFormRequestDecoder { .init() }
 }
 
-public func buildApplication(configuration: HBApplicationConfiguration) async throws -> some HBApplicationProtocol {
-    let library = try HBMustacheLibrary(directory: "templates")
+public func buildApplication(configuration: ApplicationConfiguration) async throws -> some ApplicationProtocol {
+    let library = try await MustacheLibrary(directory: "templates")
     assert(library.getTemplate(named: "head") != nil, "Set your working directory to the root folder of this example to get it to work")
 
-    let router = HBRouter(context: HTMLFormRequestContext.self)
+    let router = Router(context: HTMLFormRequestContext.self)
     WebController(mustacheLibrary: library).addRoutes(to: router)
-    let app = HBApplication(router: router)
+    let app = Application(router: router)
     return app
 }

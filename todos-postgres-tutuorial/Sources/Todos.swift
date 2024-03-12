@@ -1,7 +1,7 @@
 import ArgumentParser
 import Hummingbird
 import Logging
-@_spi(ConnectionPool) import PostgresNIO
+import PostgresNIO
 import ServiceLifecycle
 
 @main
@@ -31,13 +31,13 @@ protocol AppArguments {
 }
 
 /// Build a HBApplication
-func buildApplication(_ args: some AppArguments) async throws -> some HBApplicationProtocol {
+func buildApplication(_ args: some AppArguments) async throws -> some ApplicationProtocol {
     var logger = Logger(label: "Todos")
     logger.logLevel = .debug
     // create router
-    let router = HBRouter()
+    let router = Router()
     // add logging middleware
-    router.middlewares.add(HBLogRequestsMiddleware(.info))
+    router.middlewares.add(LogRequestsMiddleware(.info))
     // add hello route
     router.get("/") { request, context in
         "Hello\n"
@@ -56,7 +56,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some HBApplicat
         TodoController(repository: TodoMemoryRepository()).addRoutes(to: router.group("todos"))
     }
     // create application
-    var app = HBApplication(
+    var app = Application(
         router: router,
         configuration: .init(address: .hostname(args.hostname, port: args.port)),
         logger: logger
@@ -64,7 +64,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some HBApplicat
     // if we setup a postgres service then add as a service and run createTable before
     // server starts
     if let postgresRepository {
-        app.addServices(PostgresClientService(client: postgresRepository.client))
+        app.addServices(postgresRepository.client)
         app.runBeforeServerStart {
             try await postgresRepository.createTable()
         }
