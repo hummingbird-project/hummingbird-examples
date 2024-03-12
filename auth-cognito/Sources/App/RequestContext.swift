@@ -6,12 +6,12 @@ import NIOCore
 import SotoCognitoAuthenticationKit
 
 /// Request context
-struct AuthCognitoRequestContext: HBAuthRequestContext, HBRemoteAddressRequestContext, HBRouterRequestContext {
-    var coreContext: HBCoreRequestContext
+struct AuthCognitoRequestContext: AuthRequestContext, RemoteAddressRequestContext, RouterRequestContext {
+    var coreContext: CoreRequestContext
     /// required by authentication framework
-    var auth: HBLoginCache
+    var auth: LoginCache
     /// required by result builder router
-    var routerContext: HBRouterBuilderContext
+    var routerContext: RouterBuilderContext
     let channel: Channel?
     /// Connected host address
     var remoteAddress: SocketAddress? {
@@ -30,7 +30,7 @@ struct AuthCognitoRequestContext: HBAuthRequestContext, HBRemoteAddressRequestCo
 
 /// Wrapper for cognito context data
 struct HBCognitoContextData: CognitoContextData {
-    let request: HBRequest
+    let request: Request
     let context: AuthCognitoRequestContext
 
     public var contextData: CognitoIdentityProvider.ContextDataType? {
