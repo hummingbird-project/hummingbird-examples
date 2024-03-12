@@ -35,22 +35,22 @@ struct JWTPayloadData: JWTPayload, Equatable {
     }
 }
 
-struct JWTAuthenticator<Context: HBAuthRequestContext>: HBAuthenticator, @unchecked Sendable {
+struct JWTAuthenticator<Context: AuthRequestContext>: AuthenticatorMiddleware, @unchecked Sendable {
     let jwtSigners: JWTSigners
-    let fluent: HBFluent
+    let fluent: Fluent
 
-    init(fluent: HBFluent) {
+    init(fluent: Fluent) {
         self.jwtSigners = JWTSigners()
         self.fluent = fluent
     }
 
-    init(_ signer: JWTSigner, kid: JWKIdentifier? = nil, fluent: HBFluent) {
+    init(_ signer: JWTSigner, kid: JWKIdentifier? = nil, fluent: Fluent) {
         self.jwtSigners = JWTSigners()
         self.jwtSigners.use(signer, kid: kid)
         self.fluent = fluent
     }
 
-    init(jwksData: ByteBuffer, fluent: HBFluent) throws {
+    init(jwksData: ByteBuffer, fluent: Fluent) throws {
         let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
         self.jwtSigners = JWTSigners()
         try self.jwtSigners.use(jwks: jwks)
@@ -61,18 +61,18 @@ struct JWTAuthenticator<Context: HBAuthRequestContext>: HBAuthenticator, @unchec
         self.jwtSigners.use(signer, kid: kid)
     }
 
-    func authenticate(request: HBRequest, context: Context) async throws -> AuthenticatedUser? {
+    func authenticate(request: Request, context: Context) async throws -> AuthenticatedUser? {
         // get JWT from bearer authorisation
-        guard let jwtToken = request.headers.bearer?.token else { throw HBHTTPError(.unauthorized) }
+        guard let jwtToken = request.headers.bearer?.token else { throw HTTPError(.unauthorized) }
 
         let payload: JWTPayloadData
         do {
             payload = try self.jwtSigners.verify(jwtToken, as: JWTPayloadData.self)
         } catch {
             context.logger.debug("couldn't verify token")
-            throw HBHTTPError(.unauthorized)
+            throw HTTPError(.unauthorized)
         }
-        let db = fluent.db()
+        let db = self.fluent.db()
         // check if user exists and return if it exists
         if let existingUser = try await User.query(on: db)
             .filter(\.$name == payload.subject.value)

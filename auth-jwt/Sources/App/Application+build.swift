@@ -14,15 +14,15 @@ protocol AppArguments {
     var migrate: Bool { get }
 }
 
-func buildApplication(_ args: AppArguments) async throws -> some HBApplicationProtocol {
-    let env = try await HBEnvironment.shared.merging(with: .dotEnv())
+func buildApplication(_ args: AppArguments) async throws -> some ApplicationProtocol {
+    let env = try await Environment.shared.merging(with: .dotEnv())
     let logger = {
         var logger = Logger(label: "auth-jwt")
         logger.logLevel = .debug
         return logger
     }()
     let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
-    let fluent = HBFluent(logger: logger)
+    let fluent = Fluent(logger: logger)
     // add sqlite database
     if args.inMemoryDatabase {
         fluent.databases.use(.sqlite(.memory), as: .sqlite)
@@ -36,7 +36,7 @@ func buildApplication(_ args: AppArguments) async throws -> some HBApplicationPr
         try await fluent.migrate()
     }
 
-    let jwtAuthenticator: JWTAuthenticator<HBBasicAuthRequestContext>
+    let jwtAuthenticator: JWTAuthenticator<BasicAuthRequestContext>
     let jwtLocalSignerKid = JWKIdentifier("_hb_local_")
     if let jwksUrl = env.get("JWKS_URL") {
         do {
@@ -53,17 +53,16 @@ func buildApplication(_ args: AppArguments) async throws -> some HBApplicationPr
     }
     jwtAuthenticator.useSigner(.hs256(key: "my-secret-key"), kid: jwtLocalSignerKid)
 
-
-    let router = HBRouter(context: HBBasicAuthRequestContext.self)
-    router.middlewares.add(HBLogRequestsMiddleware(.debug))
+    let router = Router(context: BasicAuthRequestContext.self)
+    router.middlewares.add(LogRequestsMiddleware(.debug))
     router.middlewares.add(
-        HBCORSMiddleware(
+        CORSMiddleware(
             allowOrigin: .originBased,
             allowHeaders: [.accept, .authorization, .contentType, .origin],
             allowMethods: [.get, .options]
         )
     )
-    router.get("/") { _,_ in
+    router.get("/") { _, _ in
         return "Hello"
     }
     UserController(jwtSigners: jwtAuthenticator.jwtSigners, kid: jwtLocalSignerKid, fluent: fluent).addRoutes(to: router.group("user"))
@@ -74,8 +73,8 @@ func buildApplication(_ args: AppArguments) async throws -> some HBApplicationPr
             return "Authenticated (Subject: \(user.name))"
         }
 
-    var app = HBApplication(
-        router: router, 
+    var app = Application(
+        router: router,
         configuration: .init(
             address: .hostname(args.hostname, port: args.port),
             serverName: "auth-jwt"
@@ -93,6 +92,6 @@ struct HTTPClientService: Service {
     func run() async throws {
         /// Ignore cancellation error
         try? await gracefulShutdown()
-        try await client.shutdown()
+        try await self.client.shutdown()
     }
 }
