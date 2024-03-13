@@ -8,7 +8,7 @@ public protocol AppArguments {
     var tlsConfiguration: TLSConfiguration { get throws }
 }
 
-struct ChannelRequestContext: HBRequestContext {
+struct ChannelRequestContext: RequestContext {
     init(channel: Channel, logger: Logger) {
         self.coreContext = .init(allocator: channel.allocator, logger: logger)
         self.channel = channel
@@ -23,20 +23,20 @@ struct ChannelRequestContext: HBRequestContext {
         }
     }
 
-    var coreContext: HBCoreRequestContext
+    var coreContext: CoreRequestContext
     let channel: Channel?
 }
 
 import Hummingbird
 
-func buildApplication(arguments: some AppArguments, configuration: HBApplicationConfiguration) throws -> some HBApplicationProtocol {
-    let router = HBRouter(context: ChannelRequestContext.self)
+func buildApplication(arguments: some AppArguments, configuration: ApplicationConfiguration) throws -> some ApplicationProtocol {
+    let router = Router(context: ChannelRequestContext.self)
     router.get("/http") { _, context in
         // return "Using http v\(request.head. == "h2" ? "2.0" : "1.1")"
         return "Using http v\(await context.hasHTTP2Handler ? "2.0" : "1.1")"
     }
 
-    let app = try HBApplication(
+    let app = try Application(
         router: router,
         server: .http2Upgrade(tlsConfiguration: arguments.tlsConfiguration),
         configuration: configuration
