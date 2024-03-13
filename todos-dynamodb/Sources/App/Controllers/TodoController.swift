@@ -31,7 +31,7 @@ struct TodoController: Sendable {
         self.dynamoDB = dynamoDB
     }
 
-    func addRoutes(to group: HBRouterGroup<some HBRequestContext>) {
+    func addRoutes(to group: RouterGroup<some RequestContext>) {
         group
             .get(use: self.list)
             .post(use: self.create)
@@ -41,24 +41,24 @@ struct TodoController: Sendable {
             .delete(":id", use: self.deleteId)
     }
 
-    @Sendable func list(_ request: HBRequest, context: some HBRequestContext) async throws -> [Todo] {
+    @Sendable func list(_ request: Request, context: some RequestContext) async throws -> [Todo] {
         let input = DynamoDB.ScanInput(tableName: self.tableName)
         let response = try await self.dynamoDB.scan(input, type: Todo.self, logger: context.logger)
         return response.items ?? []
     }
 
-    @Sendable func create(_ request: HBRequest, context: some HBRequestContext) async throws -> HBEditedResponse<Todo> {
+    @Sendable func create(_ request: Request, context: some RequestContext) async throws -> EditedResponse<Todo> {
         var todo = try await request.decode(as: Todo.self, context: context)
-        guard let host = request.head.authority else { throw HBHTTPError(.badRequest, message: "No host header") }
+        guard let host = request.head.authority else { throw HTTPError(.badRequest, message: "No host header") }
         todo.id = UUID()
         todo.completed = false
         todo.url = "http://\(host)/todos/\(todo.id!)"
         let input = DynamoDB.PutItemCodableInput(item: todo, tableName: self.tableName)
         _ = try await self.dynamoDB.putItem(input, logger: context.logger)
-        return HBEditedResponse(status: .created, response: todo)
+        return EditedResponse(status: .created, response: todo)
     }
 
-    @Sendable func get(_ request: HBRequest, context: some HBRequestContext) async throws -> Todo? {
+    @Sendable func get(_ request: Request, context: some RequestContext) async throws -> Todo? {
         let id = try context.parameters.require("id")
         let input = DynamoDB.QueryInput(
             consistentRead: true,
@@ -70,7 +70,7 @@ struct TodoController: Sendable {
         return response.items?.first
     }
 
-    @Sendable func updateId(_ request: HBRequest, context: some HBRequestContext) async throws -> Todo {
+    @Sendable func updateId(_ request: Request, context: some RequestContext) async throws -> Todo {
         var todo = try await request.decode(as: EditTodo.self, context: context)
         todo.id = try context.parameters.require("id", as: UUID.self)
         let input = DynamoDB.UpdateItemCodableInput(
@@ -82,14 +82,14 @@ struct TodoController: Sendable {
         )
         do {
             let response = try await self.dynamoDB.updateItem(input, logger: context.logger)
-            guard let attributes = response.attributes else { throw HBHTTPError(.internalServerError) }
+            guard let attributes = response.attributes else { throw HTTPError(.internalServerError) }
             return try DynamoDBDecoder().decode(Todo.self, from: attributes)
         } catch let error as DynamoDBErrorType where error == .conditionalCheckFailedException {
-            throw HBHTTPError(.notFound)
+            throw HTTPError(.notFound)
         }
     }
 
-    @Sendable func deleteAll(_ request: HBRequest, context: some HBRequestContext) async throws -> HTTPResponse.Status {
+    @Sendable func deleteAll(_ request: Request, context: some RequestContext) async throws -> HTTPResponse.Status {
         let scanInput = DynamoDB.ScanInput(tableName: self.tableName)
         let items = try await self.dynamoDB.scan(scanInput, logger: context.logger).items ?? []
         let requestItems: [DynamoDB.WriteRequest] = items.compactMap { item in
@@ -101,7 +101,7 @@ struct TodoController: Sendable {
         return .ok
     }
 
-    @Sendable func deleteId(_ request: HBRequest, context: some HBRequestContext) async throws -> HTTPResponse.Status {
+    @Sendable func deleteId(_ request: Request, context: some RequestContext) async throws -> HTTPResponse.Status {
         let id = try context.parameters.require("id")
 
         let input = DynamoDB.DeleteItemInput(
@@ -113,7 +113,7 @@ struct TodoController: Sendable {
             _ = try await self.dynamoDB.deleteItem(input, logger: context.logger)
             return .ok
         } catch let error as DynamoDBErrorType where error == .conditionalCheckFailedException {
-            throw HBHTTPError(.notFound)
+            throw HTTPError(.notFound)
         }
     }
 }
