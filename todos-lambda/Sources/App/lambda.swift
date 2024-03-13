@@ -19,7 +19,7 @@ import Logging
 import SotoDynamoDB
 
 @main
-struct AppLambda: HBAPIGatewayLambda {
+struct AppLambda: APIGatewayLambdaFunction {
     let awsClient: AWSClient
     let logger: Logger
 
@@ -28,19 +28,19 @@ struct AppLambda: HBAPIGatewayLambda {
         self.logger = context.logger
     }
 
-    func buildResponder() -> some HBResponder<Context> {
-        let tableName = HBEnvironment.shared.get("TODOS_TABLE_NAME") ?? "hummingbird-todos"
+    func buildResponder() -> some HTTPResponder<Context> {
+        let tableName = Environment.shared.get("TODOS_TABLE_NAME") ?? "hummingbird-todos"
         self.logger.info("Using table \(tableName)")
         let dynamoDB = DynamoDB(client: awsClient, region: .euwest1)
 
-        let router = HBRouter(context: Context.self)
+        let router = Router(context: Context.self)
         // middleware
         router.middlewares.add(ErrorMiddleware())
-        router.middlewares.add(HBLogRequestsMiddleware(.debug))
+        router.middlewares.add(LogRequestsMiddleware(.debug))
         router.get("/") { _, _ in
             return "Hello"
         }
-        router.middlewares.add(HBCORSMiddleware(
+        router.middlewares.add(CORSMiddleware(
             allowOrigin: .originBased,
             allowHeaders: [.contentType],
             allowMethods: [.get, .options, .post, .delete, .patch]
@@ -55,18 +55,18 @@ struct AppLambda: HBAPIGatewayLambda {
     }
 }
 
-struct ErrorMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+struct ErrorMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     func handle(
-        _ input: HBRequest,
+        _ input: Request,
         context: Context,
-        next: (HBRequest, Context) async throws -> HBResponse
-    ) async throws -> HBResponse {
+        next: (Request, Context) async throws -> Response
+    ) async throws -> Response {
         do {
             return try await next(input, context)
-        } catch let error as HBHTTPError {
+        } catch let error as HTTPError {
             throw error
         } catch {
-            throw HBHTTPError(.internalServerError, message: "Error: \(error)")
+            throw HTTPError(.internalServerError, message: "Error: \(error)")
         }
     }
 }
