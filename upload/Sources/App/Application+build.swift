@@ -16,8 +16,8 @@ import Hummingbird
 import Logging
 import NIOCore
 
-func buildApplication(args: AppArguments) -> some HBApplicationProtocol {
-    let router = HBRouter()
+func buildApplication(args: AppArguments) -> some ApplicationProtocol {
+    let router = Router()
     FileController().addRoutes(to: router.group("files"))
-    return HBApplication(router: router)
+    return Application(router: router)
 }
