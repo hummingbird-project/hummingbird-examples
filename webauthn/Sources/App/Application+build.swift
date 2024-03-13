@@ -33,11 +33,11 @@ public protocol AppArguments {
     var privateKey: String { get }
 }
 
-func buildApplication(_ arguments: AppArguments) async throws -> some HBApplicationProtocol {
+func buildApplication(_ arguments: AppArguments) async throws -> some ApplicationProtocol {
     var logger = Logger(label: "webauthn")
     logger.logLevel = .debug
 
-    let fluent = HBFluent(logger: logger)
+    let fluent = Fluent(logger: logger)
     // add sqlite database
     if arguments.inMemoryDatabase {
         fluent.databases.use(.sqlite(.memory), as: .sqlite)
@@ -49,18 +49,18 @@ func buildApplication(_ arguments: AppArguments) async throws -> some HBApplicat
     try await fluent.migrate()
 
     // sessions are stored in memory
-    let memoryPersist = HBMemoryPersistDriver()
-    let sessionStorage = HBSessionStorage(memoryPersist)
+    let memoryPersist = MemoryPersistDriver()
+    let sessionStorage = SessionStorage(memoryPersist)
 
     // load mustache template library
-    let library = try await HBMustacheLibrary(directory: "templates")
+    let library = try await MustacheLibrary(directory: "templates")
     assert(library.getTemplate(named: "home") != nil, "Set your working directory to the root folder of this example to get it to work")
 
-    let router = HBRouterBuilder(context: WebAuthnRequestContext.self) {
+    let router = RouterBuilder(context: WebAuthnRequestContext.self) {
         // add logging middleware
-        HBLogRequestsMiddleware(.info)
+        LogRequestsMiddleware(.info)
         // add file middleware to server HTML files
-        HBFileMiddleware(searchForIndexHtml: true, logger: logger)
+        FileMiddleware(searchForIndexHtml: true, logger: logger)
         // health check endpoint
         Get("/health") { _, _ -> HTTPResponse.Status in
             return .ok
@@ -85,7 +85,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some HBApplicat
         }
     }
 
-    var app = HBApplication(router: router)
+    var app = Application(router: router)
     app.addServices(fluent, memoryPersist)
     return app
 }

@@ -20,7 +20,7 @@ import WebAuthn
 
 /// cannot conform fluent model `User` to `HBAuthenticatable` as it is not Sendable
 /// so create a copy to store in login cache
-struct AuthenticatedUser: HBAuthenticatable, Codable {
+struct AuthenticatedUser: Authenticatable, Codable {
     var id: UUID
     var username: String
 
@@ -30,7 +30,7 @@ struct AuthenticatedUser: HBAuthenticatable, Codable {
 }
 
 /// Authentication state stored in login cache
-enum AuthenticationSession: Sendable, Codable, HBAuthenticatable, HBResponseEncodable {
+enum AuthenticationSession: Sendable, Codable, Authenticatable, ResponseEncodable {
     case signedUp(user: AuthenticatedUser)
     case registering(user: AuthenticatedUser, challenge: [UInt8])
     case authenticating(challenge: [UInt8])
@@ -59,7 +59,7 @@ enum WebAuthnSession: Codable {
     }
 
     /// return authentication state from session object
-    func session(for request: HBRequest, fluent: HBFluent) async throws -> AuthenticationSession? {
+    func session(for request: Request, fluent: Fluent) async throws -> AuthenticationSession? {
         switch self {
         case .authenticating(let encodedChallenge):
             guard let challenge = URLEncodedBase64(encodedChallenge).decodedBytes else { return nil }
@@ -79,28 +79,28 @@ enum WebAuthnSession: Codable {
 }
 
 /// Authenticator that will return current state of authentication
-struct WebAuthnSessionStateAuthenticator<Context: HBAuthRequestContext>: HBSessionAuthenticator {
+struct WebAuthnSessionStateAuthenticator<Context: AuthRequestContext>: SessionMiddleware {
     typealias Session = WebAuthnSession
     /// fluent reference
-    let fluent: HBFluent
+    let fluent: Fluent
     /// container for session objects
-    let sessionStorage: HBSessionStorage
+    let sessionStorage: SessionStorage
 
-    func getValue(from session: Session, request: HBRequest, context: Context) async throws -> AuthenticationSession? {
+    func getValue(from session: Session, request: Request, context: Context) async throws -> AuthenticationSession? {
         return try await session.session(for: request, fluent: self.fluent)
     }
 }
 
 /// Authenticator that will return an authenticated user from a WebAuthnSession
-struct WebAuthnSessionAuthenticator<Context: HBAuthRequestContext>: HBSessionAuthenticator {
+struct WebAuthnSessionAuthenticator<Context: AuthRequestContext>: SessionMiddleware {
     typealias Session = WebAuthnSession
 
     /// fluent reference
-    let fluent: HBFluent
+    let fluent: Fluent
     /// container for session objects
-    let sessionStorage: HBSessionStorage
+    let sessionStorage: SessionStorage
 
-    func getValue(from session: Session, request: HBRequest, context: Context) async throws -> AuthenticatedUser? {
+    func getValue(from session: Session, request: Request, context: Context) async throws -> AuthenticatedUser? {
         guard case .authenticated(let userId) = session else { return nil }
         if let user = try await User.find(userId, on: self.fluent.db()) {
             return AuthenticatedUser(id: userId, username: user.username)

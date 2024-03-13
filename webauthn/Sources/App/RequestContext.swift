@@ -4,10 +4,10 @@ import HummingbirdRouter
 import Logging
 import NIOCore
 
-struct WebAuthnRequestContext: HBAuthRequestContext, HBRouterRequestContext {
-    var coreContext: HBCoreRequestContext
-    var auth: HBLoginCache
-    var routerContext: HBRouterBuilderContext
+struct WebAuthnRequestContext: AuthRequestContext, RouterRequestContext {
+    var coreContext: CoreRequestContext
+    var auth: LoginCache
+    var routerContext: RouterBuilderContext
 
     init(channel: Channel, logger: Logger) {
         self.coreContext = .init(allocator: channel.allocator, logger: logger)
