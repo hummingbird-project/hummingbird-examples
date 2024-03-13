@@ -13,9 +13,9 @@ public protocol AppArguments {
 }
 
 @MainActor
-func buildApplication(_ arguments: some AppArguments) async throws -> some HBApplicationProtocol {
+func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
     let logger = Logger(label: "todos-auth-fluent")
-    let fluent = HBFluent(logger: logger)
+    let fluent = Fluent(logger: logger)
     // add sqlite database
     if arguments.inMemoryDatabase {
         fluent.databases.use(.sqlite(.memory), as: .sqlite)
@@ -26,20 +26,20 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some HBApp
     fluent.migrations.add(CreateTodo())
     fluent.migrations.add(CreateUser())
 
-    let fluentPersist = await HBFluentPersistDriver(fluent: fluent)
+    let fluentPersist = await FluentPersistDriver(fluent: fluent)
     // migrate
     if arguments.migrate || arguments.inMemoryDatabase {
         try await fluent.migrate()
     }
-    let sessionStorage = HBSessionStorage(fluentPersist)
+    let sessionStorage = SessionStorage(fluentPersist)
     // router
-    let router = HBRouter(context: TodosAuthRequestContext.self)
+    let router = Router(context: TodosAuthRequestContext.self)
 
     // add logging middleware
-    router.middlewares.add(HBLogRequestsMiddleware(.info))
+    router.middlewares.add(LogRequestsMiddleware(.info))
     // add file middleware to server css and js files
-    router.middlewares.add(HBFileMiddleware(logger: logger))
-    router.middlewares.add(HBCORSMiddleware(
+    router.middlewares.add(FileMiddleware(logger: logger))
+    router.middlewares.add(CORSMiddleware(
         allowOrigin: .originBased,
         allowHeaders: [.contentType],
         allowMethods: [.get, .options, .post, .delete, .patch]
@@ -50,7 +50,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some HBApp
     }
 
     // load mustache template library
-    let library = try await HBMustacheLibrary(directory: "templates")
+    let library = try await MustacheLibrary(directory: "templates")
     assert(library.getTemplate(named: "head") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     // Add routes serving HTML files
@@ -60,7 +60,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some HBApp
     // Add api routes managing users
     UserController(fluent: fluent, sessionStorage: sessionStorage).addRoutes(to: router.group("api/users"))
 
-    var app = HBApplication(
+    var app = Application(
         router: router,
         configuration: .init(address: .hostname(arguments.hostname, port: arguments.port))
     )

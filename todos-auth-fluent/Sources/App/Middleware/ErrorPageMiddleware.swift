@@ -16,15 +16,15 @@ import Hummingbird
 import HummingbirdMustache
 
 /// Generate an HTML page for a thrown error
-struct ErrorPageMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
-    let errorTemplate: HBMustacheTemplate
-    let mustacheLibrary: HBMustacheLibrary
+struct ErrorPageMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+    let errorTemplate: MustacheTemplate
+    let mustacheLibrary: MustacheLibrary
 
     func handle(
-        _ request: HBRequest,
+        _ request: Request,
         context: Context,
-        next: (HBRequest, Context) async throws -> HBResponse
-    ) async throws -> HBResponse {
+        next: (Request, Context) async throws -> Response
+    ) async throws -> Response {
         do {
             return try await next(request, context)
         } catch {
@@ -32,7 +32,7 @@ struct ErrorPageMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol 
             // page with status code and message or a 501 with a description of the thrown error
             let values: [String: Any]
             let status: HTTPResponse.Status
-            if let error = error as? HBHTTPError {
+            if let error = error as? HTTPError {
                 status = error.status
                 values = [
                     "statusCode": error.status,

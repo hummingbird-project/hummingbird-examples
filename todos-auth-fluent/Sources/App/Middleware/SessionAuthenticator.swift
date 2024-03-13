@@ -20,14 +20,14 @@ import HummingbirdFluent
 
 /// Session authentication. Get UUID attached to session id in request and return
 /// the associated user
-struct SessionAuthenticator<Context: HBAuthRequestContext>: HBSessionAuthenticator {
+struct SessionAuthenticator<Context: AuthRequestContext>: SessionMiddleware {
     typealias Session = UUID
     typealias Value = User
 
-    let fluent: HBFluent
-    let sessionStorage: HBSessionStorage
+    let fluent: Fluent
+    let sessionStorage: SessionStorage
 
-    func getValue(from: UUID, request: Hummingbird.HBRequest, context: Context) async throws -> User? {
+    func getValue(from: UUID, request: Request, context: Context) async throws -> User? {
         // find user from userId
         return try await User.find(from, on: self.fluent.db())
     }

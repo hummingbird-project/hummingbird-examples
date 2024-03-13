@@ -5,7 +5,7 @@ import HummingbirdMustache
 /// to access the wrappedValue. In the mustache template you would access this with
 /// `{{wrappedValue(_myProperty)}}`. Note the `_` prefix on the property name. This is
 /// required as this is how property wrappers appear in the Mirror reflection data.
-extension FieldProperty: HBMustacheTransformable {
+extension FieldProperty: MustacheTransformable {
     public func transform(_ name: String) -> Any? {
         switch name {
         case "wrappedValue":
@@ -20,7 +20,7 @@ extension FieldProperty: HBMustacheTransformable {
 /// to access the wrappedValue. In the mustache template you would access this with
 /// `{{wrappedValue(_myID)}}`. Note the `_` prefix on the property name. This is
 /// required as this is how property wrappers appear in the Mirror reflection data.
-extension IDProperty: HBMustacheTransformable {
+extension IDProperty: MustacheTransformable {
     public func transform(_ name: String) -> Any? {
         switch name {
         case "wrappedValue":

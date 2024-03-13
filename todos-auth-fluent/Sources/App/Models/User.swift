@@ -20,7 +20,7 @@ import HummingbirdFluent
 import NIOPosix
 
 /// Database description of a user
-final class User: Model, HBAuthenticatable, @unchecked Sendable {
+final class User: Model, Authenticatable, @unchecked Sendable {
     static let schema = "user"
 
     @ID(key: .id)
@@ -62,7 +62,7 @@ extension User {
             .filter(\.$email == email)
             .first()
         // if user already exist throw conflict
-        guard existingUser == nil else { throw HBHTTPError(.conflict) }
+        guard existingUser == nil else { throw HTTPError(.conflict) }
 
         // Encrypt password on a separate thread
         let passwordHash = try await NIOThreadPool.singleton.runIfActive { Bcrypt.hash(password, cost: 12) }
@@ -88,7 +88,7 @@ extension User {
 }
 
 /// Authenticatable data from User
-struct UserAuthenticatable: HBAuthenticatable {
+struct UserAuthenticatable: Authenticatable {
     let id: UUID?
     let email: String
     let name: String
@@ -109,7 +109,7 @@ struct CreateUserRequest: Decodable {
 }
 
 /// User encoded into HTTP response
-struct UserResponse: HBResponseCodable {
+struct UserResponse: ResponseCodable {
     let id: UUID?
 
     internal init(id: UUID?) {
