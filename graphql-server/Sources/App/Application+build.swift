@@ -3,11 +3,11 @@ import GraphQL
 import Hummingbird
 import NIOPosix
 
-func buildApplication(configuration: HBApplicationConfiguration) -> some HBApplicationProtocol {
+func buildApplication(configuration: ApplicationConfiguration) -> some ApplicationProtocol {
     let graphQLHandler = GraphQLHandler()
     let eventLoopGroup = MultiThreadedEventLoopGroup.singleton
 
-    let router = HBRouter()
+    let router = Router()
     router.post("/graphql") { request, context -> GraphQLResult in
         struct GraphQLQuery: Decodable {
             let query: String
@@ -23,7 +23,7 @@ func buildApplication(configuration: HBApplicationConfiguration) -> some HBAppli
         )
     }
 
-    let app = HBApplication(
+    let app = Application(
         router: router,
         configuration: configuration,
         eventLoopGroupProvider: .shared(eventLoopGroup)

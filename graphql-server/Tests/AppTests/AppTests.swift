@@ -42,7 +42,7 @@ final class AppTests: XCTestCase {
         _ query: String,
         variables: [String: Any] = [:],
         expectedResult: String,
-        client: some HBTestClientProtocol,
+        client: some TestClientProtocol,
         file: StaticString = #filePath,
         line: UInt = #line
     ) async throws {
@@ -66,7 +66,7 @@ final class AppTests: XCTestCase {
         _ query: String,
         variables: [String: Any] = [:],
         expectedResult: Result,
-        client: some HBTestClientProtocol,
+        client: some TestClientProtocol,
         file: StaticString = #filePath,
         line: UInt = #line
     ) async throws {

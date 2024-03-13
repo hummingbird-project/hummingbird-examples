@@ -2,7 +2,7 @@ import GraphQL
 import HTTPTypes
 import Hummingbird
 
-extension GraphQLError: HBHTTPResponseError {
+extension GraphQLError: HTTPResponseError {
     /// Simple test to determine if GraphQLError is something that the client can address.
     private var isRequestError: Bool {
         message.starts(with: "Syntax Error") ? true : false
