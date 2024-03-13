@@ -2,17 +2,18 @@ import HummingbirdJobs
 
 struct JobController {
     // parameters required to run email job
-    struct EmailParameters: Codable {
+    struct EmailParameters: JobParameters {
+        static let jobID = "send_email"
         let to: [String]
         let from: String
         let subject: String
         let message: String
     }
 
-    init(queue: borrowing HBJobQueue<some HBJobQueueDriver>, emailService: FakeEmailService) {
+    init(queue: borrowing JobQueue<some JobQueueDriver>, emailService: FakeEmailService) {
         // This function demonstrates two different ways to register a job
         // Register Job with predefined job identifier
-        queue.registerJob(.sendEmail) { parameters, context in
+        queue.registerJob(parameters: EmailParameters.self) { parameters, context in
             try await emailService.sendEmail(
                 to: parameters.to,
                 from: parameters.from,
@@ -22,7 +23,7 @@ struct JobController {
         }
 
         // Create job definition and extract job id from it
-        let emailJob = HBJobDefinition(id: "send_email_2") { (parameters: EmailParameters, context) in
+        let emailJob = JobDefinition(id: "send_email_2") { (parameters: EmailParameters, context) in
             try await emailService.sendEmail(
                 to: parameters.to,
                 from: parameters.from,
@@ -34,10 +35,5 @@ struct JobController {
         self.emailJobId = emailJob.id
     }
 
-    let emailJobId: HBJobIdentifier<EmailParameters>
-}
-
-extension HBJobIdentifier<JobController.EmailParameters> {
-    /// Job ID used by send email job
-    static var sendEmail: Self { .init("send_email") }
+    let emailJobId: JobIdentifier<EmailParameters>
 }

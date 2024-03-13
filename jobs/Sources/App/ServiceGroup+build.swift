@@ -26,7 +26,7 @@ public protocol AppArguments {
 }
 
 func buildServiceGroup(_ args: AppArguments) throws -> ServiceGroup {
-    let env = HBEnvironment()
+    let env = Environment()
     let redisHost = env.get("REDIS_HOST") ?? "localhost"
     let logger = {
         var logger = Logger(label: "JobsExample")
@@ -34,11 +34,11 @@ func buildServiceGroup(_ args: AppArguments) throws -> ServiceGroup {
         return logger
     }()
 
-    let redisService = try HBRedisConnectionPoolService(
+    let redisService = try RedisConnectionPoolService(
         .init(hostname: redisHost, port: 6379),
         logger: logger
     )
-    let jobQueue = HBJobQueue(
+    let jobQueue = JobQueue(
         .redis(redisService),
         numWorkers: 4,
         logger: logger
@@ -46,12 +46,11 @@ func buildServiceGroup(_ args: AppArguments) throws -> ServiceGroup {
     let jobController = JobController(queue: jobQueue, emailService: .init(logger: logger))
 
     if !args.processJobs {
-        let router = HBRouter()
+        let router = Router()
         router.post("/send") { request, context -> HTTPResponse.Status in
             let message = try await request.body.collect(upTo: 2048)
             try await jobQueue.push(
-                id: .sendEmail,
-                parameters: .init(
+                JobController.EmailParameters(
                     to: ["john@email.com"],
                     from: "jane@email.com",
                     subject: "HI!",
@@ -87,7 +86,7 @@ func buildServiceGroup(_ args: AppArguments) throws -> ServiceGroup {
             )
             return .ok
         }
-        let app = HBApplication(
+        let app = Application(
             router: router,
             configuration: .init(address: .hostname(args.hostname, port: args.port))
         )
