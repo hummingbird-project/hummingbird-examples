@@ -12,7 +12,6 @@ public protocol AppArguments {
     var port: Int { get }
 }
 
-@MainActor
 func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
     let logger = Logger(label: "todos-auth-fluent")
     let fluent = Fluent(logger: logger)
@@ -23,8 +22,8 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
         fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
     }
     // add migrations
-    fluent.migrations.add(CreateTodo())
-    fluent.migrations.add(CreateUser())
+    await fluent.migrations.add(CreateTodo())
+    await fluent.migrations.add(CreateUser())
 
     let fluentPersist = await FluentPersistDriver(fluent: fluent)
     // migrate
