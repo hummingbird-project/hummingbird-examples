@@ -20,16 +20,16 @@ import HummingbirdFluent
 import NIO
 
 struct UserController {
-    let fluent: HBFluent
-    let sessionStorage: HBSessionStorage
+    let fluent: Fluent
+    let sessionStorage: SessionStorage
 
-    init(fluent: HBFluent, sessionStorage: HBSessionStorage) {
+    init(fluent: Fluent, sessionStorage: SessionStorage) {
         self.fluent = fluent
         self.sessionStorage = sessionStorage
     }
 
     /// Add routes for user controller
-    func addRoutes(to group: HBRouterGroup<SessionsContext>) {
+    func addRoutes(to group: RouterGroup<SessionsContext>) {
         group
             .put(use: self.create)
         group.group("login")
@@ -41,14 +41,14 @@ struct UserController {
     }
 
     /// Create new user
-    @Sendable func create(_ request: HBRequest, context: SessionsContext) async throws -> UserResponse {
+    @Sendable func create(_ request: Request, context: SessionsContext) async throws -> UserResponse {
         let createUser = try await request.decode(as: CreateUserRequest.self, context: context)
         // check if user exists and if they don't then add new user
         let existingUser = try await User.query(on: self.fluent.db())
             .filter(\.$name == createUser.name)
             .first()
         // if user already exist throw conflict
-        guard existingUser == nil else { throw HBHTTPError(.conflict) }
+        guard existingUser == nil else { throw HTTPError(.conflict) }
 
         let user = try await User(from: createUser)
         try await user.save(on: self.fluent.db())
@@ -57,7 +57,7 @@ struct UserController {
     }
 
     /// Login user and create session
-    @Sendable func login(_ request: HBRequest, context: SessionsContext) async throws -> HBResponse {
+    @Sendable func login(_ request: Request, context: SessionsContext) async throws -> Response {
         // get authenticated user and return
         let user = try context.auth.require(LoggedInUser.self)
         // create session lasting 1 hour
@@ -66,7 +66,7 @@ struct UserController {
     }
 
     /// Get current logged in user
-    @Sendable func current(_ request: HBRequest, context: SessionsContext) throws -> UserResponse {
+    @Sendable func current(_ request: Request, context: SessionsContext) throws -> UserResponse {
         // get authenticated user and return
         let user = try context.auth.require(LoggedInUser.self)
         return UserResponse(id: user.id, name: user.name)
