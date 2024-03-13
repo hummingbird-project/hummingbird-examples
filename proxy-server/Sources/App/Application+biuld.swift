@@ -10,17 +10,17 @@ public protocol AppArguments {
     var target: String { get }
 }
 
-func buildApplication(_ args: some AppArguments) -> some HBApplicationProtocol {
+func buildApplication(_ args: some AppArguments) -> some ApplicationProtocol {
     let eventLoopGroup = MultiThreadedEventLoopGroup.singleton
     let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-    let router = HBRouter()
+    let router = Router()
     router.middlewares.add(
-        HBProxyServerMiddleware(
+        ProxyServerMiddleware(
             httpClient: httpClient,
             proxy: .init(location: args.location, target: args.target)
         )
     )
-    var app = HBApplication(
+    var app = Application(
         router: router,
         configuration: .init(
             address: .hostname(args.hostname, port: args.port),

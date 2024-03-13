@@ -19,16 +19,16 @@ final class AppTests: XCTestCase {
     }
 
     func testProxy(
-        setupRouter: @escaping (HBRouter<HBBasicRequestContext>) -> Void,
+        setupRouter: @escaping (Router<BasicRequestContext>) -> Void,
         test: @escaping @Sendable (Int) async throws -> Void
     ) async throws {
         try await withThrowingTaskGroup(of: Void.self) { group in
             let (stream, source) = AsyncStream.makeStream(of: Int.self)
             // Setup server to proxy, need to run it inside a ServiceGroup so we can
             // trigger graceful shutdown at the end
-            let router = HBRouter()
+            let router = Router()
             setupRouter(router)
-            let app = HBApplication(
+            let app = Application(
                 router: router,
                 configuration: .init(address: .hostname(port: 0)),
                 onServerRunning: { channel in source.yield(channel.localAddress!.port!) }
@@ -92,7 +92,7 @@ final class AppTests: XCTestCase {
             router.post("echo") { request, _ in
                 // test content length was passed through
                 XCTAssertEqual(request.headers[.contentLength], buffer.readableBytes.description)
-                return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+                return Response(status: .ok, body: .init(asyncSequence: request.body))
             }
         } test: { port in
             let proxy = buildApplication(TestAppArguments(location: "", target: "http://localhost:\(port)"))
@@ -107,7 +107,7 @@ final class AppTests: XCTestCase {
     func testLargeBody() async throws {
         try await self.testProxy { router in
             router.post("echo") { request, _ in
-                return HBResponse(status: .ok, body: .init(asyncSequence: request.body))
+                return Response(status: .ok, body: .init(asyncSequence: request.body))
             }
         } test: { port in
             let proxy = buildApplication(TestAppArguments(location: "", target: "http://localhost:\(port)"))

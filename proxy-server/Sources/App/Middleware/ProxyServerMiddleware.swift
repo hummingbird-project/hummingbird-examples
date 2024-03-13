@@ -20,7 +20,7 @@ import NIOHTTP1
 import NIOHTTPTypesHTTP1
 
 /// Middleware forwarding requests onto another server
-public struct HBProxyServerMiddleware<Context: HBBaseRequestContext>: HBMiddlewareProtocol {
+public struct ProxyServerMiddleware<Context: BaseRequestContext>: RouterMiddleware {
     public struct Proxy: Sendable {
         let location: String
         let target: String
@@ -39,14 +39,14 @@ public struct HBProxyServerMiddleware<Context: HBBaseRequestContext>: HBMiddlewa
         self.proxy = proxy
     }
 
-    public func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         guard let response = try await forward(request: request, to: proxy, context: context) else {
             return try await next(request, context)
         }
         return response
     }
 
-    func forward(request: HBRequest, to proxy: Proxy, context: Context) async throws -> HBResponse? {
+    func forward(request: Request, to proxy: Proxy, context: Context) async throws -> Response? {
         guard request.uri.description.hasPrefix(proxy.location) else { return nil }
         let newURI = request.uri.description.dropFirst(proxy.location.count)
         guard newURI.first == nil || newURI.first == "/" else { return nil }
@@ -70,7 +70,7 @@ public struct HBProxyServerMiddleware<Context: HBBaseRequestContext>: HBMiddlewa
             // execute request
             let response = try await self.httpClient.execute(clientRequest, timeout: .seconds(60))
             // construct response
-            return HBResponse(
+            return Response(
                 status: .init(code: Int(response.status.code), reasonPhrase: response.status.reasonPhrase),
                 headers: .init(response.headers, splitCookie: false),
                 body: .init(asyncSequence: response.body)
