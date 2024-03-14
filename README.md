@@ -7,6 +7,7 @@ Examples converted to Hummingbird 2.0
 - [hello](https://github.com/hummingbird-project/hummingbird-examples/tree/main/hello) - Basic application setup.
 - [html-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/html-form) - Link HTML form to Hummingbird application.
 - [http2](https://github.com/hummingbird-project/hummingbird-examples/tree/main/http2) - Basic application with HTTP2 upgrade added.
+- [jobs](https://github.com/hummingbird-project/hummingbird-examples/tree/main/jobs) - Demonstrating offloading of jobs to another server.
 - [sessions](https://github.com/hummingbird-project/hummingbird-examples/tree/main/sessions) - Username/password and session authentication.
 - [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB.
 - [todos-lambda](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-lambda) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB and running on AWS Lambda.
@@ -24,7 +25,6 @@ Examples still working with Hummingbird 1.0
 - [auth-srp](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-srp) - Secure Remote Password authentication.
 - [graphql-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/graphql-server) - GraphQL server using [Graphiti](https://github.com/GraphQLSwift/Graphiti)
 - [ios-image-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/ios-image-server) - iOS web server that provides access to iPhone photo library.
-- [jobs](https://github.com/hummingbird-project/hummingbird-examples/tree/main/jobs) - Demonstrating offloading of jobs to another server.
 - [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit
 - [proxy-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server) - Using AsyncHTTPClient to build a proxy server
 - [proxy-server-core](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server-core) - Version of proxy server only using HummingbirdCore
