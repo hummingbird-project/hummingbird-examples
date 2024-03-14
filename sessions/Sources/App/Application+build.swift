@@ -10,26 +10,26 @@ protocol AppArguments {
 }
 
 /// Request context which default to using JSONDecoder/Encoder
-struct SessionsContext: HBRequestContext, HBAuthRequestContext {
+struct SessionsContext: RequestContext, AuthRequestContext {
     init(channel: Channel, logger: Logger) {
         self.coreContext = .init(allocator: channel.allocator, logger: logger)
         self.auth = .init()
     }
 
-    var coreContext: HBCoreRequestContext
+    var coreContext: CoreRequestContext
     /// Login cache
-    public var auth: HBLoginCache
+    public var auth: LoginCache
 }
 
 /// build application
-func buildApplication(_ arguments: AppArguments, configuration: HBApplicationConfiguration) async throws -> some HBApplicationProtocol {
-    let fluent = HBFluent(
+func buildApplication(_ arguments: AppArguments, configuration: ApplicationConfiguration) async throws -> some ApplicationProtocol {
+    let fluent = Fluent(
         logger: Logger(label: "Sessions")
     )
     // add sqlite database
     fluent.databases.use(.sqlite(arguments.inMemoryDatabase ? .memory : .file("db.sqlite")), as: .sqlite)
     // set up persist driver before migrate
-    let persist = await HBFluentPersistDriver(fluent: fluent)
+    let persist = await FluentPersistDriver(fluent: fluent)
     // add migrations
     await fluent.migrations.add(CreateUser())
     if arguments.migrate || arguments.inMemoryDatabase {
@@ -37,12 +37,12 @@ func buildApplication(_ arguments: AppArguments, configuration: HBApplicationCon
     }
 
     // Sessions
-    let sessionStorage = HBSessionStorage(persist)
+    let sessionStorage = SessionStorage(persist)
 
-    let router = HBRouter(context: SessionsContext.self)
+    let router = Router(context: SessionsContext.self)
 
     // add logging middleware
-    router.middlewares.add(HBLogRequestsMiddleware(.debug))
+    router.middlewares.add(LogRequestsMiddleware(.debug))
 
     // routes
     router.get("/") { _, _ in
@@ -52,7 +52,7 @@ func buildApplication(_ arguments: AppArguments, configuration: HBApplicationCon
     let userController = UserController(fluent: fluent, sessionStorage: sessionStorage)
     userController.addRoutes(to: router.group("user"))
 
-    var application = HBApplication(router: router, server: .http1())
+    var application = Application(router: router, server: .http1())
     application.addServices(fluent, persist)
     return application
 }

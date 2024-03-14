@@ -15,7 +15,7 @@
 import Foundation
 import Hummingbird
 
-struct Todo: HBResponseCodable {
+struct Todo: ResponseCodable {
     var id: UUID?
 
     var title: String
@@ -57,7 +57,7 @@ struct Todo: HBResponseCodable {
     }
 }
 
-struct EditTodo: HBResponseCodable {
+struct EditTodo: ResponseCodable {
     var id: UUID?
     var title: String?
     var order: Int?

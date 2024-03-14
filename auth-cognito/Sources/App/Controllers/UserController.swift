@@ -5,9 +5,9 @@ import HummingbirdRouter
 import SotoCognitoAuthenticationKit
 import SotoCognitoAuthenticationSRP
 
-extension CognitoAccessToken: HBResponseEncodable {}
-extension CognitoAuthenticateResponse: HBResponseEncodable {}
-extension CognitoCreateUserResponse: HBResponseEncodable {}
+extension CognitoAccessToken: ResponseEncodable {}
+extension CognitoAuthenticateResponse: ResponseEncodable {}
+extension CognitoCreateUserResponse: ResponseEncodable {}
 
 struct UserController {
     typealias Context = AuthCognitoRequestContext
@@ -15,7 +15,7 @@ struct UserController {
     let cognitoAuthenticatable: CognitoAuthenticatable
     let cognitoIdentityProvider: CognitoIdentityProvider
 
-    var endpoints: some HBMiddlewareProtocol<Context> {
+    var endpoints: some RouterMiddleware<Context> {
         RouteGroup("user") {
             Put(handler: self.create)
             Patch(handler: self.resend)
@@ -49,7 +49,7 @@ struct UserController {
     }
 
     /// create a user
-    @Sendable func create(_ request: HBRequest, context: Context) async throws -> CognitoCreateUserResponse {
+    @Sendable func create(_ request: Request, context: Context) async throws -> CognitoCreateUserResponse {
         struct CreateUserRequest: Decodable {
             var username: String
             var attributes: [String: String]
@@ -59,7 +59,7 @@ struct UserController {
     }
 
     /// resend create user email
-    @Sendable func resend(_ request: HBRequest, context: Context) async throws -> CognitoCreateUserResponse {
+    @Sendable func resend(_ request: Request, context: Context) async throws -> CognitoCreateUserResponse {
         struct ResendRequest: Decodable {
             var username: String
             var attributes: [String: String]
@@ -73,13 +73,13 @@ struct UserController {
     }
 
     /// response for signup
-    struct SignUpResponse: HBResponseEncodable {
+    struct SignUpResponse: ResponseEncodable {
         var confirmed: Bool
         var userSub: String
     }
 
     /// sign up instead of create user
-    @Sendable func signUp(_ request: HBRequest, context: Context) async throws -> SignUpResponse {
+    @Sendable func signUp(_ request: Request, context: Context) async throws -> SignUpResponse {
         struct SignUpRequest: Decodable {
             var username: String
             var password: String
@@ -91,7 +91,7 @@ struct UserController {
     }
 
     /// confirm sign up with confirmation code
-    @Sendable func confirmSignUp(_ request: HBRequest, context: Context) async throws -> HTTPResponse.Status {
+    @Sendable func confirmSignUp(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         struct ConfirmSignUpRequest: Decodable {
             var username: String
             var code: String
@@ -102,19 +102,19 @@ struct UserController {
     }
 
     /// Logs a user in, returning a token for accessing protected endpoints.
-    @Sendable func login(_ request: HBRequest, context: Context) throws -> CognitoAuthenticateResponse {
+    @Sendable func login(_ request: Request, context: Context) throws -> CognitoAuthenticateResponse {
         let authenticateResponse = try context.auth.require(CognitoAuthenticateResponse.self)
         return authenticateResponse
     }
 
     /// Logs a user in using Secure Remote Password, returning a token for accessing protected endpoints.
-    @Sendable func loginSRP(_ request: HBRequest, context: Context) throws -> CognitoAuthenticateResponse {
+    @Sendable func loginSRP(_ request: Request, context: Context) throws -> CognitoAuthenticateResponse {
         let authenticateResponse = try context.auth.require(CognitoAuthenticateResponse.self)
         return authenticateResponse
     }
 
     /// respond to authentication challenge
-    @Sendable func respond(_ request: HBRequest, context: Context) async throws -> CognitoAuthenticateResponse {
+    @Sendable func respond(_ request: Request, context: Context) async throws -> CognitoAuthenticateResponse {
         struct ChallengeResponse: Codable {
             let username: String
             let name: CognitoChallengeName
@@ -131,7 +131,7 @@ struct UserController {
     }
 
     /// respond to new password authentication challenge
-    @Sendable func respondNewPassword(_ request: HBRequest, context: Context) async throws -> CognitoAuthenticateResponse {
+    @Sendable func respondNewPassword(_ request: Request, context: Context) async throws -> CognitoAuthenticateResponse {
         struct ChallengeResponse: Codable {
             let username: String
             let password: String
@@ -146,13 +146,13 @@ struct UserController {
     }
 
     /// authenticate access token
-    @Sendable func authenticateAccess(_ request: HBRequest, context: Context) throws -> CognitoAccessToken {
+    @Sendable func authenticateAccess(_ request: Request, context: Context) throws -> CognitoAccessToken {
         let token = try context.auth.require(CognitoAccessToken.self)
         return token
     }
 
     /// get user attributes
-    @Sendable func attributes(_ request: HBRequest, context: Context) async throws -> String {
+    @Sendable func attributes(_ request: Request, context: Context) async throws -> String {
         struct AttributesRequest: Codable {
             let attributes: [String: String]
         }
@@ -163,18 +163,18 @@ struct UserController {
     }
 
     /// authenticate id token
-    @Sendable func authenticateId(_ request: HBRequest, context: Context) throws -> User {
+    @Sendable func authenticateId(_ request: Request, context: Context) throws -> User {
         let token = try context.auth.require(User.self)
         return token
     }
 
     /// refresh tokens
-    @Sendable func refresh(_ request: HBRequest, context: Context) async throws -> CognitoAuthenticateResponse {
+    @Sendable func refresh(_ request: Request, context: Context) async throws -> CognitoAuthenticateResponse {
         struct RefreshRequest: Decodable {
             let username: String
         }
         let user = try await request.decode(as: RefreshRequest.self, context: context)
-        guard let refreshToken = request.headers.bearer?.token else { throw HBHTTPError(.badRequest) }
+        guard let refreshToken = request.headers.bearer?.token else { throw HTTPError(.badRequest) }
         return try await self.cognitoAuthenticatable.refresh(
             username: user.username,
             refreshToken: refreshToken
@@ -183,31 +183,31 @@ struct UserController {
 
     // MARK: MFA
 
-    struct MfaGetTokenResponse: HBResponseEncodable {
+    struct MfaGetTokenResponse: ResponseEncodable {
         let authenticatorURL: String
         let session: String?
     }
 
     /// Get MFA secret code
-    @Sendable func mfaGetSecretCode(_ request: HBRequest, context: Context) async throws -> MfaGetTokenResponse {
+    @Sendable func mfaGetSecretCode(_ request: Request, context: Context) async throws -> MfaGetTokenResponse {
         let token = try context.auth.require(CognitoAccessToken.self)
-        guard let accessToken = request.headers.bearer else { throw HBHTTPError(.unauthorized) }
+        guard let accessToken = request.headers.bearer else { throw HTTPError(.unauthorized) }
         let response = try await cognitoIdentityProvider.associateSoftwareToken(.init(accessToken: accessToken.token))
         guard let secretCode = response.secretCode else {
-            throw HBHTTPError(.internalServerError)
+            throw HTTPError(.internalServerError)
         }
         let url = "otpauth://totp/\(token.username)?secret=\(secretCode)&issuer=hb-auth-cognito"
         return MfaGetTokenResponse(authenticatorURL: url, session: response.session)
     }
 
     /// Verify MFA secret code
-    @Sendable func mfaVerifyToken(_ request: HBRequest, context: Context) async throws -> HTTPResponse.Status {
+    @Sendable func mfaVerifyToken(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         struct VerifyRequest: Decodable {
             let deviceName: String?
             let session: String?
             let userCode: String
         }
-        guard let accessToken = request.headers.bearer else { throw HBHTTPError(.unauthorized) }
+        guard let accessToken = request.headers.bearer else { throw HTTPError(.unauthorized) }
         let verify = try await request.decode(as: VerifyRequest.self, context: context)
         let verifySoftwareTokenRequest = CognitoIdentityProvider.VerifySoftwareTokenRequest(
             accessToken: accessToken.token,
@@ -225,7 +225,7 @@ struct UserController {
     }
 
     /// respond to software MFA authentication challenge
-    @Sendable func respondSoftwareMfa(_ request: HBRequest, context: Context) async throws -> CognitoAuthenticateResponse {
+    @Sendable func respondSoftwareMfa(_ request: Request, context: Context) async throws -> CognitoAuthenticateResponse {
         struct MfaChallengeResponse: Codable {
             let username: String
             let code: String
@@ -241,7 +241,7 @@ struct UserController {
     }
 
     /// Enable MFA support
-    @Sendable func enableMfa(_ request: HBRequest, context: Context) async throws -> HTTPResponse.Status {
+    @Sendable func enableMfa(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         let token = try context.auth.require(CognitoAccessToken.self)
         let setUserMfaRequest = CognitoIdentityProvider.AdminSetUserMFAPreferenceRequest(
             softwareTokenMfaSettings: .init(enabled: true, preferredMfa: true),
@@ -253,7 +253,7 @@ struct UserController {
     }
 
     /// Disable MFA support
-    @Sendable func disableMfa(_ request: HBRequest, context: Context) async throws -> HTTPResponse.Status {
+    @Sendable func disableMfa(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         struct Password: Decodable {
             let password: String
         }

@@ -17,10 +17,10 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 
-struct BasicAuthenticator<Context: HBAuthRequestContext>: HBAuthenticator {
-    let fluent: HBFluent
+struct BasicAuthenticator<Context: AuthRequestContext>: AuthenticatorMiddleware {
+    let fluent: Fluent
 
-    func authenticate(request: HBRequest, context: Context) async throws -> User? {
+    func authenticate(request: Request, context: Context) async throws -> User? {
         // does request have basic authentication info in the "Authorization" header
         guard let basic = request.headers.basic else { return nil }
 

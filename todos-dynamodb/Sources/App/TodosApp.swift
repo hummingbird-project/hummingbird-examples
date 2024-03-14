@@ -4,20 +4,20 @@ import NIOPosix
 import ServiceLifecycle
 import SotoDynamoDB
 
-struct TodosApp: HBApplicationProtocol {
-    typealias Context = HBBasicRequestContext
+struct TodosApp: ApplicationProtocol {
+    typealias Context = BasicRequestContext
 
-    init(configuration: HBApplicationConfiguration, eventLoopGroupProvider: EventLoopGroupProvider = .singleton) {
+    init(configuration: ApplicationConfiguration, eventLoopGroupProvider: EventLoopGroupProvider = .singleton) {
         self.configuration = configuration
         self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
         self.awsClient = AWSClient(httpClientProvider: .createNewWithEventLoopGroup(self.eventLoopGroup))
     }
 
-    var responder: some HBResponder<Context> {
-        let router = HBRouter(context: Context.self)
+    var responder: some HTTPResponder<Context> {
+        let router = Router(context: Context.self)
         // middleware
-        router.middlewares.add(HBLogRequestsMiddleware(.debug))
-        router.middlewares.add(HBCORSMiddleware(
+        router.middlewares.add(LogRequestsMiddleware(.debug))
+        router.middlewares.add(CORSMiddleware(
             allowOrigin: .originBased,
             allowHeaders: [.contentType],
             allowMethods: [.get, .options, .post, .delete, .patch]
@@ -35,7 +35,7 @@ struct TodosApp: HBApplicationProtocol {
     }
 
     let awsClient: AWSClient
-    let configuration: HBApplicationConfiguration
+    let configuration: ApplicationConfiguration
     let eventLoopGroup: EventLoopGroup
     var services: [any Service] { [self.awsClient] }
 }

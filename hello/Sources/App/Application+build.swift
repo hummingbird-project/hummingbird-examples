@@ -1,12 +1,12 @@
 import Hummingbird
 
-func buildApplication(configuration: HBApplicationConfiguration) -> some HBApplicationProtocol {
-    let router = HBRouter()
+func buildApplication(configuration: ApplicationConfiguration) -> some ApplicationProtocol {
+    let router = Router()
     router.get("/") { _, _ in
         return "Hello"
     }
 
-    let app = HBApplication(
+    let app = Application(
         router: router,
         configuration: configuration
     )

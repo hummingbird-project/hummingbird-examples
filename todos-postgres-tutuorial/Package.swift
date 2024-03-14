@@ -6,8 +6,8 @@ let package = Package(
     platforms: [.macOS(.v14)],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-alpha.1"),
-        .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.20.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-beta.1"),
+        .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
     ],
     targets: [
         .executableTarget(
@@ -24,7 +24,7 @@ let package = Package(
             dependencies: [
                 "Todos",
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdXCT", package: "hummingbird"),
+                .product(name: "HummingbirdTesting", package: "hummingbird"),
             ]
         ),
     ]

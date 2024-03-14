@@ -20,28 +20,28 @@ import HummingbirdFluent
 import JWTKit
 import NIO
 
-struct UserController<Context: HBAuthRequestContext> {
+struct UserController<Context: AuthRequestContext> {
     let jwtSigners: JWTSigners
     let kid: JWKIdentifier
-    let fluent: HBFluent
+    let fluent: Fluent
 
     /// Add routes for user controller
-    func addRoutes(to group: HBRouterGroup<Context>) {
+    func addRoutes(to group: RouterGroup<Context>) {
         group.put(use: self.create)
-        group.group("login").add(middleware: BasicAuthenticator(fluent: fluent))
+        group.group("login").add(middleware: BasicAuthenticator(fluent: self.fluent))
             .post(use: self.login)
     }
 
     /// Create new user
-    @Sendable func create(_ request: HBRequest, context: Context) async throws -> HBEditedResponse<UserResponse> {
+    @Sendable func create(_ request: Request, context: Context) async throws -> EditedResponse<UserResponse> {
         let createUser = try await request.decode(as: CreateUserRequest.self, context: context)
-        let db = fluent.db()
+        let db = self.fluent.db()
         // check if user exists and if they don't then add new user
         let existingUser = try await User.query(on: db)
             .filter(\.$name == createUser.name)
             .first()
         // if user already exist throw conflict
-        guard existingUser == nil else { throw HBHTTPError(.conflict) }
+        guard existingUser == nil else { throw HTTPError(.conflict) }
 
         let user = User(from: createUser)
         try await user.save(on: db)
@@ -50,7 +50,7 @@ struct UserController<Context: HBAuthRequestContext> {
     }
 
     /// Login user and return JWT
-    @Sendable func login(_ request: HBRequest, context: Context) async throws -> [String: String] {
+    @Sendable func login(_ request: Request, context: Context) async throws -> [String: String] {
         // get authenticated user and return
         let user = try context.auth.require(AuthenticatedUser.self)
         let payload = JWTPayloadData(

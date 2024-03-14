@@ -1,12 +1,12 @@
 @testable import App
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import XCTest
 
 final class AppTests: XCTestCase {
-    func createTodo(title: String, client: some HBXCTClientProtocol) async throws -> UUID {
+    func createTodo(title: String, client: some TestClientProtocol) async throws -> UUID {
         let json = "{\"title\": \"\(title)\"}"
-        let todo = try await client.XCTExecute(
+        let todo = try await client.execute(
             uri: "/todos",
             method: .post,
             body: ByteBufferAllocator().buffer(string: json)
@@ -17,8 +17,8 @@ final class AppTests: XCTestCase {
         return try XCTUnwrap(todo.id)
     }
 
-    func getTodo(id: UUID, client: some HBXCTClientProtocol) async throws -> Todo {
-        return try await client.XCTExecute(
+    func getTodo(id: UUID, client: some TestClientProtocol) async throws -> Todo {
+        return try await client.execute(
             uri: "/todos/\(id)",
             method: .get
         ) { response in
@@ -27,8 +27,8 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func listTodos(client: some HBXCTClientProtocol) async throws -> [Todo] {
-        return try await client.XCTExecute(
+    func listTodos(client: some TestClientProtocol) async throws -> [Todo] {
+        return try await client.execute(
             uri: "/todos/",
             method: .get
         ) { response in
@@ -37,9 +37,9 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func updateTodo(editedTodo: EditTodo, id: UUID, client: some HBXCTClientProtocol) async throws -> Todo {
+    func updateTodo(editedTodo: EditTodo, id: UUID, client: some TestClientProtocol) async throws -> Todo {
         let buffer = try JSONEncoder().encodeAsByteBuffer(editedTodo, allocator: ByteBufferAllocator())
-        return try await client.XCTExecute(
+        return try await client.execute(
             uri: "/todos/\(id)",
             method: .patch,
             body: buffer
@@ -49,8 +49,8 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func deleteTodo(id: UUID, client: some HBXCTClientProtocol) async throws {
-        try await client.XCTExecute(
+    func deleteTodo(id: UUID, client: some TestClientProtocol) async throws {
+        try await client.execute(
             uri: "/todos/\(id)",
             method: .delete
         ) { response in
@@ -58,8 +58,8 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func deleteAllTodos(client: some HBXCTClientProtocol) async throws {
-        try await client.XCTExecute(
+    func deleteAllTodos(client: some TestClientProtocol) async throws {
+        try await client.execute(
             uri: "/todos/",
             method: .delete
         ) { response in
@@ -70,7 +70,7 @@ final class AppTests: XCTestCase {
     // MARK: Tests
 
     func testCreate() async throws {
-        try XCTSkipIf(HBEnvironment().get("CI") != nil)
+        try XCTSkipIf(Environment().get("CI") != nil)
 
         let app = TodosApp(configuration: .init())
         try await app.test(.live) { client in
@@ -82,7 +82,7 @@ final class AppTests: XCTestCase {
     }
 
     func testList() async throws {
-        try XCTSkipIf(HBEnvironment().get("CI") != nil)
+        try XCTSkipIf(Environment().get("CI") != nil)
 
         let app = TodosApp(configuration: .init())
         try await app.test(.live) { client in
@@ -95,7 +95,7 @@ final class AppTests: XCTestCase {
     }
 
     func testUpdate() async throws {
-        try XCTSkipIf(HBEnvironment().get("CI") != nil)
+        try XCTSkipIf(Environment().get("CI") != nil)
 
         let app = TodosApp(configuration: .init())
         try await app.test(.live) { client in
@@ -111,7 +111,7 @@ final class AppTests: XCTestCase {
     }
 
     func testDelete() async throws {
-        try XCTSkipIf(HBEnvironment().get("CI") != nil)
+        try XCTSkipIf(Environment().get("CI") != nil)
 
         let app = TodosApp(configuration: .init())
         try await app.test(.live) { client in
@@ -123,7 +123,7 @@ final class AppTests: XCTestCase {
     }
 
     func testDeleteAll() async throws {
-        try XCTSkipIf(HBEnvironment().get("CI") != nil)
+        try XCTSkipIf(Environment().get("CI") != nil)
 
         let app = TodosApp(configuration: .init())
         try await app.test(.live) { client in

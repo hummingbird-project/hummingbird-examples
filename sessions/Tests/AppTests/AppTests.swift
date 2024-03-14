@@ -1,7 +1,7 @@
 @testable import App
 import Hummingbird
-import HummingbirdAuthXCT
-import HummingbirdXCT
+import HummingbirdAuthTesting
+import HummingbirdTesting
 import XCTest
 
 struct TestArguments: AppArguments {
@@ -13,11 +13,11 @@ final class AppTests: XCTestCase {
     func createUser<Return>(
         name: String,
         password: String,
-        client: some HBXCTClientProtocol,
-        _ callback: @escaping (HBXCTResponse) throws -> Return
+        client: some TestClientProtocol,
+        _ callback: @escaping (TestResponse) throws -> Return
     ) async throws -> Return {
         let request = CreateUserRequest(name: name, password: password)
-        return try await client.XCTExecute(
+        return try await client.execute(
             uri: "/user",
             method: .put,
             body: JSONEncoder().encodeAsByteBuffer(request, allocator: .init())
@@ -29,10 +29,10 @@ final class AppTests: XCTestCase {
     func login<Return>(
         name: String,
         password: String,
-        client: some HBXCTClientProtocol,
-        _ callback: @escaping (HBXCTResponse) throws -> Return
+        client: some TestClientProtocol,
+        _ callback: @escaping (TestResponse) throws -> Return
     ) async throws -> Return {
-        return try await client.XCTExecute(
+        return try await client.execute(
             uri: "/user/login",
             method: .post,
             auth: .basic(username: name, password: password)
@@ -43,10 +43,10 @@ final class AppTests: XCTestCase {
 
     func getCurrent<Return>(
         cookie: String?,
-        client: some HBXCTClientProtocol,
-        _ callback: @escaping (HBXCTResponse) throws -> Return
+        client: some TestClientProtocol,
+        _ callback: @escaping (TestResponse) throws -> Return
     ) async throws -> Return {
-        return try await client.XCTExecute(
+        return try await client.execute(
             uri: "/user",
             method: .get,
             headers: cookie.map { [.cookie: $0] } ?? [:]

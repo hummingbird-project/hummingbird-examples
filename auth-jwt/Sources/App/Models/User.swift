@@ -57,7 +57,7 @@ struct CreateUserRequest: Decodable {
 }
 
 /// User encoded into HTTP response
-struct UserResponse: HBResponseCodable {
+struct UserResponse: ResponseCodable {
     let id: UUID?
     let name: String
 
@@ -74,7 +74,7 @@ struct UserResponse: HBResponseCodable {
 
 /// User stored in authentication login cache. Use this instead of User because
 /// User is not Sendable
-struct AuthenticatedUser: HBAuthenticatable {
+struct AuthenticatedUser: Authenticatable {
     let id: UUID
     let name: String
 

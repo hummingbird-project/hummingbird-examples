@@ -1,7 +1,7 @@
 @testable import App
 import Hummingbird
-import HummingbirdAuthXCT
-import HummingbirdXCT
+import HummingbirdAuthTesting
+import HummingbirdTesting
 import XCTest
 
 final class AppTests: XCTestCase {
@@ -16,8 +16,8 @@ final class AppTests: XCTestCase {
         case unexpectedStatus(HTTPResponse.Status)
     }
 
-    func createUser(_ user: CreateUserRequest, client: some HBXCTClientProtocol) async throws -> CreateUserResponse {
-        try await client.XCTExecute(
+    func createUser(_ user: CreateUserRequest, client: some TestClientProtocol) async throws -> CreateUserResponse {
+        try await client.execute(
             uri: "/api/users",
             method: .post,
             headers: [.contentType: "application/json"],
@@ -28,8 +28,8 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func login(username: String, password: String, client: some HBXCTClientProtocol) async throws -> String? {
-        try await client.XCTExecute(
+    func login(username: String, password: String, client: some TestClientProtocol) async throws -> String? {
+        try await client.execute(
             uri: "/api/users/login",
             method: .post,
             headers: [.contentType: "application/json"],
@@ -40,8 +40,8 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func urlEncodedLogin(username: String, password: String, client: some HBXCTClientProtocol) async throws -> String? {
-        try await client.XCTExecute(
+    func urlEncodedLogin(username: String, password: String, client: some TestClientProtocol) async throws -> String? {
+        try await client.execute(
             uri: "/login",
             method: .post,
             headers: [.contentType: "application/x-www-form-urlencoded"],
@@ -52,12 +52,12 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func createTodo(_ todo: CreateTodoRequest, cookie: String? = nil, client: some HBXCTClientProtocol) async throws -> Todo {
+    func createTodo(_ todo: CreateTodoRequest, cookie: String? = nil, client: some TestClientProtocol) async throws -> Todo {
         var headers: HTTPFields = [.contentType: "application/json"]
         if let cookie = cookie {
             headers[.cookie] = cookie
         }
-        return try await client.XCTExecute(
+        return try await client.execute(
             uri: "/api/todos",
             method: .post,
             headers: headers,
@@ -69,8 +69,8 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func getTodo(_ id: String, cookie: String? = nil, client: some HBXCTClientProtocol) async throws -> Todo? {
-        return try await client.XCTExecute(
+    func getTodo(_ id: String, cookie: String? = nil, client: some TestClientProtocol) async throws -> Todo? {
+        return try await client.execute(
             uri: "/api/todos/\(id)",
             method: .get,
             headers: cookie.map { [.cookie: $0] } ?? [:]
@@ -80,8 +80,8 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func deleteTodo(_ id: String, cookie: String? = nil, client: some HBXCTClientProtocol) async throws {
-        return try await client.XCTExecute(
+    func deleteTodo(_ id: String, cookie: String? = nil, client: some TestClientProtocol) async throws {
+        return try await client.execute(
             uri: "/api/todos/\(id)",
             method: .delete,
             headers: cookie.map { [.cookie: $0] } ?? [:]
@@ -90,12 +90,12 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func editTodo(_ id: String, _ todo: EditTodoRequest, cookie: String? = nil, client: some HBXCTClientProtocol) async throws -> Todo? {
+    func editTodo(_ id: String, _ todo: EditTodoRequest, cookie: String? = nil, client: some TestClientProtocol) async throws -> Todo? {
         var headers: HTTPFields = [.contentType: "application/json"]
         if let cookie = cookie {
             headers[.cookie] = cookie
         }
-        return try await client.XCTExecute(
+        return try await client.execute(
             uri: "/api/todos/\(id)",
             method: .patch,
             headers: headers,
@@ -137,7 +137,7 @@ final class AppTests: XCTestCase {
         try await app.test(.router) { client in
             _ = try await self.createUser(.init(name: "Tom Jones", email: "t@jones.com", password: "password123"), client: client)
             let cookie = try await self.login(username: "t@jones.com", password: "password123", client: client)
-            try await client.XCTExecute(
+            try await client.execute(
                 uri: "/api/users/",
                 method: .get,
                 headers: cookie.map { [.cookie: $0] } ?? [:]

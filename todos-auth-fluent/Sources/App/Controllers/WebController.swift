@@ -19,13 +19,13 @@ import HummingbirdFluent
 import HummingbirdMustache
 
 /// Redirects to login page if no user has been authenticated
-struct RedirectMiddleware<Context: HBAuthRequestContext>: HBMiddlewareProtocol {
+struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
     let to: String
     func handle(
-        _ request: HBRequest,
+        _ request: Request,
         context: Context,
-        next: (HBRequest, Context) async throws -> Output
-    ) async throws -> HBResponse {
+        next: (Request, Context) async throws -> Output
+    ) async throws -> Response {
         if context.auth.has(User.self) {
             return try await next(request, context)
         } else {
@@ -35,16 +35,16 @@ struct RedirectMiddleware<Context: HBAuthRequestContext>: HBMiddlewareProtocol {
 }
 
 /// Serves HTML pages
-struct WebController<Context: HBAuthRequestContext> {
-    let fluent: HBFluent
-    let sessionStorage: HBSessionStorage
-    let mustacheLibrary: HBMustacheLibrary
-    let todosTemplate: HBMustacheTemplate
-    let loginTemplate: HBMustacheTemplate
-    let signupTemplate: HBMustacheTemplate
-    let errorTemplate: HBMustacheTemplate
+struct WebController<Context: AuthRequestContext> {
+    let fluent: Fluent
+    let sessionStorage: SessionStorage
+    let mustacheLibrary: MustacheLibrary
+    let todosTemplate: MustacheTemplate
+    let loginTemplate: MustacheTemplate
+    let signupTemplate: MustacheTemplate
+    let errorTemplate: MustacheTemplate
 
-    init(mustacheLibrary: HBMustacheLibrary, fluent: HBFluent, sessionStorage: HBSessionStorage) {
+    init(mustacheLibrary: MustacheLibrary, fluent: Fluent, sessionStorage: SessionStorage) {
         // get the mustache templates from the library
         self.mustacheLibrary = mustacheLibrary
         guard let todosTemplate = mustacheLibrary.getTemplate(named: "todos"),
@@ -64,7 +64,7 @@ struct WebController<Context: HBAuthRequestContext> {
     }
 
     /// Add routes for webpages
-    func addRoutes(to router: HBRouter<Context>) {
+    func addRoutes(to router: Router<Context>) {
         router.group()
             .add(middleware: ErrorPageMiddleware(errorTemplate: self.errorTemplate, mustacheLibrary: self.mustacheLibrary))
             .get("/login", use: self.login)
@@ -82,7 +82,7 @@ struct WebController<Context: HBAuthRequestContext> {
     }
 
     /// Home page listing todos and with add todo UI
-    @Sendable func home(request: HBRequest, context: Context) async throws -> HTML {
+    @Sendable func home(request: Request, context: Context) async throws -> HTML {
         // get user and list of todos attached to user from database
         let user = try context.auth.require(User.self)
         let todos = try await user.$todos.get(on: self.fluent.db())
@@ -96,7 +96,7 @@ struct WebController<Context: HBAuthRequestContext> {
     }
 
     /// Login page
-    @Sendable func login(request: HBRequest, context: Context) async throws -> HTML {
+    @Sendable func login(request: Request, context: Context) async throws -> HTML {
         let html = self.loginTemplate.render((), library: self.mustacheLibrary)
         return HTML(html: html)
     }
@@ -107,7 +107,7 @@ struct WebController<Context: HBAuthRequestContext> {
     }
 
     /// Login POST page
-    @Sendable func loginDetails(request: HBRequest, context: Context) async throws -> HBResponse {
+    @Sendable func loginDetails(request: Request, context: Context) async throws -> Response {
         let details = try await request.decode(as: LoginDetails.self, context: context)
         // check if user exists in the database and then verify the entered password
         // against the one stored in the database. If it is correct then login in user
@@ -119,7 +119,7 @@ struct WebController<Context: HBAuthRequestContext> {
             // create session lasting 1 hour
             let cookie = try await self.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
             // redirect to home page
-            var response = HBResponse.redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
+            var response = Response.redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
             response.setCookie(cookie)
             return response
         } else {
@@ -138,13 +138,13 @@ struct WebController<Context: HBAuthRequestContext> {
     }
 
     /// Signup page
-    @Sendable func signup(request: HBRequest, context: Context) async throws -> HTML {
+    @Sendable func signup(request: Request, context: Context) async throws -> HTML {
         let html = self.signupTemplate.render((), library: self.mustacheLibrary)
         return HTML(html: html)
     }
 
     /// Signup POST page
-    @Sendable func signupDetails(request: HBRequest, context: Context) async throws -> HBResponse {
+    @Sendable func signupDetails(request: Request, context: Context) async throws -> Response {
         let details = try await request.decode(as: SignupDetails.self, context: context)
         do {
             // create new user
@@ -156,7 +156,7 @@ struct WebController<Context: HBAuthRequestContext> {
             )
             // redirect to login page
             return .redirect(to: "/login", type: .found)
-        } catch let error as HBHTTPError {
+        } catch let error as HTTPError {
             // if user creation throws a conflict ie the email is already being used by
             // another user then return signup page with error message
             if error.status == .conflict {

@@ -16,4 +16,4 @@ struct Todo {
 }
 
 
-extension Todo: HBResponseEncodable, Decodable, Equatable {}
+extension Todo: ResponseEncodable, Decodable, Equatable {}

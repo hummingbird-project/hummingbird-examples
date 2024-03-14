@@ -43,14 +43,14 @@ final class User: Model {
         self.id = nil
         self.name = userRequest.name
 
-        // Do Bcrypt hash on a separate thread to not block the general task executor 
+        // Do Bcrypt hash on a separate thread to not block the general task executor
         self.passwordHash = try await NIOThreadPool.singleton.runIfActive { Bcrypt.hash(userRequest.password, cost: 12) }
     }
 }
 
 /// User type to pass around as authenticatable. This is required as Fluent
 /// model types are not Sendable
-struct LoggedInUser: HBAuthenticatable {
+struct LoggedInUser: Authenticatable {
     let id: UUID
     let name: String
 
@@ -72,7 +72,7 @@ struct CreateUserRequest: Codable {
 }
 
 /// User encoded into HTTP response
-struct UserResponse: HBResponseCodable {
+struct UserResponse: ResponseCodable {
     let id: UUID
     let name: String
 

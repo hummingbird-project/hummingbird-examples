@@ -18,9 +18,9 @@ import Hummingbird
 
 /// Handles file transfers
 struct FileController {
-    let fileIO = HBFileIO()
+    let fileIO = FileIO()
 
-    func addRoutes(to group: HBRouterGroup<some HBRequestContext>) {
+    func addRoutes(to group: RouterGroup<some RequestContext>) {
         group.get(":filename", use: self.download)
         group.post("/", use: self.upload)
     }
@@ -36,7 +36,7 @@ struct FileController {
     /// then that name will be used as the file name on disk, otherwise
     /// a UUID will be used.
     /// - Returns: A JSONEncoded ``UploadModel``
-    @Sendable private func upload(_ request: HBRequest, context: some HBRequestContext) async throws -> UploadModel {
+    @Sendable private func upload(_ request: Request, context: some RequestContext) async throws -> UploadModel {
         let fileName = fileName(for: request)
 
         let uploadModel = UploadModel(filename: fileName)
@@ -58,7 +58,7 @@ struct FileController {
     /// - Returns: HBResponse of chunked bytes if success
     /// Note that this download has no login checks and allows anyone to download
     /// by its filename alone.
-    @Sendable private func download(_ request: HBRequest, context: some HBRequestContext) async throws -> HBResponse {
+    @Sendable private func download(_ request: Request, context: some RequestContext) async throws -> Response {
         let filename = try context.parameters.require("filename", as: String.self)
         let uploadModel = UploadModel(filename: filename)
         let uploadURL = try uploadModel.destinationURL(allowsOverwrite: true)
@@ -66,7 +66,7 @@ struct FileController {
             path: uploadURL.path,
             context: context
         )
-        return HBResponse(
+        return Response(
             status: .ok,
             headers: self.headers(for: filename),
             body: body
@@ -89,7 +89,7 @@ extension FileController {
         return UUID().uuidString.appending(ext)
     }
 
-    private func fileName(for request: HBRequest) -> String {
+    private func fileName(for request: Request) -> String {
         guard let fileName = request.headers[.fileName] else {
             return self.uuidFileName()
         }

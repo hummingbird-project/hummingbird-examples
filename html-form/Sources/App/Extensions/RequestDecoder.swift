@@ -14,13 +14,13 @@
 
 import Hummingbird
 
-struct RequestDecoder: HBRequestDecoder {
+struct URLFormRequestDecoder: RequestDecoder {
     let decoder = URLEncodedFormDecoder()
 
-    func decode<T>(_ type: T.Type, from request: HBRequest, context: some HBBaseRequestContext) async throws -> T where T: Decodable {
+    func decode<T>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T where T: Decodable {
         if request.headers[.contentType] == "application/x-www-form-urlencoded" {
             return try await self.decoder.decode(type, from: request, context: context)
         }
-        throw HBHTTPError(.unsupportedMediaType)
+        throw HTTPError(.unsupportedMediaType)
     }
 }

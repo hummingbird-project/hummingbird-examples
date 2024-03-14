@@ -23,7 +23,7 @@ build_example()
     if [[ -n "${CI:-}" ]]; then
         swift test
     else
-        swift package edit hummingbird --revision 2.x.x
+        swift package edit hummingbird --revision main
         swift test
         swift package unedit hummingbird
     fi

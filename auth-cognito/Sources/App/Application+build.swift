@@ -14,12 +14,12 @@ struct AWSClientService: Service {
     }
 }
 
-func buildApplication(configuration: HBApplicationConfiguration) async throws -> some HBApplicationProtocol {
+func buildApplication(configuration: ApplicationConfiguration) async throws -> some ApplicationProtocol {
     // setup Soto
     let awsClient = AWSClient(httpClientProvider: .createNew)
     let cognitoIdentityProvider = CognitoIdentityProvider(client: awsClient, region: .euwest1)
     // setup SotoCognitoAuthentication
-    let env = try await HBEnvironment().merging(with: .dotEnv())
+    let env = try await Environment().merging(with: .dotEnv())
     guard let userPoolId = env.get("cognito_user_pool_id"),
           let clientId = env.get("cognito_client_id")
     else {
@@ -34,12 +34,12 @@ func buildApplication(configuration: HBApplicationConfiguration) async throws ->
     )
     let authenticatable = CognitoAuthenticatable(configuration: config)
 
-    let router = HBRouterBuilder(context: AuthCognitoRequestContext.self) {
+    let router = RouterBuilder(context: AuthCognitoRequestContext.self) {
         AWSErrorMiddleware()
         UserController(cognitoAuthenticatable: authenticatable, cognitoIdentityProvider: cognitoIdentityProvider).endpoints
     }
 
-    var app = HBApplication(router: router)
+    var app = Application(router: router)
     app.addServices(AWSClientService(client: awsClient))
     return app
 }

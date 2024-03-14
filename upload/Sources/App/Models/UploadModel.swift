@@ -5,7 +5,7 @@ import Hummingbird
 /// A good practice might be to extend this
 /// in a way that can be stored a persistable database
 /// See ``todos-fluent`` for an example of using databases
-struct UploadModel: HBResponseCodable {
+struct UploadModel: ResponseCodable {
     let filename: String
 }
 
@@ -29,7 +29,7 @@ extension UploadModel {
 
         guard allowsOverwrite == false else { return fileURL }
         guard FileManager.default.fileExists(atPath: fileURL.path) == false else {
-            throw HBHTTPError(.conflict)
+            throw HTTPError(.conflict)
         }
         return fileURL
     }

@@ -19,9 +19,9 @@ import HummingbirdMustache
 import HummingbirdRouter
 
 /// Redirects to login page if no user has been authenticated
-struct RedirectMiddleware<Context: HBAuthRequestContext>: HBMiddlewareProtocol {
+struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
     let to: String
-    func handle(_ request: HBRequest, context: Context, next: (HBRequest, Context) async throws -> HBResponse) async throws -> HBResponse {
+    func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         // check if authenticated
         if context.auth.has(AuthenticatedUser.self) {
             return try await next(request, context)
@@ -36,14 +36,14 @@ struct RedirectMiddleware<Context: HBAuthRequestContext>: HBMiddlewareProtocol {
 struct HTMLController {
     typealias Context = WebAuthnRequestContext
 
-    let homeTemplate: HBMustacheTemplate
-    let fluent: HBFluent
-    let sessionStorage: HBSessionStorage
+    let homeTemplate: MustacheTemplate
+    let fluent: Fluent
+    let sessionStorage: SessionStorage
 
     init(
-        mustacheLibrary: HBMustacheLibrary,
-        fluent: HBFluent,
-        sessionStorage: HBSessionStorage
+        mustacheLibrary: MustacheLibrary,
+        fluent: Fluent,
+        sessionStorage: SessionStorage
     ) {
         // get the mustache templates from the library
         guard let homeTemplate = mustacheLibrary.getTemplate(named: "home")
@@ -56,7 +56,7 @@ struct HTMLController {
     }
 
     // return Route for home page
-    var endpoints: some HBMiddlewareProtocol<Context> {
+    var endpoints: some RouterMiddleware<Context> {
         Get("/") {
             WebAuthnSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
             RedirectMiddleware(to: "/login.html")
@@ -65,7 +65,7 @@ struct HTMLController {
     }
 
     /// Home page listing todos and with add todo UI
-    @Sendable func home(request: HBRequest, context: Context) async throws -> HTML {
+    @Sendable func home(request: Request, context: Context) async throws -> HTML {
         // get user
         let user = try context.auth.require(AuthenticatedUser.self)
         // Render home template and return as HTML

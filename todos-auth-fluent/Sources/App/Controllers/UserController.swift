@@ -19,12 +19,12 @@ import HummingbirdAuth
 import HummingbirdFluent
 import NIO
 
-struct UserController<Context: HBAuthRequestContext> {
-    let fluent: HBFluent
-    let sessionStorage: HBSessionStorage
+struct UserController<Context: AuthRequestContext> {
+    let fluent: Fluent
+    let sessionStorage: SessionStorage
 
     /// Add routes for user controller
-    func addRoutes(to group: HBRouterGroup<Context>) {
+    func addRoutes(to group: RouterGroup<Context>) {
         group.post(use: self.create)
         group.group("login").add(middleware: BasicAuthenticator(fluent: self.fluent))
             .post(use: self.login)
@@ -35,7 +35,7 @@ struct UserController<Context: HBAuthRequestContext> {
 
     /// Create new user
     /// Used in tests, as user creation is done by ``WebController.signupDetails``
-    @Sendable func create(_ request: HBRequest, context: Context) async throws -> HBEditedResponse<UserResponse> {
+    @Sendable func create(_ request: Request, context: Context) async throws -> EditedResponse<UserResponse> {
         let createUser = try await request.decode(as: CreateUserRequest.self, context: context)
 
         let user = try await User.create(
@@ -50,18 +50,18 @@ struct UserController<Context: HBAuthRequestContext> {
 
     /// Login user and create session
     /// Used in tests, as user creation is done by ``WebController.loginDetails``
-    @Sendable func login(_ request: HBRequest, context: Context) async throws -> HBResponse {
+    @Sendable func login(_ request: Request, context: Context) async throws -> Response {
         // get authenticated user and return
         let user = try context.auth.require(User.self)
         // create session lasting 1 hour
         let cookie = try await self.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
-        var response = HBResponse(status: .ok)
+        var response = Response(status: .ok)
         response.setCookie(cookie)
         return response
     }
 
     /// Login user and create session
-    @Sendable func logout(_ request: HBRequest, context: Context) async throws -> HTTPResponse.Status {
+    @Sendable func logout(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         // get authenticated user and return
         let user = try context.auth.require(User.self)
         // create session finishing now
@@ -70,7 +70,7 @@ struct UserController<Context: HBAuthRequestContext> {
     }
 
     /// Get current logged in user
-    @Sendable func current(_ request: HBRequest, context: Context) throws -> UserResponse {
+    @Sendable func current(_ request: Request, context: Context) throws -> UserResponse {
         // get authenticated user and return
         let user = try context.auth.require(User.self)
         return UserResponse(from: user)

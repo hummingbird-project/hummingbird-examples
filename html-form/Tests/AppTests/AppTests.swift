@@ -1,6 +1,6 @@
 @testable import App
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import XCTest
 
 final class AppTests: XCTestCase {
@@ -9,7 +9,7 @@ final class AppTests: XCTestCase {
 
         try await app.test(.router) { client in
             let urlencoded = "name=Adam&age=34"
-            try await client.XCTExecute(
+            try await client.execute(
                 uri: "/",
                 method: .post,
                 headers: [.contentType: "application/x-www-form-urlencoded"],
