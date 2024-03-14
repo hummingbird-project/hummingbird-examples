@@ -2,4 +2,4 @@ import GraphQL
 import Foundation
 import Hummingbird
 
-extension GraphQLResult: HBResponseEncodable {}
+extension GraphQLResult: ResponseEncodable {}
