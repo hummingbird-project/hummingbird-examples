@@ -13,7 +13,7 @@ let package = Package(
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-beta.1"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0-beta.1"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0-beta.1"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-mustache.git", branch: "main"),
+        .package(url: "https://github.com/hummingbird-project/swift-mustache.git", from: "2.0.0-beta.1"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/swift-server/webauthn-swift.git", from: "1.0.0-alpha"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.0.0"),
@@ -28,7 +28,7 @@ let package = Package(
                 .product(name: "HummingbirdRouter", package: "hummingbird"),
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
                 .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
-                .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
+                .product(name: "Mustache", package: "swift-mustache"),
                 .product(name: "WebAuthn", package: "webauthn-swift"),
             ],
             swiftSettings: [

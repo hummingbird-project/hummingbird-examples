@@ -16,7 +16,7 @@ import FluentKit
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
-import HummingbirdMustache
+import Mustache
 
 /// Redirects to login page if no user has been authenticated
 struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {

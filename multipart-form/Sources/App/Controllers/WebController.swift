@@ -15,25 +15,25 @@
 import Hummingbird
 import HummingbirdMustache
 
-struct HTML: HBResponseGenerator {
+struct HTML: ResponseGenerator {
     let html: String
 
-    public func response(from request: HBRequest) throws -> HBResponse {
+    public func response(from request: Request) throws -> Response {
         let buffer = request.allocator.buffer(string: self.html)
         return .init(status: .ok, headers: ["content-type": "text/html"], body: .byteBuffer(buffer))
     }
 }
 
 struct WebController {
-    let mustacheLibrary: HBMustacheLibrary
+    let mustacheLibrary: MustacheLibrary
 
-    func input(request: HBRequest) -> HTML {
+    func input(request: Request) -> HTML {
         let html = mustacheLibrary.render((), withTemplate: "enter-details")!
         return HTML(html: html)
     }
 
-    func post(request: HBRequest) throws -> HTML {
-        guard let user = try? request.decode(as: User.self) else { throw HBHTTPError(.badRequest) }
+    func post(request: Request) throws -> HTML {
+        guard let user = try? request.decode(as: User.self) else { throw HTTPError(.badRequest) }
         let html = mustacheLibrary.render(user, withTemplate: "details-entered")!
         return HTML(html: html)
     }

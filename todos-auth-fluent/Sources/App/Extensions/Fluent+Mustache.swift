@@ -1,5 +1,5 @@
 import FluentKit
-import HummingbirdMustache
+import Mustache
 
 /// Extend @propertyWrapper FieldProperty to enable mustache transform functions and add one
 /// to access the wrappedValue. In the mustache template you would access this with

@@ -1,6 +1,6 @@
 import Hummingbird
-import HummingbirdMustache
 import Logging
+import Mustache
 import NIOCore
 
 struct HTMLFormRequestContext: RequestContext {

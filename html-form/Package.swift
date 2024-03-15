@@ -8,7 +8,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-beta.1"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-mustache.git", branch: "main"),
+        .package(url: "https://github.com/hummingbird-project/swift-mustache.git", from: "2.0.0-beta.1"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
     ],
     targets: [
@@ -17,7 +17,7 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdMustache", package: "hummingbird-mustache"),
+                .product(name: "Mustache", package: "swift-mustache"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of

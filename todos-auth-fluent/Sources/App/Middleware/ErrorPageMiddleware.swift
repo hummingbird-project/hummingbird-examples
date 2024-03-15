@@ -13,7 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdMustache
+import Mustache
 
 /// Generate an HTML page for a thrown error
 struct ErrorPageMiddleware<Context: BaseRequestContext>: RouterMiddleware {

@@ -3,7 +3,7 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
-import HummingbirdMustache
+import Mustache
 
 public protocol AppArguments {
     var inMemoryDatabase: Bool { get }

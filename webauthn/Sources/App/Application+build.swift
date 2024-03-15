@@ -17,8 +17,8 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
-import HummingbirdMustache
 import HummingbirdRouter
+import Mustache
 import WebAuthn
 
 /// Application arguments protocol. We use a protocol so we can call
