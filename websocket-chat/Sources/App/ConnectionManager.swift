@@ -14,64 +14,77 @@
 
 import Hummingbird
 import HummingbirdWebSocket
+import Logging
 import NIOConcurrencyHelpers
+import ServiceLifecycle
 
-extension HBApplication {
-    actor ConnectionManager {
-        init() {
-            self.map = [:]
-        }
-
-        /// Called when a new user joins
-        func newUser(name: String, ws: HBWebSocket) {
-            // add to list of connections
-            self.add(name: name, ws: ws)
-            // send ping and wait for pong and repeat every 60 seconds
-            ws.initiateAutoPing(interval: .seconds(60))
-
-            Task {
-                // output joined text
-                try await self.textOutput("\(name) has joined")
-                let stream = ws.readStream()
-                for await data in stream {
-                    switch data {
-                    case .text(let text):
-                        try? await self.textOutput("[\(name)]: \(text)")
-                    default:
-                        break
-                    }
-                }
-                self.remove(name: name)
-                try await self.textOutput("\(name) has left")
-            }
-        }
-
-        /// output text to all connections
-        func textOutput(_ text: String) async throws {
-            for webSocket in map.values {
-                try await webSocket.write(.text(text))
-            }
-        }
-
-        func get(name: String) -> HBWebSocket? {
-            map[name]
-        }
-
-        /// Add to list of connections
-        private func add(name: String, ws: HBWebSocket) {
-            map[name] = ws
-        }
-
-        /// Remove from list of connections
-        private func remove(name: String) {
-            map[name] = nil
-        }
-
-        private var map: [String: HBWebSocket]
+struct ConnectionManager: Service {
+    struct Connection {
+        let name: String
+        let inbound: WebSocketInboundStream
+        let outbound: WebSocketOutboundWriter<BasicWebSocketRequestContext>
     }
 
-    var connectionMgr: ConnectionManager {
-        get { return self.extensions.get(\.connectionMgr) }
-        set { return self.extensions.set(\.connectionMgr, value: newValue) }
+    actor OutboundConnections {
+        typealias Writer = WebSocketOutboundWriter<BasicWebSocketRequestContext>
+        init() {
+            self.outboundWriters = [:]
+        }
+
+        func send(_ output: String) async throws {
+            for outbound in self.outboundWriters.values {
+                try await outbound.write(.text(output))
+            }
+        }
+
+        func add(name: String, outbound: Writer) async throws {
+            try await self.send("\(name) joined")
+            self.outboundWriters[name] = outbound
+        }
+
+        func remove(name: String) async throws {
+            self.outboundWriters[name] = nil
+            try await self.send("\(name) left")
+        }
+
+        var outboundWriters: [String: Writer]
+    }
+
+    let connectionStream: AsyncStream<Connection>
+    let connectionContinuation: AsyncStream<Connection>.Continuation
+    let logger: Logger
+
+    init(logger: Logger) {
+        self.logger = logger
+        (self.connectionStream, self.connectionContinuation) = AsyncStream<Connection>.makeStream()
+    }
+
+    func run() async {
+        await withGracefulShutdownHandler {
+            await withDiscardingTaskGroup { group in
+                let outboundCounnections = OutboundConnections()
+                for await connection in self.connectionStream {
+                    self.logger.info("add connection", metadata: ["name": .string(connection.name)])
+                    try? await outboundCounnections.add(name: connection.name, outbound: connection.outbound)
+                    group.addTask {
+                        for await input in connection.inbound {
+                            guard case .text(let text) = input else { continue }
+                            let output = "[\(connection.name)]: \(text)"
+                            self.logger.debug("Output", metadata: ["message": .string(output)])
+                            try? await outboundCounnections.send(output)
+                        }
+                        self.logger.info("remove connection", metadata: ["name": .string(connection.name)])
+                        try? await outboundCounnections.remove(name: connection.name)
+                    }
+                }
+            }
+        } onGracefulShutdown: {
+            self.connectionContinuation.finish()
+        }
+    }
+
+    func addUser(name: String, inbound: WebSocketInboundStream, outbound: WebSocketOutboundWriter<BasicWebSocketRequestContext>) {
+        let connection = Connection(name: name, inbound: inbound, outbound: outbound)
+        self.connectionContinuation.yield(connection)
     }
 }
