@@ -29,14 +29,17 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
             return .dontUpgrade
         }
         return .upgrade([:])
-    } onUpgrade: { inbound, outbound, _ in
-        connectionManager.addUser(name: UUID().uuidString, inbound: inbound, outbound: outbound)
-        try? await gracefulShutdown()
+    } onUpgrade: { inbound, outbound, context in
+        // only allow upgrade if username query parameter exists
+        guard let name = context.request.uri.queryParameters["username"] else {
+            return
+        }
+        await connectionManager.manageUser(name: String(name), inbound: inbound, outbound: outbound)
     }
 
     var app = Application(
         router: router,
-        server: .webSocketUpgrade(webSocketRouter: wsRouter, configuration: .init(extensions: [.perMessageDeflate()])),
+        server: .http1WebSocketUpgrade(webSocketRouter: wsRouter, configuration: .init(extensions: [.perMessageDeflate()])),
         configuration: .init(address: .hostname(arguments.hostname, port: arguments.port)),
         logger: logger
     )

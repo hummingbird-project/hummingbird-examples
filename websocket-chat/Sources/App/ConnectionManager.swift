@@ -22,11 +22,12 @@ struct ConnectionManager: Service {
     struct Connection {
         let name: String
         let inbound: WebSocketInboundStream
-        let outbound: WebSocketOutboundWriter<BasicWebSocketRequestContext>
+        let outbound: WebSocketOutboundWriter
+        let continuation: CheckedContinuation<Void, Never>
     }
 
     actor OutboundConnections {
-        typealias Writer = WebSocketOutboundWriter<BasicWebSocketRequestContext>
+        typealias Writer = WebSocketOutboundWriter
         init() {
             self.outboundWriters = [:]
         }
@@ -38,8 +39,8 @@ struct ConnectionManager: Service {
         }
 
         func add(name: String, outbound: Writer) async throws {
-            try await self.send("\(name) joined")
             self.outboundWriters[name] = outbound
+            try await self.send("\(name) joined")
         }
 
         func remove(name: String) async throws {
@@ -67,14 +68,17 @@ struct ConnectionManager: Service {
                     self.logger.info("add connection", metadata: ["name": .string(connection.name)])
                     try? await outboundCounnections.add(name: connection.name, outbound: connection.outbound)
                     group.addTask {
-                        for await input in connection.inbound {
-                            guard case .text(let text) = input else { continue }
-                            let output = "[\(connection.name)]: \(text)"
-                            self.logger.debug("Output", metadata: ["message": .string(output)])
-                            try? await outboundCounnections.send(output)
-                        }
-                        self.logger.info("remove connection", metadata: ["name": .string(connection.name)])
-                        try? await outboundCounnections.remove(name: connection.name)
+                        do {
+                            for try await input in connection.inbound {
+                                guard case .text(let text) = input else { continue }
+                                let output = "[\(connection.name)]: \(text)"
+                                self.logger.debug("Output", metadata: ["message": .string(output)])
+                                try? await outboundCounnections.send(output)
+                            }
+                            self.logger.info("remove connection", metadata: ["name": .string(connection.name)])
+                            try? await outboundCounnections.remove(name: connection.name)
+                        } catch {}
+                        connection.continuation.resume()
                     }
                 }
             }
@@ -83,8 +87,10 @@ struct ConnectionManager: Service {
         }
     }
 
-    func addUser(name: String, inbound: WebSocketInboundStream, outbound: WebSocketOutboundWriter<BasicWebSocketRequestContext>) {
-        let connection = Connection(name: name, inbound: inbound, outbound: outbound)
-        self.connectionContinuation.yield(connection)
+    func manageUser(name: String, inbound: WebSocketInboundStream, outbound: WebSocketOutboundWriter) async {
+        await withCheckedContinuation { cont in
+            let connection = Connection(name: name, inbound: inbound, outbound: outbound, continuation: cont)
+            self.connectionContinuation.yield(connection)
+        }
     }
 }
