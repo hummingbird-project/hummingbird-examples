@@ -65,9 +65,10 @@ struct ConnectionManager: Service {
             await withDiscardingTaskGroup { group in
                 let outboundCounnections = OutboundConnections()
                 for await connection in self.connectionStream {
-                    self.logger.info("add connection", metadata: ["name": .string(connection.name)])
-                    try? await outboundCounnections.add(name: connection.name, outbound: connection.outbound)
                     group.addTask {
+                        self.logger.info("add connection", metadata: ["name": .string(connection.name)])
+                        try? await outboundCounnections.add(name: connection.name, outbound: connection.outbound)
+
                         do {
                             for try await input in connection.inbound {
                                 guard case .text(let text) = input else { continue }
@@ -75,12 +76,14 @@ struct ConnectionManager: Service {
                                 self.logger.debug("Output", metadata: ["message": .string(output)])
                                 try? await outboundCounnections.send(output)
                             }
-                            self.logger.info("remove connection", metadata: ["name": .string(connection.name)])
-                            try? await outboundCounnections.remove(name: connection.name)
                         } catch {}
+
+                        self.logger.info("remove connection", metadata: ["name": .string(connection.name)])
+                        try? await outboundCounnections.remove(name: connection.name)
                         connection.continuation.resume()
                     }
                 }
+                group.cancelAll()
             }
         } onGracefulShutdown: {
             self.connectionContinuation.finish()
