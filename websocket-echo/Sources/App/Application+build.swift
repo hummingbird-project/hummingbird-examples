@@ -33,7 +33,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
 
     let app = Application(
         router: router,
-        server: .webSocketUpgrade(webSocketRouter: wsRouter, configuration: .init(extensions: [.perMessageDeflate()])),
+        server: .http1WebSocketUpgrade(webSocketRouter: wsRouter, configuration: .init(extensions: [.perMessageDeflate()])),
         configuration: .init(address: .hostname(arguments.hostname, port: arguments.port)),
         logger: logger
     )
