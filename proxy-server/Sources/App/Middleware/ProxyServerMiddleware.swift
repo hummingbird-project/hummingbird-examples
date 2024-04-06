@@ -20,8 +20,9 @@ import NIOHTTP1
 import NIOHTTPTypesHTTP1
 
 /// Middleware forwarding requests onto another server
-public struct ProxyServerMiddleware<Context: BaseRequestContext>: RouterMiddleware {
-    public struct Proxy: Sendable {
+struct ProxyServerMiddleware: RouterMiddleware {
+    typealias Context = ProxyRequestContext
+    struct Proxy: Sendable {
         let location: String
         let target: String
 
@@ -34,12 +35,12 @@ public struct ProxyServerMiddleware<Context: BaseRequestContext>: RouterMiddlewa
     let httpClient: HTTPClient
     let proxy: Proxy
 
-    public init(httpClient: HTTPClient, proxy: Proxy) {
+    init(httpClient: HTTPClient, proxy: Proxy) {
         self.httpClient = httpClient
         self.proxy = proxy
     }
 
-    public func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+    func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         guard let response = try await forward(request: request, to: proxy, context: context) else {
             return try await next(request, context)
         }
@@ -55,6 +56,16 @@ public struct ProxyServerMiddleware<Context: BaseRequestContext>: RouterMiddlewa
         var clientRequest = HTTPClientRequest(url: "\(proxy.target)\(newURI)")
         clientRequest.method = .init(request.method)
         clientRequest.headers = .init(request.headers)
+        if let remoteAddress = context.remoteAddress {
+            switch context.remoteAddress {
+            case .v4:
+                clientRequest.headers.add(name: "Forwarded", value: "for=\(remoteAddress.ipAddress!)")
+            case .v6:
+                clientRequest.headers.add(name: "Forwarded", value: "for=\"[\(remoteAddress.ipAddress!)]\"")
+            default:
+                break
+            }
+        }
         // extract length from content-length header
         let contentLength = if let header = request.headers[.contentLength], let value = Int(header) {
             HTTPClientRequest.Body.Length.known(value)

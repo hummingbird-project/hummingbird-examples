@@ -1,5 +1,7 @@
 import AsyncHTTPClient
 import Hummingbird
+import Logging
+import NIOCore
 import NIOPosix
 import ServiceLifecycle
 
@@ -10,10 +12,23 @@ public protocol AppArguments {
     var target: String { get }
 }
 
+/// Request context for proxy
+///
+/// Stores remote address
+struct ProxyRequestContext: RequestContext {
+    var coreContext: CoreRequestContext
+    let remoteAddress: SocketAddress?
+
+    init(channel: Channel, logger: Logger) {
+        self.coreContext = .init(allocator: channel.allocator, logger: logger)
+        self.remoteAddress = channel.remoteAddress
+    }
+}
+
 func buildApplication(_ args: some AppArguments) -> some ApplicationProtocol {
     let eventLoopGroup = MultiThreadedEventLoopGroup.singleton
     let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
-    let router = Router()
+    let router = Router(context: ProxyRequestContext.self)
     router.middlewares.add(
         ProxyServerMiddleware(
             httpClient: httpClient,
