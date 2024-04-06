@@ -17,6 +17,8 @@ Examples converted to Hummingbird 2.0
 - [todos-postgres-tutorial](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-postgres-tutorial) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using PostgresNIO. Sample code that goes along with the [Todos tutorial](https://hummingbird-project.github.io/hummingbird-docs/2.0/tutorials/todos).
 - [upload](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload) - File uploading and downloading.
 - [webauthn](https://github.com/hummingbird-project/hummingbird-examples/tree/main/webauthn) - Web app demonstrating WebAuthn(PassKey) authentication.
+- [websocket-chat](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-chat) - Simple chat application using WebSockets.
+- [websocket-echo](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-echo) - Simple WebSocket based echo server.
 
 And finally
 
@@ -29,7 +31,5 @@ Examples still working with Hummingbird 1.0
 - [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit
 - [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
 - [upload-s3](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload-s3) - File uploading and downloading using AWS S3 as backing store.
-- [websocket-chat](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-chat) - Simple chat application using WebSockets.
-- [websocket-echo](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-echo) - Simple WebSocket based echo server.
 
 The full set of Hummingbird 1.0 examples can be found at https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x
