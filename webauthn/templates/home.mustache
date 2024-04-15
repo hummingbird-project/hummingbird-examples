@@ -3,15 +3,23 @@
 <head>
     <title>WebAuthn Register</title>
     <meta charset="UTF-8">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="js/webauthn.js?v=1"></script>
-    <link rel="stylesheet" type="text/css" href="style.css?v=1">
 </head>
-<body>
-    <img id="hb" src="images/hummingbird.png" />
-    <h2>Welcome {{name}}</h2>
-    <p>
-        <button type="button" onclick="logout();">Logout</button>
-    </p>
+<body class="bg-gray-100">
+    <div class="text-center">
+        <h2 class="text-3xl p-3">WebAuthn Demo</h2>
+    </div>
+    <div class="p-6 max-w-md mx-auto bg-white rounded-xl space-x-4 shadow-lg">
+        <div>
+            <img src="images/hummingbird.png" class="w-64 mx-auto"/>
+        </div>
+        <div class="p-2 text-center">
+            <h2 class="p-2">Welcome {{name}}</h2>
+            <div class="inline-block border p-2 shadow-md">
+                <button type="button" onclick="logout();" class="hover:text-slate-500">Logout</button><br/>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

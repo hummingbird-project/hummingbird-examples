@@ -3,26 +3,33 @@
 <head>
     <title>WebAuthn Register</title>
     <meta charset="UTF-8">
-    <link rel="stylesheet" type="text/css" href="style.css?v=1">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="js/webauthn.js?v=1"></script>
     <script type="text/javascript">
         function registerUser(event) {
-            const username = $("#email").val();
+            const emailInput = document.getElementById("email");
+            const username = emailInput.value;
             register(username)
         }
     </script>
 </head>
-<body>
-    <img id="hb" src="images/hummingbird.png" />
-    <h2>Register</h2>
-    <p>
-        <form action="#">
-            <label for="email">Email</label>
-            <input type="text" id="email" name="email"/><br/>
-        <br>
-        <button type="button" onclick="registerUser(event);">Register</button>
-        </form>
-    </p>
+<body class="bg-gray-100">
+    <div class="text-center">
+        <h2 class="text-3xl p-3">WebAuthn Demo</h2>
+    </div>
+    <div class="p-6 max-w-md mx-auto bg-white rounded-xl space-x-4 shadow-lg">
+        <div>
+            <img src="images/hummingbird.png" class="w-64 mx-auto"/>
+        </div>
+        <div class="p-2 text-center">
+            <form action="#">
+                <label for="email" class="text-sm">Enter your email address</label><br/>
+                <input type="text" id="email" name="email"/ class="border"><input/><br/>
+                <div class="inline-block border p-2 shadow-md">
+                    <button type="button" onclick="registerUser(event);" class="hover:text-slate-500">Go</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
