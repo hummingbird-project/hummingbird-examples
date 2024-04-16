@@ -15,9 +15,10 @@ struct HTMLFormRequestContext: RequestContext {
 
 public func buildApplication(configuration: ApplicationConfiguration) async throws -> some ApplicationProtocol {
     let library = try await MustacheLibrary(directory: "templates")
-    assert(library.getTemplate(named: "head") != nil, "Set your working directory to the root folder of this example to get it to work")
+    assert(library.getTemplate(named: "page") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     let router = Router(context: HTMLFormRequestContext.self)
+    router.middlewares.add(FileMiddleware())
     WebController(mustacheLibrary: library).addRoutes(to: router)
     let app = Application(router: router)
     return app
