@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncAlgorithms
 import Hummingbird
 import HummingbirdWebSocket
 import Logging
@@ -19,36 +20,35 @@ import NIOConcurrencyHelpers
 import ServiceLifecycle
 
 struct ConnectionManager: Service {
+    typealias OutputStream = AsyncChannel<WebSocketOutboundWriter.OutboundFrame>
     struct Connection {
         let name: String
         let inbound: WebSocketInboundStream
-        let outbound: WebSocketOutboundWriter
-        let continuation: CheckedContinuation<Void, Never>
+        let outbound: OutputStream
     }
 
     actor OutboundConnections {
-        typealias Writer = WebSocketOutboundWriter
         init() {
             self.outboundWriters = [:]
         }
 
-        func send(_ output: String) async throws {
+        func send(_ output: String) async {
             for outbound in self.outboundWriters.values {
-                try await outbound.write(.text(output))
+                await outbound.send(.text(output))
             }
         }
 
-        func add(name: String, outbound: Writer) async throws {
+        func add(name: String, outbound: OutputStream) async {
             self.outboundWriters[name] = outbound
-            try await self.send("\(name) joined")
+            await self.send("\(name) joined")
         }
 
-        func remove(name: String) async throws {
+        func remove(name: String) async {
             self.outboundWriters[name] = nil
-            try await self.send("\(name) left")
+            await self.send("\(name) left")
         }
 
-        var outboundWriters: [String: Writer]
+        var outboundWriters: [String: OutputStream]
     }
 
     let connectionStream: AsyncStream<Connection>
@@ -67,20 +67,20 @@ struct ConnectionManager: Service {
                 for await connection in self.connectionStream {
                     group.addTask {
                         self.logger.info("add connection", metadata: ["name": .string(connection.name)])
-                        try? await outboundCounnections.add(name: connection.name, outbound: connection.outbound)
+                        await outboundCounnections.add(name: connection.name, outbound: connection.outbound)
 
                         do {
-                            for try await input in connection.inbound {
+                            for try await input in connection.inbound.messages(maxSize: 1_000_000) {
                                 guard case .text(let text) = input else { continue }
                                 let output = "[\(connection.name)]: \(text)"
                                 self.logger.debug("Output", metadata: ["message": .string(output)])
-                                try? await outboundCounnections.send(output)
+                                await outboundCounnections.send(output)
                             }
                         } catch {}
 
                         self.logger.info("remove connection", metadata: ["name": .string(connection.name)])
-                        try? await outboundCounnections.remove(name: connection.name)
-                        connection.continuation.resume()
+                        await outboundCounnections.remove(name: connection.name)
+                        connection.outbound.finish()
                     }
                 }
                 group.cancelAll()
@@ -90,10 +90,10 @@ struct ConnectionManager: Service {
         }
     }
 
-    func manageUser(name: String, inbound: WebSocketInboundStream, outbound: WebSocketOutboundWriter) async {
-        await withCheckedContinuation { cont in
-            let connection = Connection(name: name, inbound: inbound, outbound: outbound, continuation: cont)
-            self.connectionContinuation.yield(connection)
-        }
+    func addUser(name: String, inbound: WebSocketInboundStream, outbound: WebSocketOutboundWriter) -> OutputStream {
+        let outputStream = OutputStream()
+        let connection = Connection(name: name, inbound: inbound, outbound: outputStream)
+        self.connectionContinuation.yield(connection)
+        return outputStream
     }
 }

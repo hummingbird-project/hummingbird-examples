@@ -34,7 +34,10 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
         guard let name = context.request.uri.queryParameters["username"] else {
             return
         }
-        await connectionManager.manageUser(name: String(name), inbound: inbound, outbound: outbound)
+        let outputStream = connectionManager.addUser(name: String(name), inbound: inbound, outbound: outbound)
+        for try await output in outputStream {
+            try await outbound.write(output)
+        }
     }
 
     var app = Application(

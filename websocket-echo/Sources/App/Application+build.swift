@@ -2,6 +2,7 @@ import Hummingbird
 import HummingbirdWebSocket
 import HummingbirdWSCompression
 import Logging
+import NIOWebSocket
 
 protocol AppArguments {
     var hostname: String { get }
@@ -23,11 +24,22 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     wsRouter.ws("echo") { _, _ in
         .upgrade([:])
     } onUpgrade: { inbound, outbound, _ in
-        for try await packet in inbound {
-            if case .text("disconnect") = packet {
+        // parse WebSocket frames
+        for try await frame in inbound {
+            if frame.opcode == .text, String(buffer: frame.data) == "disconnect", frame.fin == true {
                 break
             }
-            try await outbound.write(.custom(packet.webSocketFrame))
+            let opcode: WebSocketOpcode = switch frame.opcode {
+            case .text: .text
+            case .binary: .binary
+            case .continuation: .continuation
+            }
+            let frame = WebSocketFrame(
+                fin: frame.fin,
+                opcode: opcode,
+                data: frame.data
+            )
+            try await outbound.write(.custom(frame))
         }
     }
 
