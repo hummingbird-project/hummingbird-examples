@@ -17,37 +17,38 @@ import Hummingbird
 import MultipartKit
 import NIOFoundationCompat
 
-extension FormDataEncoder: HBResponseEncoder {
+extension FormDataEncoder {
     /// Extend JSONEncoder to support encoding `HBResponse`'s. Sets body and header values
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
-    public func encode<T: Encodable>(_ value: T, from request: HBRequest) throws -> HBResponse {
-        var buffer = request.allocator.buffer(capacity: 0)
+    public func encode<T: Encodable>(_ value: T, from request: Request, context: some BaseRequestContext) throws -> Response {
+        var buffer = context.allocator.buffer(capacity: 0)
 
         let boundary = "----HBFormBoundary" + String(base32Encoding: (0..<4).map { _ in UInt8.random(in: 0...255) })
         try self.encode(value, boundary: boundary, into: &buffer)
-        return HBResponse(
+        return Response(
             status: .ok,
-            headers: ["content-type": "multipart/form-data; boundary=\(boundary)"],
-            body: .byteBuffer(buffer)
+            headers: [.contentType: "multipart/form-data; boundary=\(boundary)"],
+            body: .init(byteBuffer: buffer)
         )
     }
 }
 
-extension FormDataDecoder: HBRequestDecoder {
+extension FormDataDecoder {
     /// Extend JSONDecoder to decode from `HBRequest`.
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
-    public func decode<T: Decodable>(_ type: T.Type, from request: HBRequest) throws -> T {
-        guard let buffer = request.body.buffer,
-              let contentType = request.headers["content-type"].first,
-              let mediaType = HBMediaType(from: contentType),
+    public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T {
+        guard let contentType = request.headers[.contentType],
+              let mediaType = MediaType(from: contentType),
               let parameter = mediaType.parameter,
-              parameter.name == "boundary" else {
-                  throw HBHTTPError(.badRequest)
-              }
+              parameter.name == "boundary"
+        else {
+            throw HTTPError(.unsupportedMediaType)
+        }
+        let buffer = try await request.body.collect(upTo: 1_000_000)
         return try self.decode(T.self, from: buffer, boundary: parameter.value)
     }
 }

@@ -13,28 +13,41 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdMustache
+import Mustache
 
 struct HTML: ResponseGenerator {
     let html: String
 
-    public func response(from request: Request) throws -> Response {
-        let buffer = request.allocator.buffer(string: self.html)
-        return .init(status: .ok, headers: ["content-type": "text/html"], body: .byteBuffer(buffer))
+    public func response(from request: Request, context: some BaseRequestContext) throws -> Response {
+        let buffer = context.allocator.buffer(string: self.html)
+        return .init(status: .ok, headers: [.contentType: "text/html"], body: .init(byteBuffer: buffer))
     }
 }
 
 struct WebController {
-    let mustacheLibrary: MustacheLibrary
+    let library: MustacheLibrary
+    let enterTemplate: MustacheTemplate
+    let enteredTemplate: MustacheTemplate
 
-    func input(request: Request) -> HTML {
-        let html = mustacheLibrary.render((), withTemplate: "enter-details")!
+    init(mustacheLibrary: MustacheLibrary) {
+        self.library = mustacheLibrary
+        self.enterTemplate = mustacheLibrary.getTemplate(named: "enter-details")!
+        self.enteredTemplate = mustacheLibrary.getTemplate(named: "details-entered")!
+    }
+
+    func addRoutes(to router: some RouterMethods<some BaseRequestContext>) {
+        router.get("/", use: self.input)
+        router.post("/", use: self.post)
+    }
+
+    @Sendable func input(request: Request, context: some BaseRequestContext) -> HTML {
+        let html = self.enterTemplate.render((), library: self.library)
         return HTML(html: html)
     }
 
-    func post(request: Request) throws -> HTML {
-        guard let user = try? request.decode(as: User.self) else { throw HTTPError(.badRequest) }
-        let html = mustacheLibrary.render(user, withTemplate: "details-entered")!
+    @Sendable func post(request: Request, context: some BaseRequestContext) async throws -> HTML {
+        let user = try await request.decode(as: User.self, context: context)
+        let html = self.enteredTemplate.render(user, library: self.library)
         return HTML(html: html)
     }
 }
