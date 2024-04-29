@@ -1,14 +1,12 @@
-{{>head}}
-<body>
-<div>
-<h1>Please enter your details</h1>
-<form action="/" method="post" enctype="multipart/form-data">
-<label for="name">Name</label><br/>
-<input type="text" id="name" name="name"/><br/>
-<label for="age">Age</label><br/>
-<input type="text" id="age" name="age"/><br/>
-<input type="submit" value="Submit"/>
-</form>
-</div>
-</body>
-</html>
+{{<page}}
+    {{$body}}
+        <h1 class="text-xl">Please enter your details</h1>
+        <form action="/" method="post" enctype="multipart/form-data">
+        <label for="name">Name</label><br/>
+        <input type="text" id="name" name="name" class="border"/><br/>
+        <label for="age">Age</label><br/>
+        <input type="text" id="age" name="age" class="border"/><br/>
+        <input type="submit" value="Submit" class="p-1 my-2 border shadow-lg" />
+        </form>
+    {{/body}}
+{{/page}}    
