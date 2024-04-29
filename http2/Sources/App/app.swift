@@ -11,10 +11,10 @@ struct HummingbirdArguments: AsyncParsableCommand, AppArguments {
     var port: Int = 8081
 
     @Option(name: .shortAndLong, help: "PEM file containing certificate chain")
-    var certificateChain: String
+    var certificateChain: String = "resources/certs/server.crt"
 
     @Option(name: .long, help: "PEM file containing private key")
-    var privateKey: String
+    var privateKey: String = "resources/certs/server.key"
 
     var tlsConfiguration: TLSConfiguration {
         get throws {
