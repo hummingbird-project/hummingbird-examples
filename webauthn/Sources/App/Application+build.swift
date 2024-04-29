@@ -53,7 +53,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
     let sessionStorage = SessionStorage(memoryPersist)
 
     // load mustache template library
-    let library = try await MustacheLibrary(directory: "templates")
+    let library = try await MustacheLibrary(directory: "resources/templates")
     assert(library.getTemplate(named: "home") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     let router = RouterBuilder(context: WebAuthnRequestContext.self) {

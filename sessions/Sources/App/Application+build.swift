@@ -52,7 +52,11 @@ func buildApplication(_ arguments: AppArguments, configuration: ApplicationConfi
     let userController = UserController(fluent: fluent, sessionStorage: sessionStorage)
     userController.addRoutes(to: router.group("user"))
 
-    var application = Application(router: router, server: .http1())
+    var application = Application(
+        router: router,
+        server: .http1(),
+        configuration: configuration
+    )
     application.addServices(fluent, persist)
     return application
 }
