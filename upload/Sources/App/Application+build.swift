@@ -19,5 +19,8 @@ import NIOCore
 func buildApplication(args: AppArguments) -> some ApplicationProtocol {
     let router = Router()
     FileController().addRoutes(to: router.group("files"))
-    return Application(router: router)
+    return Application(
+        router: router,
+        configuration: .init(address: .hostname(args.hostname, port: args.port))
+    )
 }
