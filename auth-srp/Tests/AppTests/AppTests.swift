@@ -17,74 +17,74 @@ import Crypto
 import Foundation
 import Hummingbird
 import HummingbirdTesting
+import Logging
 import SRP
 import XCTest
 
 final class AppTests: XCTestCase {
     struct TestArguments: AppArguments {
-        var migrate: Bool { true }
-        var inMemoryDatabase: Bool { true }
+        var hostname = "localhost"
+        var port = 8080
+        var logLevel: Logger.Level? = .trace
+        var migrate = true
+        var inMemoryDatabase = true
     }
 
-    func testApp() throws {
+    func testApp() async throws {
         let srpClient = SRPClient(configuration: SRPConfiguration<Insecure.SHA1>(.N2048))
-        let app = HBApplication(testing: .live)
-        try app.configure(TestArguments())
-        try app.XCTStart()
-        defer { app.XCTStop() }
+        let app = try await buildApplication(TestArguments())
+        try await app.test(.router) { client in
+            let (salt, verifier) = srpClient.generateSaltAndVerifier(username: "JohnSmith", password: "1234567890")
+            let createUser = UserController.CreateUserInput(name: "JohnSmith", salt: salt.hexDigest(), verifier: verifier.hex)
+            let createUserBody = try JSONEncoder().encode(createUser)
+            try await client.execute(uri: "/api/user", method: .post, body: .init(data: createUserBody)) { response in
+                XCTAssertEqual(response.status, .ok)
+            }
 
-        let (salt, verifier) = srpClient.generateSaltAndVerifier(username: "JohnSmith", password: "1234567890")
-        let createUser = UserController.CreateUser.Input(name: "JohnSmith", salt: salt.hexDigest(), verifier: verifier.hex)
-        let createUserBody = try JSONEncoder().encode(createUser)
-        try app.XCTExecute(uri: "/api/user", method: .POST, body: .init(data: createUserBody)) { response in
-            XCTAssertEqual(response.status, .ok)
-        }
-
-        let keys = srpClient.generateKeys()
-        let initLogin = UserController.InitLogin.Input(name: "JohnSmith", A: keys.public.hex)
-        let initLoginBody = try JSONEncoder().encode(initLogin)
-        let (initLoginResponse, cookies) = try app.XCTExecute(
-            uri: "/api/user/login",
-            method: .POST,
-            body: .init(data: initLoginBody)
-        ) { response -> (UserController.InitLogin.Output, String) in
-            XCTAssertEqual(response.status, .ok)
-            let cookies = try XCTUnwrap(response.headers["set-cookie"].first)
-            let body = try XCTUnwrap(response.body)
-            let initLoginResponse = try JSONDecoder().decode(UserController.InitLogin.Output.self, from: Data(buffer: body))
-            return (initLoginResponse, cookies)
-        }
-        let serverPublicKey = try XCTUnwrap(SRPKey(hex: initLoginResponse.B))
-        let sharedSecret = try srpClient.calculateSharedSecret(
-            username: "JohnSmith",
-            password: "1234567890",
-            salt: salt,
-            clientKeys: keys,
-            serverPublicKey: serverPublicKey
-        )
-        let proof = srpClient.calculateSimpleClientProof(
-            clientPublicKey: keys.public,
-            serverPublicKey: serverPublicKey,
-            sharedSecret: sharedSecret
-        )
-        let verifyLogin = UserController.VerifyLogin.Input(proof: proof.hexDigest())
-        let verifyLoginBody = try JSONEncoder().encode(verifyLogin)
-        try app.XCTExecute(
-            uri: "/api/user/verify",
-            method: .POST,
-            headers: ["cookie": cookies],
-            body: .init(data: verifyLoginBody)
-        ) { response in
-            XCTAssertEqual(response.status, .ok)
-            let body = try XCTUnwrap(response.body)
-            let verifyLoginResponse = try JSONDecoder().decode(UserController.VerifyLogin.Output.self, from: Data(buffer: body))
-            let serverProof = try XCTUnwrap(SRPKey(hex: verifyLoginResponse.proof))
-            try srpClient.verifySimpleServerProof(
-                serverProof: serverProof.bytes,
-                clientProof: proof,
+            let keys = srpClient.generateKeys()
+            let initLogin = UserController.InitLoginInput(name: "JohnSmith", A: keys.public.hex)
+            let initLoginBody = try JSONEncoder().encode(initLogin)
+            let (initLoginResponse, cookies) = try await client.execute(
+                uri: "/api/user/login",
+                method: .post,
+                body: .init(data: initLoginBody)
+            ) { response -> (UserController.InitLoginOutput, String) in
+                XCTAssertEqual(response.status, .ok)
+                let cookies = try XCTUnwrap(response.headers[.setCookie])
+                let initLoginResponse = try JSONDecoder().decode(UserController.InitLoginOutput.self, from: response.body)
+                return (initLoginResponse, cookies)
+            }
+            let serverPublicKey = try XCTUnwrap(SRPKey(hex: initLoginResponse.B))
+            let sharedSecret = try srpClient.calculateSharedSecret(
+                username: "JohnSmith",
+                password: "1234567890",
+                salt: salt,
                 clientKeys: keys,
+                serverPublicKey: serverPublicKey
+            )
+            let proof = srpClient.calculateSimpleClientProof(
+                clientPublicKey: keys.public,
+                serverPublicKey: serverPublicKey,
                 sharedSecret: sharedSecret
             )
+            let verifyLogin = UserController.VerifyLoginInput(proof: proof.hexDigest())
+            let verifyLoginBody = try JSONEncoder().encode(verifyLogin)
+            try await client.execute(
+                uri: "/api/user/verify",
+                method: .post,
+                headers: [.cookie: cookies],
+                body: .init(data: verifyLoginBody)
+            ) { response in
+                XCTAssertEqual(response.status, .ok)
+                let verifyLoginResponse = try JSONDecoder().decode(UserController.VerifyLoginOutput.self, from: response.body)
+                let serverProof = try XCTUnwrap(SRPKey(hex: verifyLoginResponse.proof))
+                try srpClient.verifySimpleServerProof(
+                    serverProof: serverProof.bytes,
+                    clientProof: proof,
+                    clientKeys: keys,
+                    sharedSecret: sharedSecret
+                )
+            }
         }
     }
 }
