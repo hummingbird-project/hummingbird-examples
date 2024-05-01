@@ -17,6 +17,7 @@ Examples converted to Hummingbird 2.0
 - [todos-mongokitten-openapi](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-mongokitten-openapi) - Todos application, using MongoDB driver [MongoKitten](https://github.com/orlandos-nl/MongoKitten) and the [OpenAPI runtime](https://github.com/apple/swift-openapi-runtime).
 - [todos-postgres-tutorial](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-postgres-tutorial) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using PostgresNIO. Sample code that goes along with the [Todos tutorial](https://hummingbird-project.github.io/hummingbird-docs/2.0/tutorials/todos).
 - [upload](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload) - File uploading and downloading.
+- [upload-s3](https://github.com/hummingbird-project/hummingbird-examples/tree/main/upload-s3) - File uploading and downloading using AWS S3 as backing store.
 - [webauthn](https://github.com/hummingbird-project/hummingbird-examples/tree/main/webauthn) - Web app demonstrating WebAuthn(PassKey) authentication.
 - [websocket-chat](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-chat) - Simple chat application using WebSockets.
 - [websocket-echo](https://github.com/hummingbird-project/hummingbird-examples/tree/main/websocket-echo) - Simple WebSocket based echo server.
@@ -30,6 +31,5 @@ Examples still working with Hummingbird 1.0
 - [auth-srp](https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x/auth-srp) - Secure Remote Password authentication.
 - [ios-image-server](https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x/ios-image-server) - iOS web server that provides access to iPhone photo library.
 - [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
-- [upload-s3](https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x/upload-s3) - File uploading and downloading using AWS S3 as backing store.
 
 The full set of Hummingbird 1.0 examples can be found at https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x
