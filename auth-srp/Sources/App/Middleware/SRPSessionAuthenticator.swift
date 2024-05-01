@@ -13,9 +13,15 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import Hummingbird
 import HummingbirdAuth
+import HummingbirdFluent
 
-struct SRPSessionAuthenticator: HBSessionAuthenticator {
+struct SRPSessionAuthenticator: SessionMiddleware {
+    typealias Context = AuthSRPRequestContext
+    let fluent: Fluent
+    let sessionStorage: SessionStorage
+
     enum AuthenticationState: Codable {
         case authenticating(A: String, B: String, serverSharedSecret: String)
         case authenticated
@@ -28,12 +34,12 @@ struct SRPSessionAuthenticator: HBSessionAuthenticator {
 
     typealias Value = User
 
-    func getValue(from session: Session, request: Hummingbird.HBRequest) -> NIOCore.EventLoopFuture<User?> {
+    func getValue(from session: Session, request: Request, context: Context) async throws -> User? {
         switch session.state {
         case .authenticated:
-            return User.find(session.userId, on: request.db)
+            return try await User.find(session.userId, on: self.fluent.db())
         case .authenticating:
-            return request.eventLoop.makeSucceededFuture(nil)
+            return nil
         }
     }
 }

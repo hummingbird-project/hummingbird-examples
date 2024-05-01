@@ -12,11 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import App
 import ArgumentParser
 import Hummingbird
+import Logging
 
-struct HummingbirdArguments: ParsableCommand, AppArguments {
+@main
+struct HummingbirdArguments: AsyncParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var hostname: String = "127.0.0.1"
 
@@ -29,17 +30,18 @@ struct HummingbirdArguments: ParsableCommand, AppArguments {
     @Flag(name: .shortAndLong)
     var inMemoryDatabase: Bool = false
 
-    func run() throws {
-        let app = HBApplication(
-            configuration: .init(
-                address: .hostname(self.hostname, port: self.port),
-                serverName: "Hummingbird"
-            )
-        )
-        try app.configure(self)
-        try app.start()
-        app.wait()
+    @Option(name: .shortAndLong)
+    var logLevel: Logger.Level?
+
+    func run() async throws {
+        let app = try await buildApplication(self)
+        try await app.runService()
     }
 }
 
-HummingbirdArguments.main()
+/// Extend `Logger.Level` so it can be used as an argument
+#if compiler(>=6.0)
+extension Logger.Level: @retroactive ExpressibleByArgument {}
+#else
+extension Logger.Level: ExpressibleByArgument {}
+#endif

@@ -16,7 +16,7 @@
 import Crypto
 import Foundation
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
 import SRP
 import XCTest
 

@@ -23,16 +23,22 @@ import NIO
 import SRP
 
 struct UserController {
-    static let srp = SRPServer<Insecure.SHA1>(configuration: .init(.N2048))
+    typealias Context = AuthSRPRequestContext
 
-    /// Add routes for user controller
-    func addRoutes(to group: HBRouterGroup) {
-        group.post(use: CreateUser.self)
-        group.post("login", options: .editResponse, use: InitLogin.self)
-        group.post("verify", options: .editResponse, use: VerifyLogin.self)
-        group.group()
-            .add(middleware: SRPSessionAuthenticator())
+    let srp = SRPServer<Insecure.SHA1>(configuration: .init(.N2048))
+    let fluent: Fluent
+    let sessionStorage: SessionStorage
+
+    /// Return routes
+    var routes: RouteCollection<Context> {
+        let routes = RouteCollection(context: Context.self)
+        routes.post(use: self.createUser)
+        routes.post("login", use: self.initLogin)
+        routes.post("verify", use: self.verifyLogin)
+        routes.group()
+            .add(middleware: SRPSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
             .get("loggedIn.html", use: self.loggedIn)
+        return routes
     }
 
     /// SRP session. All keys are stored as base64
@@ -44,150 +50,114 @@ struct UserController {
     }
 
     /// Create new user
-    struct CreateUser: HBRouteHandler {
-        struct Input: Codable {
-            let name: String
-            let salt: String
-            let verifier: String // hex format
+    struct CreateUserInput: Codable {
+        let name: String
+        let salt: String
+        let verifier: String // hex format
+    }
+
+    struct CreateUserOutput: ResponseCodable {
+        let name: String
+    }
+
+    @Sendable func createUser(request: Request, context: Context) async throws -> CreateUserOutput {
+        let input = try await request.decode(as: CreateUserInput.self, context: context)
+        guard let verifier = SRPKey(hex: input.verifier) else { throw HTTPError(.badRequest, message: "Invalid verifier") }
+        let user = User(name: input.name, salt: input.salt, verifier: String(base64Encoding: verifier.bytes))
+        let db = self.fluent.db()
+        // check if user exists and if they don't then add new user
+        let dbUser = try await User.query(on: db)
+            .filter(\.$name == user.name)
+            .first()
+        guard dbUser == nil else { throw HTTPError(.conflict) }
+        try await user.save(on: db)
+        return .init(name: user.name)
+    }
+
+    struct InitLoginInput: Codable {
+        let name: String
+        let A: String
+    }
+
+    struct InitLoginOutput: ResponseCodable {
+        let B: String
+        let salt: String
+    }
+
+    @Sendable func initLogin(request: Request, context: Context) async throws -> EditedResponse<InitLoginOutput> {
+        let input = try await request.decode(as: InitLoginInput.self, context: context)
+        let user = try await User.query(on: self.fluent.db())
+            .filter(\.$name == input.name)
+            .first()
+
+        // get data
+        guard let user = user else { throw HTTPError(.unauthorized) }
+        guard let A = SRPKey(hex: input.A) else { throw HTTPError(.badRequest) }
+        let verifier = try SRPKey(user.verifier.base64decoded())
+        // calculate server keys
+        let serverKeys = self.srp.generateKeys(verifier: verifier)
+        // calculate secret
+        let serverSharedSecret = try self.srp.calculateSharedSecret(clientPublicKey: A, serverKeys: serverKeys, verifier: verifier)
+
+        // store session data and return server public key, salt and session id
+        let session = try SRPSessionAuthenticator.Session(
+            userId: user.requireID(),
+            state: .authenticating(
+                A: String(base64Encoding: A.bytes),
+                B: String(base64Encoding: serverKeys.public.bytes),
+                serverSharedSecret: String(base64Encoding: serverSharedSecret.bytes)
+            )
+        )
+        let cookie = try await self.sessionStorage.save(session: session, expiresIn: .seconds(600))
+        return .init(
+            status: .ok,
+            headers: [.setCookie: cookie.description],
+            response: .init(
+                B: serverKeys.public.hex,
+                salt: user.salt
+            )
+        )
+    }
+
+    struct VerifyLoginInput: Codable {
+        let proof: String
+    }
+
+    struct VerifyLoginOutput: ResponseCodable {
+        let proof: String
+    }
+
+    @Sendable func verifyLogin(request: Request, context: Context) async throws -> VerifyLoginOutput {
+        let input = try await request.decode(as: VerifyLoginInput.self, context: context)
+        guard let session = try await self.sessionStorage.load(as: SRPSessionAuthenticator.Session.self, request: request) else {
+            throw HTTPError(.unauthorized)
         }
-
-        struct Output: HBResponseCodable {
-            let name: String
-        }
-
-        let input: Input
-
-        init(from request: HBRequest) throws {
-            self.input = try request.decode(as: Input.self)
-        }
-
-        func handle(request: HBRequest) -> EventLoopFuture<Output> {
-            guard let verifier = SRPKey(hex: input.verifier) else { return request.failure(.badRequest) }
-            let user = User(name: input.name, salt: self.input.salt, verifier: String(base64Encoding: verifier.bytes))
-            // check if user exists and if they don't then add new user
-            return User.query(on: request.db)
-                .filter(\.$name == user.name)
-                .first()
-                .flatMapThrowing { user -> Void in
-                    // if user already exist throw conflict
-                    guard user == nil else { throw HBHTTPError(.conflict) }
-                    return
-                }
-                .flatMap { _ in
-                    return user.save(on: request.db)
-                }
-                .transform(to: Output(name: user.name))
+        do {
+            switch session.state {
+            case .authenticating(let A, let B, let sharedSecret):
+                guard let clientProof = SRPKey(hex: input.proof)?.bytes else { throw HTTPError(.badRequest) }
+                // verify client proof is correct and generate server proof
+                let serverProof = try srp.verifySimpleClientProof(
+                    proof: clientProof,
+                    clientPublicKey: SRPKey(A.base64decoded()),
+                    serverPublicKey: SRPKey(B.base64decoded()),
+                    sharedSecret: SRPKey(sharedSecret.base64decoded())
+                )
+                var session = session
+                session.state = .authenticated
+                // set session state to authenticated and return server proof
+                try await self.sessionStorage.update(session: session, expiresIn: .seconds(24 * 60 * 60), request: request)
+                return VerifyLoginOutput(proof: SRPKey(serverProof).hex)
+            case .authenticated:
+                throw HTTPError(.badRequest)
+            }
+        } catch SRPServerError.invalidClientProof {
+            throw HTTPError(.unauthorized)
         }
     }
 
-    /// Login user and create session
-    struct InitLogin: HBRouteHandler {
-        struct Input: Codable {
-            let name: String
-            let A: String
-        }
-
-        struct Output: HBResponseCodable {
-            let B: String
-            let salt: String
-        }
-
-        let input: Input
-
-        init(from request: HBRequest) throws {
-            self.input = try request.decode(as: Input.self)
-        }
-
-        func handle(request: HBRequest) -> EventLoopFuture<Output> {
-            return User.query(on: request.db)
-                .filter(\.$name == self.input.name)
-                .first()
-                .flatMap { user -> EventLoopFuture<Output> in
-                    do {
-                        // get data
-                        guard let user = user else { throw HBHTTPError(.unauthorized) }
-                        guard let A = SRPKey(hex: input.A) else { throw HBHTTPError(.badRequest) }
-                        let verifier = try SRPKey(user.verifier.base64decoded())
-                        // calculate server keys
-                        let serverKeys = UserController.srp.generateKeys(verifier: verifier)
-                        // calculate secret
-                        let serverSharedSecret = try UserController.srp.calculateSharedSecret(clientPublicKey: A, serverKeys: serverKeys, verifier: verifier)
-
-                        // store session data and return server public key, salt and session id
-                        let session = try SRPSessionAuthenticator.Session(
-                            userId: user.requireID(),
-                            state: .authenticating(
-                                A: String(base64Encoding: A.bytes),
-                                B: String(base64Encoding: serverKeys.public.bytes),
-                                serverSharedSecret: String(base64Encoding: serverSharedSecret.bytes)
-                            )
-                        )
-                        return request.session.save(session: session, expiresIn: .minutes(10))
-                            .map { _ in
-                                return .init(
-                                    B: serverKeys.public.hex,
-                                    salt: user.salt
-                                )
-                            }
-                    } catch {
-                        return request.failure(error)
-                    }
-                }
-        }
-    }
-
-    /// Verify login secret from client and return server proof of secret
-    struct VerifyLogin: HBRouteHandler {
-        struct Input: Codable {
-            let proof: String
-        }
-
-        struct Output: HBResponseCodable {
-            let proof: String
-        }
-
-        let input: Input
-
-        init(from request: HBRequest) throws {
-            self.input = try request.decode(as: Input.self)
-        }
-
-        func handle(request: HBRequest) -> EventLoopFuture<Output> {
-            return request.session.load(as: SRPSessionAuthenticator.Session.self)
-                .flatMap { session in
-                    do {
-                        guard let session = session else { return request.failure(.unauthorized) }
-                        switch session.state {
-                        case .authenticating(let A, let B, let sharedSecret):
-                            guard let clientProof = SRPKey(hex: input.proof)?.bytes else { throw HBHTTPError(.badRequest) }
-                            // verify client proof is correct and generate server proof
-                            let serverProof = try srp.verifySimpleClientProof(
-                                proof: clientProof,
-                                clientPublicKey: SRPKey(A.base64decoded()),
-                                serverPublicKey: SRPKey(B.base64decoded()),
-                                sharedSecret: SRPKey(sharedSecret.base64decoded())
-                            )
-                            var session = session
-                            session.state = .authenticated
-                            // set session state to authenticated and return server proof
-                            return request.session.save(session: session, expiresIn: .hours(24))
-                                .map { _ in
-                                    return Output(proof: SRPKey(serverProof).hex)
-                                }
-                        case .authenticated:
-                            return request.failure(.badRequest)
-                        }
-                    } catch SRPServerError.invalidClientProof {
-                        return request.failure(.unauthorized)
-                    } catch {
-                        return request.failure(error)
-                    }
-                }
-        }
-    }
-
-    func loggedIn(request: HBRequest) throws -> String {
-        let user = try request.authRequire(User.self)
+    @Sendable func loggedIn(request: Request, context: Context) throws -> String {
+        let user = try context.auth.require(User.self)
         return "Logged in as \(user.name)"
     }
 }
