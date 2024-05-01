@@ -52,6 +52,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
     }
 
     let router = Router(context: AuthSRPRequestContext.self)
+    router.middlewares.add(RedirectMiddleware())
     router.middlewares.add(FileMiddleware(logger: logger))
     router.middlewares.add(LogRequestsMiddleware(.info, includeHeaders: true))
     router.addRoutes(UserController(fluent: fluent, sessionStorage: sessionStorage).routes, atPath: "/api/user")
