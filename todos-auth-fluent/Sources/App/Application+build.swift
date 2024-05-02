@@ -22,8 +22,8 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
         fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
     }
     // add migrations
-    await fluent.migrations.add(CreateTodo())
     await fluent.migrations.add(CreateUser())
+    await fluent.migrations.add(CreateTodo())
 
     let fluentPersist = await FluentPersistDriver(fluent: fluent)
     // migrate
