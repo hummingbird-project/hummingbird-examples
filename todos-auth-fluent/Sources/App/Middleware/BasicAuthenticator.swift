@@ -30,7 +30,8 @@ struct BasicAuthenticator<Context: AuthRequestContext>: AuthenticatorMiddleware 
             .filter(\.$email == basic.username)
             .first()
         guard let user = user else { return nil }
-        guard Bcrypt.verify(basic.password, hash: user.passwordHash) else { return nil }
+        // Do Bcrypt verify on a separate thread to not block the general task executor 
+        guard try await NIOThreadPool.singleton.runIfActive({ Bcrypt.verify(basic.password, hash: user.passwordHash) }) else { return nil }
         return user
     }
 }
