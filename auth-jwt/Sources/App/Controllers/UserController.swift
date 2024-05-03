@@ -43,7 +43,7 @@ struct UserController<Context: AuthRequestContext> {
         // if user already exist throw conflict
         guard existingUser == nil else { throw HTTPError(.conflict) }
 
-        let user = User(from: createUser)
+        let user = try await User(from: createUser)
         try await user.save(on: db)
 
         return .init(status: .created, response: UserResponse(from: user))
