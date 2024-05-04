@@ -46,12 +46,6 @@ final class User: Model, Authenticatable, @unchecked Sendable {
         self.email = email
         self.passwordHash = passwordHash
     }
-
-    internal init(from userRequest: CreateUserRequest) {
-        self.id = nil
-        self.name = userRequest.name
-        self.passwordHash = Bcrypt.hash(userRequest.password, cost: 12)
-    }
 }
 
 extension User {
