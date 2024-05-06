@@ -5,7 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "upload-s3",
-    platforms: [.macOS("14.0")],
+    platforms: [.macOS(.v14)],
     products: [
         .executable(name: "App", targets: ["App"]),
     ],
