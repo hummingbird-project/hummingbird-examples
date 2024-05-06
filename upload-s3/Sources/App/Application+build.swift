@@ -24,7 +24,7 @@ struct AWSClientService: Service {
     }
 }
 
-func buildApplication(_ args: AppArguments) -> some ApplicationProtocol {
+func buildApplication(_ args: some AppArguments) -> some ApplicationProtocol {
     let logger = {
         var logger = Logger(label: "html-form")
         logger.logLevel = args.logLevel ?? .info
@@ -60,34 +60,3 @@ func buildApplication(_ args: AppArguments) -> some ApplicationProtocol {
     app.addServices(AWSClientService(client: awsClient))
     return app
 }
-
-/*
- extension HBApplication {
-     /// configure your application
-     /// add middleware
-     /// setup the encoder/decoder
-     /// add your routes
-     func configure(_: AppArguments) throws {
-         let env = HBEnvironment()
-         guard let bucket = env.get("s3_upload_bucket") else {
-             preconditionFailure("Requires \"s3_upload_bucket\" environment variable")
-         }
-
-         self.encoder = JSONEncoder()
-         self.middleware.add(HBLogRequestsMiddleware(.info))
-         self.aws.client = AWSClient(httpClientProvider: .createNewWithEventLoopGroup(self.eventLoopGroup))
-         let s3 = S3(client: self.aws.client, region: .euwest1)
-
-         let fileController = S3FileController(
-             s3: s3,
-             bucket: bucket,
-             folder: env.get("s3_upload_folder") ?? "hb-upload-s3"
-         )
-         fileController.addRoutes(to: self.router.group("files"))
-
-         self.router.get("/health") { _ -> HTTPResponseStatus in
-             return .ok
-         }
-     }
- }
- */
