@@ -1,10 +1,15 @@
 @testable import App
 import Hummingbird
-import HummingbirdXCT
+import HummingbirdTesting
+import Logging
 import XCTest
 
 final class AppTests: XCTestCase {
-    struct TestArguments: AppArguments {}
+    struct TestArguments: AppArguments {
+        let hostname = "127.0.0.1"
+        let port = 8080
+        let logLevel: Logger.Level? = .trace
+    }
 
     func randomBuffer(size: Int) -> ByteBuffer {
         var data = [UInt8](repeating: 0, count: size)
@@ -12,66 +17,56 @@ final class AppTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testUploadDownload() throws {
-        try XCTSkipIf(HBEnvironment().get("CI") != nil)
+    func testUploadDownload() async throws {
+        try XCTSkipIf(Environment().get("CI") != nil)
 
-        let args = TestArguments()
-        let app = HBApplication(testing: .live)
-        try app.configure(args)
+        let app = buildApplication(TestArguments())
 
-        try app.XCTStart()
-        defer { XCTAssertNoThrow(app.XCTStop()) }
+        try await app.test(.router) { client in
+            let buffer = self.randomBuffer(size: 278)
+            let filename = try await client.execute(
+                uri: "/files",
+                method: .post,
+                headers: [.contentLength: buffer.readableBytes.description],
+                body: buffer
+            ) { response -> String in
+                let json = try JSONDecoder().decode(S3FileController.UploadModel.self, from: response.body)
+                return json.filename
+            }
 
-        let buffer = self.randomBuffer(size: 278)
-        let filename = try app.XCTExecute(
-            uri: "/files",
-            method: .POST,
-            headers: ["content-length": buffer.readableBytes.description],
-            body: buffer
-        ) { response -> String in
-            let body = try XCTUnwrap(response.body)
-            let json = try JSONDecoder().decode(S3FileController.UploadModel.self, from: body)
-            return json.filename
+            let buffer2 = try await client.execute(uri: "/files/\(filename)", method: .get) { response -> ByteBuffer in
+                return response.body
+            }
+
+            XCTAssertEqual(buffer, buffer2)
         }
-
-        let buffer2 = try app.XCTExecute(uri: "/files/\(filename)", method: .GET) { response -> ByteBuffer in
-            let body = try XCTUnwrap(response.body)
-            return body
-        }
-
-        XCTAssertEqual(buffer, buffer2)
     }
 
-    func testFilename() throws {
-        try XCTSkipIf(HBEnvironment().get("CI") != nil)
+    func testFilename() async throws {
+        try XCTSkipIf(Environment().get("CI") != nil)
 
-        let args = TestArguments()
-        let app = HBApplication(testing: .live)
-        try app.configure(args)
+        let app = buildApplication(TestArguments())
 
-        try app.XCTStart()
-        defer { XCTAssertNoThrow(app.XCTStop()) }
+        try await app.test(.router) { client in
+            let buffer = self.randomBuffer(size: 354_001)
+            let filename = try await client.execute(
+                uri: "/files",
+                method: .post,
+                headers: [
+                    .contentLength: buffer.readableBytes.description,
+                    .fileName: "testFilename",
+                ],
+                body: buffer
+            ) { response -> String in
+                let json = try JSONDecoder().decode(S3FileController.UploadModel.self, from: response.body)
+                return json.filename
+            }
+            XCTAssertEqual(filename, "testFilename")
+            let buffer2 = try await client.execute(uri: "/files/\(filename)", method: .get) { response -> ByteBuffer in
+                return response.body
+            }
 
-        let buffer = self.randomBuffer(size: 354_001)
-        let filename = try app.XCTExecute(
-            uri: "/files",
-            method: .POST,
-            headers: [
-                "content-length": buffer.readableBytes.description,
-                "file-name": "testFilename",
-            ],
-            body: buffer
-        ) { response -> String in
-            let body = try XCTUnwrap(response.body)
-            let json = try JSONDecoder().decode(S3FileController.UploadModel.self, from: body)
-            return json.filename
+            XCTAssertEqual(buffer, buffer2)
         }
-        XCTAssertEqual(filename, "testFilename")
-        let buffer2 = try app.XCTExecute(uri: "/files/\(filename)", method: .GET) { response -> ByteBuffer in
-            let body = try XCTUnwrap(response.body)
-            return body
-        }
-
-        XCTAssertEqual(buffer, buffer2)
     }
 }
