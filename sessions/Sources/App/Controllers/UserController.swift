@@ -61,7 +61,7 @@ struct UserController {
         // get authenticated user and return
         let user = try context.auth.require(LoggedInUser.self)
         // create session lasting 1 hour
-        let cookie = try await self.sessionStorage.save(session: user.id, expiresIn: .seconds(60))
+        let cookie = try await self.sessionStorage.save(session: user.id, expiresIn: .seconds(3600))
         return .init(status: .ok, headers: [.setCookie: cookie.description])
     }
 

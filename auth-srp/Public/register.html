@@ -4,6 +4,7 @@
     <title>SRP Test</title>
     <meta charset="UTF-8">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <!-- Using JS library https://github.com/symeapp/srp-client -->
     <script type="text/javascript" src="js/jsbn.js"></script>
     <script type="text/javascript" src="js/sha1.js"></script>
@@ -52,15 +53,24 @@
         }
     </script>
 </head>
-<body>
-    <h1>Create user</h1>
-    <form action="#">
-    <label for="name">Name</label><br/>
-    <input type="text" id="name" name="name"/><br/>
-    <label for="password">Password</label><br/>
-    <input type="text" id="password" name="password"/><br/>
-    <br>
-    <input type="submit" value="Submit" onclick="createUser(event)"/>
-    </form>
+<body class="bg-gray-100">
+    <div class="text-center">
+        <h2 class="text-3xl p-3">Register</h2>
+    </div>
+    <div class="p-6 max-w-md mx-auto bg-white rounded-xl space-x-4 shadow-lg">
+        <div>
+            <img src="images/hummingbird.png" class="w-64 mx-auto"/>
+        </div>
+        <div class="p-2 text-center">
+            <form action="#">
+                <label for="name" class="text-sm">Name</label><br/>
+                <input type="text" id="name" name="name" class="border"/><br/>
+                <label for="password" class="text-sm">Password</label><br/>
+                <input type="text" id="password" name="password" class="border"/><br/>
+                <br>
+                <input type="submit" value="Register" onclick="createUser(event)" class="hover:text-slate-500"/>
+            </form>
+        </div>
+    </div>
 </body>
 </html>
