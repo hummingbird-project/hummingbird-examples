@@ -4,7 +4,7 @@ check:
 	./scripts/run-checks.sh
 
 format:
-	./scripts/run-swift-format.sh --fix
+	swiftformat .
 
 all:
 	./scripts/build-all.sh
