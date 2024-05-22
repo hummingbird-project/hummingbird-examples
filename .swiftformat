@@ -8,7 +8,7 @@
 --exclude .build
 
 # rules
---disable redundantReturn, extensionAccessControl, unusedArguments
+--disable redundantReturn, extensionAccessControl, unusedArguments, yodaconditions
 
 # format options
 --ifdef no-indent
