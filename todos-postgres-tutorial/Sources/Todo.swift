@@ -1,11 +1,10 @@
 import Foundation
 import Hummingbird
 
-
 struct Todo {
     // Todo ID
     var id: UUID
-    // Title 
+    // Title
     var title: String
     // Order number
     var order: Int?
@@ -14,6 +13,5 @@ struct Todo {
     // Is Todo complete
     var completed: Bool?
 }
-
 
 extension Todo: ResponseEncodable, Decodable, Equatable {}

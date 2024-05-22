@@ -20,7 +20,7 @@ import NIO
 
 struct TodoController<Context: BaseRequestContext> {
     let fluent: Fluent
-    
+
     func addRoutes(to group: RouterGroup<Context>) {
         group
             .get(use: self.list)
@@ -29,18 +29,17 @@ struct TodoController<Context: BaseRequestContext> {
             .patch(":id", use: self.update)
             .delete(":id", use: self.deleteId)
     }
-    
+
     @Sendable func list(_ request: Request, context: Context) async throws -> [Todo] {
-        try await Todo.query(on: fluent.db()).all()
+        try await Todo.query(on: self.fluent.db()).all()
     }
-    
+
     struct CreateTodoRequest: ResponseCodable {
         var title: String
     }
-    
+
     /// Create new todo
     @Sendable func create(_ request: Request, context: Context) async throws -> EditedResponse<Todo> {
-        
         let todoRequest = try await request.decode(as: CreateTodoRequest.self, context: context)
         guard let host = request.head.authority else { throw HTTPError(.badRequest, message: "No host header") }
         let todo = try Todo(title: todoRequest.title)
@@ -51,7 +50,7 @@ struct TodoController<Context: BaseRequestContext> {
         try await todo.update(on: db)
         return .init(status: .created, response: todo)
     }
-    
+
     /// Get todo
     @Sendable func get(_ request: Request, context: Context) async throws -> Todo? {
         let id = try context.parameters.require("id", as: UUID.self)
@@ -59,12 +58,12 @@ struct TodoController<Context: BaseRequestContext> {
             .filter(\.$id == id)
             .first()
     }
-    
+
     struct EditTodoRequest: ResponseCodable {
         var title: String?
         var completed: Bool?
     }
-    
+
     /// Edit todo
     @Sendable func update(_ request: Request, context: Context) async throws -> Todo {
         let id = try context.parameters.require("id", as: UUID.self)
@@ -80,7 +79,7 @@ struct TodoController<Context: BaseRequestContext> {
         try await todo.update(on: db)
         return todo
     }
-    
+
     /// delete todo
     @Sendable func deleteId(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         let id = try context.parameters.require("id", as: UUID.self)

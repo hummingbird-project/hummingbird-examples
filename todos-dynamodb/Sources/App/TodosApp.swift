@@ -1,9 +1,9 @@
+import AsyncHTTPClient
 import Hummingbird
 import NIOCore
 import NIOPosix
 import ServiceLifecycle
 import SotoDynamoDB
-import AsyncHTTPClient
 
 struct TodosApp: ApplicationProtocol {
     typealias Context = BasicRequestContext

@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 import AWSLambdaEvents
 import AWSLambdaRuntime
 import HummingbirdLambda
 import Logging
 import SotoDynamoDB
-import AsyncHTTPClient
 
 @main
 struct AppLambda: APIGatewayLambdaFunction {

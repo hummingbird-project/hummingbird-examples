@@ -1,9 +1,9 @@
+import AsyncHTTPClient
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdRouter
 import ServiceLifecycle
 import SotoCognitoAuthenticationKit
-import AsyncHTTPClient
 
 struct AWSClientService: Service {
     let client: AWSClient

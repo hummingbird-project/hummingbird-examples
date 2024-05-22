@@ -10,12 +10,11 @@ REPO_ROOT="$(git -C "${CURRENT_SCRIPT_DIR}" rev-parse --show-toplevel)"
   
 read -ra PATHS_TO_CHECK <<< "$( \
   git -C "${REPO_ROOT}" ls-files -z \
-  "Package.swift" \
+  "**/Package.swift" \
   | xargs -0 \
 )"
 
 for FILE_PATH in "${PATHS_TO_CHECK[@]}"; do
-echo $FILE_PATH
     if [[ $(grep ".package(path:" "${FILE_PATH}"|wc -l) -ne 0 ]] ; then
         fatal "❌ The '${FILE_PATH}' file contains local Swift package reference(s)."
     fi

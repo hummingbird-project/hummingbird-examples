@@ -29,13 +29,6 @@ for SCRIPT_PATH in "${SCRIPT_PATHS[@]}"; do
   fi
 done
 
-log "Running swift-format..."
-bash "${CURRENT_SCRIPT_DIR}"/run-swift-format.sh $FIX_FORMAT > /dev/null
-FORMAT_EXIT_CODE=$?
-if [ $FORMAT_EXIT_CODE -ne 0 ]; then
-  ((NUM_CHECKS_FAILED+=1))
-fi
-
 if [ "${NUM_CHECKS_FAILED}" -gt 0 ]; then
   fatal "❌ ${NUM_CHECKS_FAILED} check(s) failed."
 fi

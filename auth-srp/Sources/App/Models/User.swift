@@ -32,9 +32,9 @@ final class User: Model, Authenticatable, @unchecked Sendable {
     @Field(key: "verifier")
     var verifier: String
 
-    internal init() {}
+    init() {}
 
-    internal init(id: UUID? = nil, name: String, salt: String, verifier: String) {
+    init(id: UUID? = nil, name: String, salt: String, verifier: String) {
         self.id = id
         self.name = name
         self.salt = salt

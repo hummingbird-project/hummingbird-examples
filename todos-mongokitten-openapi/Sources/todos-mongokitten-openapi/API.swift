@@ -36,7 +36,7 @@ struct API: APIProtocol {
         case .json(let todo):
             todo.items
         }
-        
+
         // Create a new TodoModel, generating a new primary key
         // And using the todo items from the request body
         let model = TodoModel(_id: ObjectId(), items: items)
@@ -77,11 +77,11 @@ struct API: APIProtocol {
         // Find the TodoModel with the specified id
         // The primary key (id) is stored in the `_id` field in MongoDB
         // This call also decodes the BSON to a `TodoModel``
-        guard let model = try await mongo["todos"].findOne("_id" == id, as: TodoModel.self) else {
+        guard let model = try await mongo["todos"].findOne(id == "_id", as: TodoModel.self) else {
             // If no TodoModel was found, return a 404 Not Found
             return .notFound(.init())
         }
-        
+
         // If it _was_ found, send the model to the client as JSON
         return .ok(.init(body: .json(.init(model: model))))
     }
@@ -97,17 +97,17 @@ struct API: APIProtocol {
         case .json(let todo):
             todo.items
         }
-    
+
         // Create a new model, with the same id as the original
         let model = TodoModel(_id: id, items: items)
 
         // Update (overwrite) the model in the database
-        guard try await mongo["todos"].updateEncoded(where: "_id" == id, to: model).updatedCount == 1 else {
+        guard try await self.mongo["todos"].updateEncoded(where: id == "_id", to: model).updatedCount == 1 else {
             // If the model was not updated, return a 404 Not Found
             // Since this means the _id does not exist in the database
             return .notFound(.init())
         }
-        
+
         return .ok(.init(body: .json(.init(model: model))))
     }
 }

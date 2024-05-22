@@ -23,11 +23,11 @@ struct ContentView: View {
     @State private var alertText = Text("")
 
     var body: some View {
-        TextView(text: $logText, textStyle: $logTextStyle)
+        TextView(text: self.$logText, textStyle: self.$logTextStyle)
             .padding()
             .onAppear {
                 // setup logging
-                LoggingSystem.bootstrap { label in StringLogHandler(label: label, string: $logText) }
+                LoggingSystem.bootstrap { label in StringLogHandler(label: label, string: self.$logText) }
                 // create server app
                 let app = HBApplication.run()
                 // if app has a login token then display dialog
@@ -36,8 +36,8 @@ struct ContentView: View {
                     self.showingAlert = true
                 }
             }
-            .alert(isPresented: $showingAlert, content: {
-                Alert(title: Text("iOS Image Server"), message: alertText)
+            .alert(isPresented: self.$showingAlert, content: {
+                Alert(title: Text("iOS Image Server"), message: self.alertText)
             })
     }
 }

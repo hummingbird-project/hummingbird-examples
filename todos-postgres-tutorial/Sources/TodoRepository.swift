@@ -1,6 +1,5 @@
 import Foundation
 
-
 /// Interface for storing and editing todos
 protocol TodoRepository {
     /// Create todo.

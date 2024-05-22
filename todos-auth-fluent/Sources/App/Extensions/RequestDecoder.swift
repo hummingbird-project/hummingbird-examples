@@ -12,8 +12,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Hummingbird
 import Foundation
+import Hummingbird
 
 /// Request body decoder
 struct TodosAuthRequestDecoder: RequestDecoder {
