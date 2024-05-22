@@ -3,7 +3,7 @@ import HummingbirdAuth
 import Logging
 import NIOCore
 
-struct TodosAuthRequestContext: AuthRequestContext {
+struct TodosAuthRequestContext: AuthRequestContext, BaseRequestContext, RequestContext {
     var coreContext: CoreRequestContext
     var auth: LoginCache
 

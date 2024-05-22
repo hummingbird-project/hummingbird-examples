@@ -4,7 +4,9 @@ import OpenAPIHummingbird
 import OpenAPIRuntime
 import MongoKitten
 
-@main struct HummingbirdArguments: AsyncParsableCommand {
+@main 
+struct HummingbirdArguments: AsyncParsableCommand {
+
     @Option(name: .shortAndLong)
     var hostname: String = "127.0.0.1"
 
@@ -22,12 +24,12 @@ import MongoKitten
         // Connect to MongoDB
         let mongo = try await MongoDatabase.connect(to: connectionString)
         
-        let router = HBRouter()
-        router.middlewares.add(HBLogRequestsMiddleware(.info))
+        let router = Router()
+        router.middlewares.add(LogRequestsMiddleware(.info))
         let api = API(mongo: mongo)
         try api.registerHandlers(on: router)
         
-        let app = HBApplication(
+        let app = Application(
             router: router,
             configuration: .init(address: .hostname(hostname, port: port))
         )

@@ -84,7 +84,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
             ).endpoints
         }
     }
-
+    
     var app = Application(router: router)
     app.addServices(fluent, memoryPersist)
     return app

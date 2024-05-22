@@ -10,7 +10,10 @@ struct CognitoBasicAuthenticator: AuthenticatorMiddleware {
     typealias Context = AuthCognitoRequestContext
     let cognitoAuthenticatable: CognitoAuthenticatable
 
-    func authenticate(request: Request, context: AuthCognitoRequestContext) async throws -> CognitoAuthenticateResponse? {
+    func authenticate(
+        request: Request,
+        context: AuthCognitoRequestContext
+    ) async throws -> CognitoAuthenticateResponse? {
         guard let basic = request.headers.basic else { return nil }
         return try? await self.cognitoAuthenticatable.authenticate(
             username: basic.username,
@@ -25,7 +28,10 @@ struct CognitoBasicSRPAuthenticator: AuthenticatorMiddleware {
     typealias Context = AuthCognitoRequestContext
     let cognitoAuthenticatable: CognitoAuthenticatable
 
-    func authenticate(request: Request, context: AuthCognitoRequestContext) async throws -> CognitoAuthenticateResponse? {
+    func authenticate(
+        request: Request,
+        context: AuthCognitoRequestContext
+    ) async throws -> CognitoAuthenticateResponse? {
         guard let basic = request.headers.basic else { return nil }
         return try? await self.cognitoAuthenticatable.authenticateSRP(
             username: basic.username,
@@ -40,9 +46,14 @@ struct CognitoAccessAuthenticator: AuthenticatorMiddleware {
     typealias Context = AuthCognitoRequestContext
     let cognitoAuthenticatable: CognitoAuthenticatable
 
-    func authenticate(request: Request, context: AuthCognitoRequestContext) async throws -> CognitoAccessToken? {
+    func authenticate(
+        request: Request,
+        context: AuthCognitoRequestContext
+    ) async throws -> CognitoAccessToken? {
         guard let bearer = request.headers.bearer else { return nil }
-        return try? await self.cognitoAuthenticatable.authenticate(accessToken: bearer.token)
+        return try? await self.cognitoAuthenticatable.authenticate(
+            accessToken: bearer.token
+        )
     }
 }
 
@@ -53,8 +64,13 @@ struct CognitoIdAuthenticator<Payload: Authenticatable & Codable>: Authenticator
     typealias Context = AuthCognitoRequestContext
     let cognitoAuthenticatable: CognitoAuthenticatable
 
-    func authenticate(request: Request, context: AuthCognitoRequestContext) async throws -> Payload? {
+    func authenticate(
+        request: Request,
+        context: AuthCognitoRequestContext
+    ) async throws -> Payload? {
         guard let bearer = request.headers.bearer else { return nil }
-        return try? await self.cognitoAuthenticatable.authenticate(idToken: bearer.token)
+        return try? await self.cognitoAuthenticatable.authenticate(
+            idToken: bearer.token
+        )
     }
 }

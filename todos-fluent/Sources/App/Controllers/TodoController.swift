@@ -18,75 +18,80 @@ import Hummingbird
 import HummingbirdFluent
 import NIO
 
-struct TodoController {
-    func addRoutes(to group: HBRouterGroup) {
+struct TodoController<Context: BaseRequestContext> {
+    let fluent: Fluent
+    
+    func addRoutes(to group: RouterGroup<Context>) {
         group
             .get(use: self.list)
             .get(":id", use: self.get)
-            .post(options: .editResponse, use: self.create)
-            .delete(use: self.deleteAll)
-            .patch(use: self.update)
-            .patch(":id", use: self.updateId)
+            .post(use: self.create)
+            .patch(":id", use: self.update)
             .delete(":id", use: self.deleteId)
     }
-
-    func list(_ request: HBRequest) -> EventLoopFuture<[Todo]> {
-        return Todo.query(on: request.db).all()
+    
+    @Sendable func list(_ request: Request, context: Context) async throws -> [Todo] {
+        try await Todo.query(on: fluent.db()).all()
     }
-
-    func create(_ request: HBRequest) -> EventLoopFuture<Todo> {
-        guard let todo = try? request.decode(as: Todo.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        guard let host = request.headers["host"].first else { return request.failure(HBHTTPError(.badRequest, message: "No host header")) }
-        return todo.save(on: request.db)
-            .flatMap { _ in
-                todo.completed = false
-                todo.url = "http://\(host)/todos/\(todo.id!)"
-                return todo.update(on: request.db)
-            }
-            .map { request.response.status = .created; return todo }
+    
+    struct CreateTodoRequest: ResponseCodable {
+        var title: String
     }
-
-    func get(_ request: HBRequest) -> EventLoopFuture<Todo?> {
-        guard let id = request.parameters.get("id", as: UUID.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        return Todo.find(id, on: request.db)
+    
+    /// Create new todo
+    @Sendable func create(_ request: Request, context: Context) async throws -> EditedResponse<Todo> {
+        
+        let todoRequest = try await request.decode(as: CreateTodoRequest.self, context: context)
+        guard let host = request.head.authority else { throw HTTPError(.badRequest, message: "No host header") }
+        let todo = try Todo(title: todoRequest.title)
+        let db = self.fluent.db()
+        _ = try await todo.save(on: db)
+        todo.completed = false
+        todo.url = "http://\(host)/api/todos/\(todo.id!)"
+        try await todo.update(on: db)
+        return .init(status: .created, response: todo)
     }
-
-    func update(_ request: HBRequest) -> EventLoopFuture<Todo> {
-        guard let newTodo = try? request.decode(as: Todo.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        return Todo.query(on: request.db)
-            .filter(\.$title == "Test")
+    
+    /// Get todo
+    @Sendable func get(_ request: Request, context: Context) async throws -> Todo? {
+        let id = try context.parameters.require("id", as: UUID.self)
+        return try await Todo.query(on: self.fluent.db())
+            .filter(\.$id == id)
             .first()
-            .unwrap(orError: HBHTTPError(.notFound))
-            .flatMap { todo -> EventLoopFuture<Todo> in
-                todo.update(from: newTodo)
-                return todo.update(on: request.db).map { todo }
-            }
     }
-
-    func updateId(_ request: HBRequest) -> EventLoopFuture<Todo> {
-        guard let id = request.parameters.get("id", as: UUID.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        guard let newTodo = try? request.decode(as: EditTodo.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        return Todo.find(id, on: request.db)
-            .unwrap(orError: HBHTTPError(.notFound))
-            .flatMap { todo -> EventLoopFuture<Todo> in
-                todo.update(from: newTodo)
-                return todo.update(on: request.db).map { todo }
-            }
+    
+    struct EditTodoRequest: ResponseCodable {
+        var title: String?
+        var completed: Bool?
     }
-
-    func deleteAll(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
-        return Todo.query(on: request.db)
-            .delete()
-            .transform(to: .ok)
+    
+    /// Edit todo
+    @Sendable func update(_ request: Request, context: Context) async throws -> Todo {
+        let id = try context.parameters.require("id", as: UUID.self)
+        let editTodo = try await request.decode(as: EditTodoRequest.self, context: context)
+        let db = self.fluent.db()
+        guard let todo = try await Todo.query(on: db)
+            .filter(\.$id == id)
+            .first()
+        else {
+            throw HTTPError(.notFound)
+        }
+        todo.update(title: editTodo.title, completed: editTodo.completed)
+        try await todo.update(on: db)
+        return todo
     }
-
-    func deleteId(_ request: HBRequest) -> EventLoopFuture<HTTPResponseStatus> {
-        guard let id = request.parameters.get("id", as: UUID.self) else { return request.failure(HBHTTPError(.badRequest)) }
-        return Todo.find(id, on: request.db)
-            .unwrap(orError: HBHTTPError(.notFound))
-            .flatMap { todo in
-                todo.delete(on: request.db)
-            }
-            .transform(to: .ok)
+    
+    /// delete todo
+    @Sendable func deleteId(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+        let id = try context.parameters.require("id", as: UUID.self)
+        let db = self.fluent.db()
+        guard let todo = try await Todo.query(on: db)
+            .filter(\.$id == id)
+            .first()
+        else {
+            throw HTTPError(.notFound)
+        }
+        try await todo.delete(on: db)
+        return .ok
     }
 }

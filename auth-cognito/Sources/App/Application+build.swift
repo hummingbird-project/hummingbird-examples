@@ -3,6 +3,7 @@ import HummingbirdAuth
 import HummingbirdRouter
 import ServiceLifecycle
 import SotoCognitoAuthenticationKit
+import AsyncHTTPClient
 
 struct AWSClientService: Service {
     let client: AWSClient
@@ -14,9 +15,11 @@ struct AWSClientService: Service {
     }
 }
 
-func buildApplication(configuration: ApplicationConfiguration) async throws -> some ApplicationProtocol {
+func buildApplication(
+    configuration: ApplicationConfiguration
+) async throws -> some ApplicationProtocol {
     // setup Soto
-    let awsClient = AWSClient(httpClientProvider: .createNew)
+    let awsClient = AWSClient(httpClient: HTTPClient.shared)
     let cognitoIdentityProvider = CognitoIdentityProvider(client: awsClient, region: .euwest1)
     // setup SotoCognitoAuthentication
     let env = try await Environment().merging(with: .dotEnv())
@@ -36,7 +39,10 @@ func buildApplication(configuration: ApplicationConfiguration) async throws -> s
 
     let router = RouterBuilder(context: AuthCognitoRequestContext.self) {
         AWSErrorMiddleware()
-        UserController(cognitoAuthenticatable: authenticatable, cognitoIdentityProvider: cognitoIdentityProvider).endpoints
+        UserController(
+            cognitoAuthenticatable: authenticatable,
+            cognitoIdentityProvider: cognitoIdentityProvider
+        ).endpoints
     }
 
     var app = Application(router: router)

@@ -2,12 +2,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "Todos",
-    platforms: [.macOS(.v14)],
+    name: "todos-postgres-tutorial",
+    platforms: [
+        .macOS(.v14),
+    ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-beta.1"),
-        .package(url: "https://github.com/vapor/postgres-nio.git", from: "1.21.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird", from: "2.0.0-beta.5"),
+        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.4.0"),
+        .package(url: "https://github.com/vapor/postgres-nio", from: "1.21.0"),
     ],
     targets: [
         .executableTarget(

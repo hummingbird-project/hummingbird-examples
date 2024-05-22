@@ -17,6 +17,7 @@ import AWSLambdaRuntime
 import HummingbirdLambda
 import Logging
 import SotoDynamoDB
+import AsyncHTTPClient
 
 @main
 struct AppLambda: APIGatewayLambdaFunction {
@@ -24,7 +25,7 @@ struct AppLambda: APIGatewayLambdaFunction {
     let logger: Logger
 
     init(context: LambdaInitializationContext) {
-        self.awsClient = AWSClient(httpClientProvider: .createNewWithEventLoopGroup(context.eventLoop))
+        self.awsClient = AWSClient(httpClient: HTTPClient.shared)
         self.logger = context.logger
     }
 

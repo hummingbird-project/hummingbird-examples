@@ -65,7 +65,11 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
     router.get("/") { _, _ in
         return "Hello"
     }
-    UserController(jwtSigners: jwtAuthenticator.jwtSigners, kid: jwtLocalSignerKid, fluent: fluent).addRoutes(to: router.group("user"))
+    UserController(
+        jwtSigners: jwtAuthenticator.jwtSigners,
+        kid: jwtLocalSignerKid,
+        fluent: fluent
+    ).addRoutes(to: router.group("user"))
     router.group("auth")
         .add(middleware: jwtAuthenticator)
         .get("/") { request, context in
