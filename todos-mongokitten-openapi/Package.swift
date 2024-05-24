@@ -7,12 +7,12 @@ let package = Package(
         .macOS(.v14),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird", branch: "2.0.0-beta.5"),
-        .package(url: "https://github.com/swift-server/swift-openapi-hummingbird", branch: "2.0.0-beta.1"),
-        .package(url: "https://github.com/apple/swift-argument-parser", from: "1.4.0"),
-        .package(url: "https://github.com/apple/swift-openapi-generator", from: "1.2.0"),
-        .package(url: "https://github.com/apple/swift-openapi-runtime", from: "1.3.0"),
-        .package(url: "https://github.com/orlandos-nl/mongokitten", from: "7.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-beta.5"),
+        .package(url: "https://github.com/swift-server/swift-openapi-hummingbird.git", from: "2.0.0-beta.1"),
+        .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
+        .package(url: "https://github.com/apple/swift-openapi-generator.git", from: "1.2.0"),
+        .package(url: "https://github.com/apple/swift-openapi-runtime.git", from: "1.3.0"),
+        .package(url: "https://github.com/orlandos-nl/mongokitten.git", from: "7.0.0"),
     ],
     targets: [
         .target(
@@ -32,6 +32,12 @@ let package = Package(
                 .product(name: "MongoKitten", package: "mongokitten"),
                 .product(name: "OpenAPIHummingbird", package: "swift-openapi-hummingbird"),
                 .target(name: "TodosOpenAPI"),
+            ],
+            swiftSettings: [
+                // Enable better optimizations when building in Release configuration. Despite the use of
+                // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
+                // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
+                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
             ]
         ),
     ]
