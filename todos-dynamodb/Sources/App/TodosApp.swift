@@ -1,3 +1,4 @@
+import AsyncHTTPClient
 import Hummingbird
 import NIOCore
 import NIOPosix
@@ -7,10 +8,11 @@ import SotoDynamoDB
 struct TodosApp: ApplicationProtocol {
     typealias Context = BasicRequestContext
 
-    init(configuration: ApplicationConfiguration, eventLoopGroupProvider: EventLoopGroupProvider = .singleton) {
+    init(
+        configuration: ApplicationConfiguration
+    ) {
         self.configuration = configuration
-        self.eventLoopGroup = eventLoopGroupProvider.eventLoopGroup
-        self.awsClient = AWSClient(httpClientProvider: .createNewWithEventLoopGroup(self.eventLoopGroup))
+        self.awsClient = AWSClient(httpClient: HTTPClient.shared)
     }
 
     var responder: some HTTPResponder<Context> {
@@ -36,6 +38,5 @@ struct TodosApp: ApplicationProtocol {
 
     let awsClient: AWSClient
     let configuration: ApplicationConfiguration
-    let eventLoopGroup: EventLoopGroup
     var services: [any Service] { [self.awsClient] }
 }

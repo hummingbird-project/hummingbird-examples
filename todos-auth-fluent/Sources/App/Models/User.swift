@@ -38,9 +38,9 @@ final class User: Model, Authenticatable, @unchecked Sendable {
     @Children(for: \.$owner)
     var todos: [Todo]
 
-    internal init() {}
+    init() {}
 
-    internal init(id: UUID? = nil, name: String, email: String, passwordHash: String) {
+    init(id: UUID? = nil, name: String, email: String, passwordHash: String) {
         self.id = id
         self.name = name
         self.email = email
@@ -95,7 +95,7 @@ struct CreateUserRequest: Decodable {
     let email: String
     let password: String
 
-    internal init(name: String, email: String, password: String) {
+    init(name: String, email: String, password: String) {
         self.name = name
         self.email = email
         self.password = password
@@ -106,11 +106,11 @@ struct CreateUserRequest: Decodable {
 struct UserResponse: ResponseCodable {
     let id: UUID?
 
-    internal init(id: UUID?) {
+    init(id: UUID?) {
         self.id = id
     }
 
-    internal init(from user: User) {
+    init(from user: User) {
         self.id = user.id
     }
 }

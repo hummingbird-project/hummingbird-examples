@@ -31,15 +31,15 @@ final class User: Model {
     @OptionalField(key: "password-hash")
     var passwordHash: String?
 
-    internal init() {}
+    init() {}
 
-    internal init(id: UUID? = nil, name: String, passwordHash: String?) {
+    init(id: UUID? = nil, name: String, passwordHash: String?) {
         self.id = id
         self.name = name
         self.passwordHash = passwordHash
     }
 
-    internal init(from userRequest: CreateUserRequest) async throws {
+    init(from userRequest: CreateUserRequest) async throws {
         self.id = nil
         self.name = userRequest.name
         if let password = userRequest.password {
@@ -55,7 +55,7 @@ struct CreateUserRequest: Decodable {
     let name: String
     let password: String?
 
-    internal init(name: String, password: String?) {
+    init(name: String, password: String?) {
         self.name = name
         self.password = password
     }
@@ -66,12 +66,12 @@ struct UserResponse: ResponseCodable {
     let id: UUID?
     let name: String
 
-    internal init(id: UUID?, name: String) {
+    init(id: UUID?, name: String) {
         self.id = id
         self.name = name
     }
 
-    internal init(from user: User) {
+    init(from user: User) {
         self.id = user.id
         self.name = user.name
     }

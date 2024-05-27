@@ -28,7 +28,7 @@ public protocol AppArguments {
 
 func buildApplication(_ args: some AppArguments) async throws -> some ApplicationProtocol {
     let logger = {
-        var logger = Logger(label: "html-form")
+        var logger = Logger(label: "auth-srp")
         logger.logLevel = args.logLevel ?? .info
         return logger
     }()
@@ -54,8 +54,20 @@ func buildApplication(_ args: some AppArguments) async throws -> some Applicatio
     let router = Router(context: AuthSRPRequestContext.self)
     router.middlewares.add(RedirectMiddleware())
     router.middlewares.add(FileMiddleware(logger: logger))
-    router.middlewares.add(LogRequestsMiddleware(.info, includeHeaders: true))
-    router.addRoutes(UserController(fluent: fluent, sessionStorage: sessionStorage).routes, atPath: "/api/user")
+    router.middlewares.add(
+        LogRequestsMiddleware(
+            .info,
+            includeHeaders: .all(),
+            redactHeaders: []
+        )
+    )
+    router.addRoutes(
+        UserController(
+            fluent: fluent,
+            sessionStorage: sessionStorage
+        ).routes,
+        atPath: "/api/user"
+    )
     var application = Application(
         router: router,
         configuration: .init(address: .hostname(args.hostname, port: args.port)),

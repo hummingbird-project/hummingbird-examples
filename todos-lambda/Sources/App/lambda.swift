@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import AsyncHTTPClient
 import AWSLambdaEvents
 import AWSLambdaRuntime
 import HummingbirdLambda
@@ -24,7 +25,7 @@ struct AppLambda: APIGatewayLambdaFunction {
     let logger: Logger
 
     init(context: LambdaInitializationContext) {
-        self.awsClient = AWSClient(httpClientProvider: .createNewWithEventLoopGroup(context.eventLoop))
+        self.awsClient = AWSClient(httpClient: HTTPClient.shared)
         self.logger = context.logger
     }
 

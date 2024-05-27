@@ -44,7 +44,7 @@ public struct StringLogHandler: LogHandler {
         }
     }
 
-    internal init(label: String, string: Binding<String>) {
+    init(label: String, string: Binding<String>) {
         self.label = label
         self.string = string
     }

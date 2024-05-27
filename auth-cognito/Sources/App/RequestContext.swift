@@ -6,7 +6,7 @@ import NIOCore
 import SotoCognitoAuthenticationKit
 
 /// Request context
-struct AuthCognitoRequestContext: AuthRequestContext, RemoteAddressRequestContext, RouterRequestContext {
+struct AuthCognitoRequestContext: AuthRequestContext, RemoteAddressRequestContext, RouterRequestContext, RequestContext {
     var coreContext: CoreRequestContext
     /// required by authentication framework
     var auth: LoginCache

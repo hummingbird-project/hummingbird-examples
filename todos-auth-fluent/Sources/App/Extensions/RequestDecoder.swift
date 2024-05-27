@@ -12,6 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import Hummingbird
 
 /// Request body decoder

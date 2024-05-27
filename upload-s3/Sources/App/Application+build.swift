@@ -26,7 +26,7 @@ struct AWSClientService: Service {
 
 func buildApplication(_ args: some AppArguments) -> some ApplicationProtocol {
     let logger = {
-        var logger = Logger(label: "html-form")
+        var logger = Logger(label: "upload-s3")
         logger.logLevel = args.logLevel ?? .info
         return logger
     }()

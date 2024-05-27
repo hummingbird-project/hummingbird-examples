@@ -88,7 +88,7 @@ struct TestCreateUserRequest: Encodable {
     let name: String
     let password: String?
 
-    internal init(name: String, password: String?) {
+    init(name: String, password: String?) {
         self.name = name
         self.password = password
     }

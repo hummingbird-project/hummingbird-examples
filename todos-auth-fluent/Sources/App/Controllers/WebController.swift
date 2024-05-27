@@ -35,7 +35,7 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
 }
 
 /// Serves HTML pages
-struct WebController<Context: AuthRequestContext> {
+struct WebController<Context: AuthRequestContext & BaseRequestContext> {
     let fluent: Fluent
     let sessionStorage: SessionStorage
     let mustacheLibrary: MustacheLibrary

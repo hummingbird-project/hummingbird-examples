@@ -4,7 +4,7 @@ import HummingbirdRouter
 import Logging
 import NIOCore
 
-struct WebAuthnRequestContext: AuthRequestContext, RouterRequestContext {
+struct WebAuthnRequestContext: AuthRequestContext, RouterRequestContext, RequestContext {
     var coreContext: CoreRequestContext
     var auth: LoginCache
     var routerContext: RouterBuilderContext
