@@ -40,5 +40,9 @@ let package = Package(
                 .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
             ]
         ),
+        .testTarget(
+            name: "TodosOpenAPITests",
+            dependencies: []
+        ),
     ]
 )
