@@ -21,7 +21,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
         logger.logLevel = .debug
         return logger
     }()
-    let httpClient = HTTPClient(eventLoopGroupProvider: .singleton)
+    let httpClient = HTTPClient.shared
     let fluent = Fluent(logger: logger)
     // add sqlite database
     if args.inMemoryDatabase {
@@ -85,17 +85,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
         ),
         logger: logger
     )
-    app.addServices(fluent, HTTPClientService(client: httpClient))
+    app.addServices(fluent)
 
     return app
-}
-
-struct HTTPClientService: Service {
-    let client: HTTPClient
-
-    func run() async throws {
-        /// Ignore cancellation error
-        try? await gracefulShutdown()
-        try await self.client.shutdown()
-    }
 }
