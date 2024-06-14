@@ -20,11 +20,11 @@ struct AuthCognitoRequestContext: AuthRequestContext, RemoteAddressRequestContex
     }
 
     /// initializer required by live server
-    init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
+    init(source: Source) {
+        self.coreContext = .init(source: source)
         self.auth = .init()
         self.routerContext = .init()
-        self.channel = channel
+        self.channel = source.channel
     }
 }
 
