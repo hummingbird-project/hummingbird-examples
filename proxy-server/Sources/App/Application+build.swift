@@ -19,9 +19,9 @@ struct ProxyRequestContext: RequestContext {
     var coreContext: CoreRequestContext
     let remoteAddress: SocketAddress?
 
-    init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
-        self.remoteAddress = channel.remoteAddress
+    init(source: Source) {
+        self.coreContext = .init(source: source)
+        self.remoteAddress = source.channel.remoteAddress
     }
 }
 
