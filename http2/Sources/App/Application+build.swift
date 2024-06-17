@@ -23,7 +23,7 @@ struct ChannelRequestContext: RequestContext {
         }
     }
 
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
     let channel: Channel?
 }
 

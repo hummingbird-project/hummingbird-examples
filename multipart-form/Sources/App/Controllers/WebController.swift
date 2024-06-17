@@ -18,7 +18,7 @@ import Mustache
 struct HTML: ResponseGenerator {
     let html: String
 
-    public func response(from request: Request, context: some BaseRequestContext) throws -> Response {
+    public func response(from request: Request, context: some RequestContext) throws -> Response {
         let buffer = context.allocator.buffer(string: self.html)
         return .init(status: .ok, headers: [.contentType: "text/html"], body: .init(byteBuffer: buffer))
     }
@@ -35,17 +35,17 @@ struct WebController {
         self.enteredTemplate = mustacheLibrary.getTemplate(named: "details-entered")!
     }
 
-    func addRoutes(to router: some RouterMethods<some BaseRequestContext>) {
+    func addRoutes(to router: some RouterMethods<some RequestContext>) {
         router.get("/", use: self.input)
         router.post("/", use: self.post)
     }
 
-    @Sendable func input(request: Request, context: some BaseRequestContext) -> HTML {
+    @Sendable func input(request: Request, context: some RequestContext) -> HTML {
         let html = self.enterTemplate.render((), library: self.library)
         return HTML(html: html)
     }
 
-    @Sendable func post(request: Request, context: some BaseRequestContext) async throws -> HTML {
+    @Sendable func post(request: Request, context: some RequestContext) async throws -> HTML {
         let user = try await request.decode(as: User.self, context: context)
         let html = self.enteredTemplate.render(user, library: self.library)
         return HTML(html: html)

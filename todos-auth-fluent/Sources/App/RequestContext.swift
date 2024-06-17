@@ -4,7 +4,7 @@ import Logging
 import NIOCore
 
 struct TodosAuthRequestContext: AuthRequestContext, RequestContext {
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
     var auth: LoginCache
 
     init(source: Source) {

@@ -19,7 +19,7 @@ import HummingbirdAuth
 import HummingbirdFluent
 import NIO
 
-struct UserController<Context: AuthRequestContext & BaseRequestContext> {
+struct UserController<Context: AuthRequestContext & RequestContext> {
     let fluent: Fluent
     let sessionStorage: SessionStorage
 

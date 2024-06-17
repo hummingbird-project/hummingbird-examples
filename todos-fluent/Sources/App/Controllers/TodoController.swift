@@ -18,7 +18,7 @@ import Hummingbird
 import HummingbirdFluent
 import NIO
 
-struct TodoController<Context: BaseRequestContext> {
+struct TodoController<Context: RequestContext> {
     let fluent: Fluent
 
     func addRoutes(to group: RouterGroup<Context>) {

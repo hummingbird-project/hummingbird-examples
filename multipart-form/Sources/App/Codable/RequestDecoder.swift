@@ -16,7 +16,7 @@ import Hummingbird
 import MultipartKit
 
 struct MultipartRequestDecoder: RequestDecoder {
-    func decode<T>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T where T: Decodable {
+    func decode<T>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T where T: Decodable {
         let decoder = FormDataDecoder()
         return try await decoder.decode(type, from: request, context: context)
     }

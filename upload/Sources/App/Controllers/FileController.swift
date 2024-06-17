@@ -40,7 +40,7 @@ struct FileController {
         let fileName = fileName(for: request)
 
         let uploadModel = UploadModel(filename: fileName)
-        let fileURL = try uploadModel.destinationURL()
+        let fileURL = try uploadModel.destinationURL(allowsOverwrite: true)
 
         context.logger.info(.init(stringLiteral: "Uploading: \(uploadModel)"))
         try await self.fileIO.writeFile(

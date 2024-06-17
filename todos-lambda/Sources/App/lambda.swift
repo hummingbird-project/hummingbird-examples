@@ -56,7 +56,7 @@ struct AppLambda: APIGatewayLambdaFunction {
     }
 }
 
-struct ErrorMiddleware<Context: BaseRequestContext>: RouterMiddleware {
+struct ErrorMiddleware<Context: RequestContext>: RouterMiddleware {
     func handle(
         _ input: Request,
         context: Context,

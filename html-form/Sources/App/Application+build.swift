@@ -4,7 +4,7 @@ import Mustache
 import NIOCore
 
 struct HTMLFormRequestContext: RequestContext {
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
 
     init(source: Source) {
         self.coreContext = .init(source: source)

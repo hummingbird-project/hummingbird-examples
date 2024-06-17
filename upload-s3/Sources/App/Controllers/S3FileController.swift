@@ -24,7 +24,7 @@ struct S3FileController {
     let bucket: String
     let folder: String
 
-    func getRoutes<Context: BaseRequestContext>(context: Context.Type = Context.self) -> RouteCollection<Context> {
+    func getRoutes<Context: RequestContext>(context: Context.Type = Context.self) -> RouteCollection<Context> {
         return RouteCollection(context: Context.self)
             .get(":filename", use: self.download)
             .post("/", use: self.upload)
@@ -46,7 +46,7 @@ struct S3FileController {
     /// then that name will be used as the file name on disk, otherwise
     /// a UUID will be used.
     /// - Returns: A JSON encoded ``UploadModel``
-    @Sendable private func upload(_ request: Request, context: some BaseRequestContext) async throws -> UploadModel {
+    @Sendable private func upload(_ request: Request, context: some RequestContext) async throws -> UploadModel {
         guard let contentLength: Int = (request.headers[.contentLength].map { Int($0) } ?? nil) else {
             throw HTTPError(.badRequest)
         }
@@ -75,7 +75,7 @@ struct S3FileController {
     /// - Returns: HBResponse of chunked bytes if success
     /// Note that this download has no login checks and allows anyone to download
     /// by its filename alone.
-    @Sendable private func download(request: Request, context: some BaseRequestContext) async throws -> Response {
+    @Sendable private func download(request: Request, context: some RequestContext) async throws -> Response {
         guard let filename = context.parameters.get("filename") else {
             throw HTTPError(.badRequest)
         }

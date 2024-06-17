@@ -7,7 +7,7 @@ import SotoCognitoAuthenticationKit
 
 /// Request context
 struct AuthCognitoRequestContext: AuthRequestContext, RemoteAddressRequestContext, RouterRequestContext, RequestContext {
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
     /// required by authentication framework
     var auth: LoginCache
     /// required by result builder router

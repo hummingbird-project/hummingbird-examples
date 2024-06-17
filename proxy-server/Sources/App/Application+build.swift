@@ -16,7 +16,7 @@ public protocol AppArguments {
 ///
 /// Stores remote address
 struct ProxyRequestContext: RequestContext {
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
     let remoteAddress: SocketAddress?
 
     init(source: Source) {

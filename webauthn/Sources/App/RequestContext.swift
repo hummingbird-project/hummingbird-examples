@@ -5,7 +5,7 @@ import Logging
 import NIOCore
 
 struct WebAuthnRequestContext: AuthRequestContext, RouterRequestContext, RequestContext {
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
     var auth: LoginCache
     var routerContext: RouterBuilderContext
 
