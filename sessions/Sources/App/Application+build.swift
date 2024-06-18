@@ -30,7 +30,7 @@ func buildApplication(_ arguments: AppArguments, configuration: ApplicationConfi
     let router = Router(context: BasicAuthRequestContext.self)
 
     // add logging middleware
-    router.middlewares.add(LogRequestsMiddleware(.debug))
+    router.add(middleware: LogRequestsMiddleware(.debug))
 
     // routes
     router.get("/") { _, _ in

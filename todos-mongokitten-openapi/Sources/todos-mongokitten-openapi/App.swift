@@ -24,7 +24,7 @@ struct HummingbirdArguments: AsyncParsableCommand {
         let mongo = try await MongoDatabase.connect(to: self.connectionString)
 
         let router = Router()
-        router.middlewares.add(LogRequestsMiddleware(.info))
+        router.add(middleware: LogRequestsMiddleware(.info))
         let api = API(mongo: mongo)
         try api.registerHandlers(on: router)
 

@@ -52,9 +52,9 @@ func buildApplication(_ args: some AppArguments) async throws -> some Applicatio
     }
 
     let router = Router(context: BasicAuthRequestContext.self)
-    router.middlewares.add(RedirectMiddleware())
-    router.middlewares.add(FileMiddleware(logger: logger))
-    router.middlewares.add(
+    router.add(middleware: RedirectMiddleware())
+    router.add(middleware: FileMiddleware(logger: logger))
+    router.add(middleware:
         LogRequestsMiddleware(
             .info,
             includeHeaders: .all(),

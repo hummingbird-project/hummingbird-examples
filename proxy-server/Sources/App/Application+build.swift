@@ -29,7 +29,7 @@ func buildApplication(_ args: some AppArguments) -> some ApplicationProtocol {
     let eventLoopGroup = MultiThreadedEventLoopGroup.singleton
     let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
     let router = Router(context: ProxyRequestContext.self)
-    router.middlewares.add(
+    router.add(middleware:
         ProxyServerMiddleware(
             httpClient: httpClient,
             proxy: .init(location: args.location, target: args.target)

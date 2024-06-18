@@ -36,12 +36,12 @@ struct AppLambda: APIGatewayLambdaFunction {
 
         let router = Router(context: Context.self)
         // middleware
-        router.middlewares.add(ErrorMiddleware())
-        router.middlewares.add(LogRequestsMiddleware(.debug))
+        router.add(middleware: ErrorMiddleware())
+        router.add(middleware: LogRequestsMiddleware(.debug))
         router.get("/") { _, _ in
             return "Hello"
         }
-        router.middlewares.add(CORSMiddleware(
+        router.add(middleware: CORSMiddleware(
             allowOrigin: .originBased,
             allowHeaders: [.contentType],
             allowMethods: [.get, .options, .post, .delete, .patch]

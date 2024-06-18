@@ -37,7 +37,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some Applicatio
     // create router
     let router = Router()
     // add logging middleware
-    router.middlewares.add(LogRequestsMiddleware(.info))
+    router.add(middleware: LogRequestsMiddleware(.info))
     // add hello route
     router.get("/") { request, context in
         "Hello\n"

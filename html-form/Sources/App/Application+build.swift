@@ -33,7 +33,7 @@ public func buildApplication(args: AppArguments) async throws -> some Applicatio
     assert(library.getTemplate(named: "page") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     let router = Router(context: HTMLFormRequestContext.self)
-    router.middlewares.add(FileMiddleware())
+    router.add(middleware: FileMiddleware())
     WebController(mustacheLibrary: library).addRoutes(to: router)
     let app = Application(
         router: router,

@@ -35,10 +35,10 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     let router = Router(context: TodosAuthRequestContext.self)
 
     // add logging middleware
-    router.middlewares.add(LogRequestsMiddleware(.info))
+    router.add(middleware: LogRequestsMiddleware(.info))
     // add file middleware to server css and js files
-    router.middlewares.add(FileMiddleware(logger: logger))
-    router.middlewares.add(CORSMiddleware(
+    router.add(middleware: FileMiddleware(logger: logger))
+    router.add(middleware: CORSMiddleware(
         allowOrigin: .originBased,
         allowHeaders: [.contentType],
         allowMethods: [.get, .options, .post, .delete, .patch]

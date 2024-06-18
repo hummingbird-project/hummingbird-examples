@@ -12,7 +12,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
     assert(library.getTemplate(named: "page") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     let router = Router(context: MultipartRequestContext.self)
-    router.middlewares.add(FileMiddleware())
+    router.add(middleware: FileMiddleware())
     WebController(mustacheLibrary: library).addRoutes(to: router)
     return Application(router: router, configuration: .init(address: .hostname(args.hostname, port: args.port)))
 }
