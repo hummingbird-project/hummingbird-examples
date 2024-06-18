@@ -51,7 +51,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some Applicatio
         try await fluent.migrate()
     }
 
-    let router = Router(context: AuthSRPRequestContext.self)
+    let router = Router(context: BasicAuthRequestContext.self)
     router.middlewares.add(RedirectMiddleware())
     router.middlewares.add(FileMiddleware(logger: logger))
     router.middlewares.add(

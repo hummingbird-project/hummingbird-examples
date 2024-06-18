@@ -17,7 +17,7 @@ import Hummingbird
 
 /// Request body decoder
 struct TodosAuthRequestDecoder: RequestDecoder {
-    func decode<T>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T where T: Decodable {
+    func decode<T>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T where T: Decodable {
         /// if no content-type header exists or it is an unknown content-type return bad request
         guard let header = request.headers[.contentType] else { throw HTTPError(.badRequest) }
         guard let mediaType = MediaType(from: header) else { throw HTTPError(.badRequest) }

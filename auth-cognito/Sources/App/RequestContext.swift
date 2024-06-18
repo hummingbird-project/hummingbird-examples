@@ -7,7 +7,7 @@ import SotoCognitoAuthenticationKit
 
 /// Request context
 struct AuthCognitoRequestContext: AuthRequestContext, RemoteAddressRequestContext, RouterRequestContext, RequestContext {
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
     /// required by authentication framework
     var auth: LoginCache
     /// required by result builder router
@@ -20,11 +20,11 @@ struct AuthCognitoRequestContext: AuthRequestContext, RemoteAddressRequestContex
     }
 
     /// initializer required by live server
-    init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
+    init(source: Source) {
+        self.coreContext = .init(source: source)
         self.auth = .init()
         self.routerContext = .init()
-        self.channel = channel
+        self.channel = source.channel
     }
 }
 

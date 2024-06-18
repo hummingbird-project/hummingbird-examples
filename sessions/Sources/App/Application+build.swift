@@ -9,18 +9,6 @@ protocol AppArguments {
     var inMemoryDatabase: Bool { get }
 }
 
-/// Request context which default to using JSONDecoder/Encoder
-struct SessionsContext: RequestContext, AuthRequestContext {
-    init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
-        self.auth = .init()
-    }
-
-    var coreContext: CoreRequestContext
-    /// Login cache
-    public var auth: LoginCache
-}
-
 /// build application
 func buildApplication(_ arguments: AppArguments, configuration: ApplicationConfiguration) async throws -> some ApplicationProtocol {
     let fluent = Fluent(
@@ -39,7 +27,7 @@ func buildApplication(_ arguments: AppArguments, configuration: ApplicationConfi
     // Sessions
     let sessionStorage = SessionStorage(persist)
 
-    let router = Router(context: SessionsContext.self)
+    let router = Router(context: BasicAuthRequestContext.self)
 
     // add logging middleware
     router.middlewares.add(LogRequestsMiddleware(.debug))

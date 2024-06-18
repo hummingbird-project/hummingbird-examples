@@ -23,7 +23,7 @@ import NIO
 import SRP
 
 struct UserController {
-    typealias Context = AuthSRPRequestContext
+    typealias Context = BasicAuthRequestContext
 
     let srp = SRPServer<Insecure.SHA1>(configuration: .init(.N2048))
     let fluent: Fluent

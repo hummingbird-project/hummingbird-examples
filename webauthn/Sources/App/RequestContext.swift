@@ -5,12 +5,12 @@ import Logging
 import NIOCore
 
 struct WebAuthnRequestContext: AuthRequestContext, RouterRequestContext, RequestContext {
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
     var auth: LoginCache
     var routerContext: RouterBuilderContext
 
-    init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
+    init(source: Source) {
+        self.coreContext = .init(source: source)
         self.auth = .init()
         self.routerContext = .init()
     }

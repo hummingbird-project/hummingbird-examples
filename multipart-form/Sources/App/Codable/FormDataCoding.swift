@@ -22,7 +22,7 @@ extension FormDataEncoder {
     /// - Parameters:
     ///   - value: Value to encode
     ///   - request: Request used to generate response
-    public func encode<T: Encodable>(_ value: T, from request: Request, context: some BaseRequestContext) throws -> Response {
+    public func encode<T: Encodable>(_ value: T, from request: Request, context: some RequestContext) throws -> Response {
         var buffer = context.allocator.buffer(capacity: 0)
 
         let boundary = "----HBFormBoundary" + String(base32Encoding: (0..<4).map { _ in UInt8.random(in: 0...255) })
@@ -40,7 +40,7 @@ extension FormDataDecoder {
     /// - Parameters:
     ///   - type: Type to decode
     ///   - request: Request to decode from
-    public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some BaseRequestContext) async throws -> T {
+    public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T {
         guard let contentType = request.headers[.contentType],
               let mediaType = MediaType(from: contentType),
               let parameter = mediaType.parameter,

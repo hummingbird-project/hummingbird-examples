@@ -4,9 +4,9 @@ import NIOCore
 
 struct MultipartRequestContext: RequestContext {
     var requestDecoder: MultipartRequestDecoder { .init() }
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
 
-    init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
+    init(source: Source) {
+        self.coreContext = .init(source: source)
     }
 }

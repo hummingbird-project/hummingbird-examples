@@ -9,9 +9,9 @@ public protocol AppArguments {
 }
 
 struct ChannelRequestContext: RequestContext {
-    init(channel: Channel, logger: Logger) {
-        self.coreContext = .init(allocator: channel.allocator, logger: logger)
-        self.channel = channel
+    init(source: Source) {
+        self.coreContext = .init(source: source)
+        self.channel = source.channel
     }
 
     var hasHTTP2Handler: Bool {
@@ -23,7 +23,7 @@ struct ChannelRequestContext: RequestContext {
         }
     }
 
-    var coreContext: CoreRequestContext
+    var coreContext: CoreRequestContextStorage
     let channel: Channel?
 }
 
