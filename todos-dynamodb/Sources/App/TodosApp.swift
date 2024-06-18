@@ -18,8 +18,8 @@ struct TodosApp: ApplicationProtocol {
     var responder: some HTTPResponder<Context> {
         let router = Router(context: Context.self)
         // middleware
-        router.middlewares.add(LogRequestsMiddleware(.debug))
-        router.middlewares.add(CORSMiddleware(
+        router.add(middleware: LogRequestsMiddleware(.debug))
+        router.add(middleware: CORSMiddleware(
             allowOrigin: .originBased,
             allowHeaders: [.contentType],
             allowMethods: [.get, .options, .post, .delete, .patch]

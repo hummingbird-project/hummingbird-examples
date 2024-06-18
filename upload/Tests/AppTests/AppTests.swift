@@ -8,10 +8,10 @@ final class AppTests: XCTestCase {
         var hostname: String { "127.0.0.1" }
         var port: Int { 0 }
     }
-    
+
     func testUploadDownload() async throws {
         let app = buildApplication(args: TestArguments())
-        
+
         try await app.test(.live) { client in
             let textString = "Hello, World!"
             let testFileName = "Hello.txt"
@@ -21,7 +21,7 @@ final class AppTests: XCTestCase {
                 try? FileManager.default.removeItem(at: uploadURL)
             }
             let buffer = ByteBuffer(string: textString)
-            
+
             try await client.execute(
                 uri: "/files",
                 method: .post,
@@ -32,14 +32,14 @@ final class AppTests: XCTestCase {
                 let bodyString = String(buffer: response.body)
                 XCTAssertTrue(bodyString.contains(testFileName))
             }
-            
+
             try await client.execute(uri: "/files/\(testFileName)", method: .get) { response in
                 let downloadString = String(buffer: response.body)
                 XCTAssertEqual(downloadString, textString, "Downloaded bytes should match uploaded bytes")
             }
         }
     }
-    
+
     func testUploadDownload2() async throws {
         let app = buildApplication(args: TestArguments())
 
@@ -55,7 +55,7 @@ final class AppTests: XCTestCase {
             }
         }
     }
-    
+
     func runUploadTest(
         _ client: any TestClientProtocol,
         _ i: Int,
@@ -82,7 +82,7 @@ final class AppTests: XCTestCase {
         ) { response in
             XCTAssertEqual(response.status, .ok)
         }
-        
+
         print("--download-- \(testFileName)")
         try await client.execute(uri: "/files/\(testFileName)", method: .get) { response in
             let dlBytes = response.body.getBytes(at: 0, length: response.body.readableBytes)
@@ -90,7 +90,7 @@ final class AppTests: XCTestCase {
             let isOk = dlBytes == bytes
             XCTAssertTrue(isOk, "Downloaded bytes should match uploaded bytes")
         }
-        
+
         print("--downloaded-- \(testFileName)")
     }
 }

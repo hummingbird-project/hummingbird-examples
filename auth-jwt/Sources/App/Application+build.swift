@@ -54,8 +54,8 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
     jwtAuthenticator.useSigner(.hs256(key: "my-secret-key"), kid: jwtLocalSignerKid)
 
     let router = Router(context: BasicAuthRequestContext.self)
-    router.middlewares.add(LogRequestsMiddleware(.debug))
-    router.middlewares.add(
+    router.add(middleware: LogRequestsMiddleware(.debug))
+    router.add(middleware:
         CORSMiddleware(
             allowOrigin: .originBased,
             allowHeaders: [.accept, .authorization, .contentType, .origin],

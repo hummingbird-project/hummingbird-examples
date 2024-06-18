@@ -39,7 +39,7 @@ func buildApplication(_ args: some AppArguments) -> some ApplicationProtocol {
     let s3 = S3(client: awsClient, region: .euwest1)
 
     let router = Router()
-    router.middlewares.add(LogRequestsMiddleware(.info))
+    router.add(middleware: LogRequestsMiddleware(.info))
 
     router.addRoutes(
         S3FileController(
