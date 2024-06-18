@@ -18,7 +18,7 @@ import HummingbirdAuth
 import HummingbirdFluent
 
 struct SRPSessionAuthenticator: SessionMiddleware {
-    typealias Context = AuthSRPRequestContext
+    typealias Context = BasicAuthRequestContext
     let fluent: Fluent
     let sessionStorage: SessionStorage
 
