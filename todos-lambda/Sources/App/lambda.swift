@@ -30,7 +30,8 @@ struct AppLambda: APIGatewayLambdaFunction {
     }
 
     func buildResponder() -> some HTTPResponder<Context> {
-        let tableName = Environment.shared.get("TODOS_TABLE_NAME") ?? "hummingbird-todos"
+        let env = Environment()
+        let tableName = env.get("TODOS_TABLE_NAME") ?? "hummingbird-todos"
         self.logger.info("Using table \(tableName)")
         let dynamoDB = DynamoDB(client: awsClient, region: .euwest1)
 

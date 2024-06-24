@@ -15,7 +15,7 @@ protocol AppArguments {
 }
 
 func buildApplication(_ args: AppArguments) async throws -> some ApplicationProtocol {
-    let env = try await Environment.shared.merging(with: .dotEnv())
+    let env = try await Environment().merging(with: .dotEnv())
     let logger = {
         var logger = Logger(label: "auth-jwt")
         logger.logLevel = .debug
