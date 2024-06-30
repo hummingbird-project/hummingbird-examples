@@ -1,9 +1,9 @@
-import HummingbirdJobs
+import Jobs
 
 struct JobController {
     // parameters required to run email job
     struct EmailParameters: JobParameters {
-        static let jobID = "send_email"
+        static let jobName = "send_email"
         let to: [String]
         let from: String
         let subject: String
