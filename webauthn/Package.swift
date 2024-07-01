@@ -10,9 +10,9 @@ let package = Package(
         .executable(name: "App", targets: ["App"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-beta.7"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0-beta.3"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0-beta.1"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-rc.1"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0-beta.4"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0-beta.2"),
         .package(url: "https://github.com/hummingbird-project/swift-mustache.git", from: "2.0.0-beta.1"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/swift-server/webauthn-swift.git", from: "1.0.0-alpha.2"),

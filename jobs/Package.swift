@@ -8,9 +8,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-beta.5"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-redis.git", from: "2.0.0-beta.1"),
-        .package(url: "https://github.com/hummingbird-project/swift-jobs.git", branch: "main"),
-        .package(url: "https://github.com/hummingbird-project/swift-jobs-redis.git", branch: "main"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-redis.git", from: "2.0.0-beta.2"),
+        .package(url: "https://github.com/hummingbird-project/swift-jobs.git", branch: "1.0.0-beta.1"),
+        .package(url: "https://github.com/hummingbird-project/swift-jobs-redis.git", branch: "1.0.0-beta.2"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
     ],
     targets: [
