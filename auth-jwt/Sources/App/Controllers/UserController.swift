@@ -21,7 +21,7 @@ import JWTKit
 import NIO
 
 struct UserController<Context: AuthRequestContext & RequestContext> {
-    let jwtSigners: JWTSigners
+    let jwtKeyCollection: JWTKeyCollection
     let kid: JWKIdentifier
     let fluent: Fluent
 
@@ -65,8 +65,8 @@ struct UserController<Context: AuthRequestContext & RequestContext> {
             subject: .init(value: user.name),
             expiration: .init(value: Date(timeIntervalSinceNow: 12 * 60 * 60))
         )
-        return try [
-            "token": self.jwtSigners.sign(payload, kid: self.kid),
+        return try await [
+            "token": self.jwtKeyCollection.sign(payload, kid: self.kid),
         ]
     }
 }

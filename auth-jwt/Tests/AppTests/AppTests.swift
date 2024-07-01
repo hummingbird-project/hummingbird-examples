@@ -72,9 +72,9 @@ final class AppTests: XCTestCase {
                 subject: .init(value: "John Smith"),
                 expiration: .init(value: Date(timeIntervalSinceNow: 12 * 60 * 60))
             )
-            let signers = JWTSigners()
-            signers.use(.hs256(key: "my-secret-key"), kid: "_hb_local_")
-            let token = try signers.sign(payload, kid: "_hb_local_")
+            let signers = JWTKeyCollection()
+            await signers.add(hmac: "my-secret-key", digestAlgorithm: .sha256, kid: "_hb_local_")
+            let token = try await signers.sign(payload, kid: "_hb_local_")
 
             try await client.execute(uri: "/auth", method: .get, auth: .bearer(token)) { response in
                 XCTAssertEqual(response.status, .ok)
