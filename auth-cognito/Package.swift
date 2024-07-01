@@ -1,4 +1,4 @@
-// swift-tools-version:5.9
+// swift-tools-version:5.10
 import PackageDescription
 
 let package = Package(
@@ -9,7 +9,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-beta.7"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", branch: "2.0.0-beta.3"),
-        .package(url: "https://github.com/adam-fowler/soto-cognito-authentication-kit.git", from: "5.0.0-rc.1"),
+        .package(url: "https://github.com/adam-fowler/soto-cognito-authentication-kit.git", from: "5.0.0-rc.2"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
     ],
     targets: [
@@ -22,12 +22,6 @@ let package = Package(
                 .product(name: "SotoCognitoAuthenticationKit", package: "soto-cognito-authentication-kit"),
                 .product(name: "SotoCognitoAuthenticationSRP", package: "soto-cognito-authentication-kit"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
-            ],
-            swiftSettings: [
-                // Enable better optimizations when building in Release configuration. Despite the use of
-                // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
-                // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
             ]
         ),
         .testTarget(
