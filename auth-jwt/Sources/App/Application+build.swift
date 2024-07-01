@@ -66,7 +66,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
         return "Hello"
     }
     UserController(
-        jwtSigners: jwtAuthenticator.jwtSigners,
+        jwtKeyCollection: jwtAuthenticator.jwtKeyCollection,
         kid: jwtLocalSignerKid,
         fluent: fluent
     ).addRoutes(to: router.group("user"))
