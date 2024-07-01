@@ -18,7 +18,7 @@ extension GraphQLError: HTTPResponseError {
         [.contentType: "application/json"]
     }
 
-    public func body(allocator: ByteBufferAllocator) -> ByteBuffer? {
-        ByteBuffer(string: message)
+    public func response(from request: Request, context: some RequestContext) -> Response {
+        .init(status: status, headers: headers, body: .init(byteBuffer: ByteBuffer(string: message)))
     }
 }
