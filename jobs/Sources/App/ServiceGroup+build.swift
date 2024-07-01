@@ -13,8 +13,8 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdJobs
-import HummingbirdJobsRedis
+import Jobs
+import JobsRedis
 import HummingbirdRedis
 import Logging
 import ServiceLifecycle
@@ -39,7 +39,7 @@ func buildServiceGroup(_ args: AppArguments) throws -> ServiceGroup {
         logger: logger
     )
     let jobQueue = JobQueue(
-        .redis(redisService),
+        .redis(redisService.pool),
         numWorkers: 4,
         logger: logger
     )

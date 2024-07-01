@@ -43,7 +43,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
             let request = HTTPClientRequest(url: jwksUrl)
             let jwksResponse: HTTPClientResponse = try await httpClient.execute(request, timeout: .seconds(20))
             let jwksData = try await jwksResponse.body.collect(upTo: 1_000_000)
-            jwtAuthenticator = try JWTAuthenticator(jwksData: jwksData, fluent: fluent)
+            jwtAuthenticator = try await JWTAuthenticator(jwksData: jwksData, fluent: fluent)
         } catch {
             logger.error("JWTAuthenticator initialization failed")
             throw error
@@ -51,7 +51,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
     } else {
         jwtAuthenticator = JWTAuthenticator(fluent: fluent)
     }
-    jwtAuthenticator.useSigner(.hs256(key: "my-secret-key"), kid: jwtLocalSignerKid)
+    await jwtAuthenticator.useSigner(hmac: "my-secret-key", digestAlgorithm: .sha256, kid: jwtLocalSignerKid)
 
     let router = Router(context: BasicAuthRequestContext.self)
     router.add(middleware: LogRequestsMiddleware(.debug))
@@ -66,7 +66,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
         return "Hello"
     }
     UserController(
-        jwtSigners: jwtAuthenticator.jwtSigners,
+        jwtKeyCollection: jwtAuthenticator.jwtKeyCollection,
         kid: jwtLocalSignerKid,
         fluent: fluent
     ).addRoutes(to: router.group("user"))

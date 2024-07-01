@@ -30,35 +30,29 @@ struct JWTPayloadData: JWTPayload, Equatable {
     var expiration: ExpirationClaim
     // Define additional JWT Attributes here
 
-    func verify(using signer: JWTSigner) throws {
+    func verify(using algorithm: some JWTAlgorithm) async throws {
         try self.expiration.verifyNotExpired()
     }
 }
 
 struct JWTAuthenticator<Context: AuthRequestContext & RequestContext>: AuthenticatorMiddleware, @unchecked Sendable {
-    let jwtSigners: JWTSigners
+    let jwtKeyCollection: JWTKeyCollection
     let fluent: Fluent
 
     init(fluent: Fluent) {
-        self.jwtSigners = JWTSigners()
+        self.jwtKeyCollection = JWTKeyCollection()
         self.fluent = fluent
     }
 
-    init(_ signer: JWTSigner, kid: JWKIdentifier? = nil, fluent: Fluent) {
-        self.jwtSigners = JWTSigners()
-        self.jwtSigners.use(signer, kid: kid)
-        self.fluent = fluent
-    }
-
-    init(jwksData: ByteBuffer, fluent: Fluent) throws {
+    init(jwksData: ByteBuffer, fluent: Fluent) async throws {
         let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
-        self.jwtSigners = JWTSigners()
-        try self.jwtSigners.use(jwks: jwks)
+        self.jwtKeyCollection = JWTKeyCollection()
+        try await self.jwtKeyCollection.add(jwks: jwks)
         self.fluent = fluent
     }
 
-    func useSigner(_ signer: JWTSigner, kid: JWKIdentifier) {
-        self.jwtSigners.use(signer, kid: kid)
+    func useSigner(hmac: HMACKey, digestAlgorithm: DigestAlgorithm, kid: JWKIdentifier? = nil) async {
+        await self.jwtKeyCollection.add(hmac: hmac, digestAlgorithm: digestAlgorithm, kid: kid)
     }
 
     func authenticate(request: Request, context: Context) async throws -> AuthenticatedUser? {
@@ -67,7 +61,7 @@ struct JWTAuthenticator<Context: AuthRequestContext & RequestContext>: Authentic
 
         let payload: JWTPayloadData
         do {
-            payload = try self.jwtSigners.verify(jwtToken, as: JWTPayloadData.self)
+            payload = try await self.jwtKeyCollection.verify(jwtToken, as: JWTPayloadData.self)
         } catch {
             context.logger.debug("couldn't verify token")
             throw HTTPError(.unauthorized)
