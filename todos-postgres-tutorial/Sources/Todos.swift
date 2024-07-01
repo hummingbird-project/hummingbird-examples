@@ -65,7 +65,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some Applicatio
     // server starts
     if let postgresRepository {
         app.addServices(postgresRepository.client)
-        app.runBeforeServerStart {
+        app.beforeServerStarts {
             try await postgresRepository.createTable()
         }
     }
