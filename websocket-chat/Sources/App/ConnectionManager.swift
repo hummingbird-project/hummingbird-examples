@@ -20,7 +20,12 @@ import NIOConcurrencyHelpers
 import ServiceLifecycle
 
 struct ConnectionManager: Service {
-    typealias OutputStream = AsyncChannel<WebSocketOutboundWriter.OutboundFrame>
+    enum Output {
+        case close(String?)
+        case frame(WebSocketOutboundWriter.OutboundFrame)
+    }
+
+    typealias OutputStream = AsyncChannel<Output>
     struct Connection {
         let name: String
         let inbound: WebSocketInboundStream
@@ -34,13 +39,15 @@ struct ConnectionManager: Service {
 
         func send(_ output: String) async {
             for outbound in self.outboundWriters.values {
-                await outbound.send(.text(output))
+                await outbound.send(.frame(.text(output)))
             }
         }
 
-        func add(name: String, outbound: OutputStream) async {
+        func add(name: String, outbound: OutputStream) async -> Bool {
+            guard self.outboundWriters[name] == nil else { return false }
             self.outboundWriters[name] = outbound
             await self.send("\(name) joined")
+            return true
         }
 
         func remove(name: String) async {
@@ -67,7 +74,12 @@ struct ConnectionManager: Service {
                 for await connection in self.connectionStream {
                     group.addTask {
                         self.logger.info("add connection", metadata: ["name": .string(connection.name)])
-                        await outboundCounnections.add(name: connection.name, outbound: connection.outbound)
+                        guard await outboundCounnections.add(name: connection.name, outbound: connection.outbound) else {
+                            self.logger.info("user already exists", metadata: ["name": .string(connection.name)])
+                            await connection.outbound.send(.close("User connected already"))
+                            connection.outbound.finish()
+                            return
+                        }
 
                         do {
                             for try await input in connection.inbound.messages(maxSize: 1_000_000) {
