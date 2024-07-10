@@ -32,11 +32,17 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     } onUpgrade: { inbound, outbound, context in
         // only allow upgrade if username query parameter exists
         guard let name = context.request.uri.queryParameters["username"] else {
+            try await outbound.close(.unexpectedServerError, reason: "User connected already")
             return
         }
         let outputStream = connectionManager.addUser(name: String(name), inbound: inbound, outbound: outbound)
         for try await output in outputStream {
-            try await outbound.write(output)
+            switch output {
+            case .frame(let frame):
+                try await outbound.write(frame)
+            case .close(let reason):
+                try await outbound.close(.unexpectedServerError, reason: reason)
+            }
         }
     }
 
