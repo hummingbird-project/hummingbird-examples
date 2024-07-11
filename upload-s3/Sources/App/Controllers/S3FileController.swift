@@ -79,8 +79,6 @@ struct S3FileController {
         guard let filename = context.parameters.get("filename") else {
             throw HTTPError(.badRequest)
         }
-        // due to the fact that `getObjectStreaming` doesn't return until all data is downloaded we have
-        // to get headers values via a headObject call first
         let key = "\(self.folder)/\(filename)"
         let s3Response = try await self.s3.getObject(
             .init(bucket: self.bucket, key: key),
