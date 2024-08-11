@@ -12,15 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Bcrypt
 import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdBasicAuth
 import HummingbirdFluent
 import NIOPosix
 
 /// Database description of a user
-final class User: Model, Authenticatable, @unchecked Sendable {
+final class User: Model, BasicAuthenticationUser, @unchecked Sendable {
     static let schema = "user"
 
     @ID(key: .id)
@@ -33,7 +35,7 @@ final class User: Model, Authenticatable, @unchecked Sendable {
     var name: String
 
     @Field(key: "password")
-    var passwordHash: String
+    var passwordHash: String?
 
     @Children(for: \.$owner)
     var todos: [Todo]
@@ -49,6 +51,8 @@ final class User: Model, Authenticatable, @unchecked Sendable {
 }
 
 extension User {
+    var username: String { self.name }
+
     /// create a User in the db attached to request
     static func create(name: String, email: String, password: String, db: Database) async throws -> User {
         // check if user exists and if they don't then add new user
@@ -74,8 +78,9 @@ extension User {
             .filter(\.$email == email)
             .first()
         guard let user = user else { return nil }
+        guard let passwordHash = user.passwordHash else { return nil }
         // Verify the password against the hash stored in the database
-        let verified = try await NIOThreadPool.singleton.runIfActive { Bcrypt.verify(password, hash: user.passwordHash) }
+        let verified = try await NIOThreadPool.singleton.runIfActive { Bcrypt.verify(password, hash: passwordHash) }
         guard verified else { return nil }
         return user
     }

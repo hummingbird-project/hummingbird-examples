@@ -16,6 +16,7 @@ import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdBasicAuth
 import HummingbirdFluent
 import NIO
 
@@ -26,7 +27,14 @@ struct UserController<Context: AuthRequestContext & RequestContext> {
     /// Add routes for user controller
     func addRoutes(to group: RouterGroup<Context>) {
         group.post(use: self.create)
-        group.group("login").add(middleware: BasicAuthenticator(fluent: self.fluent))
+        group.group("login")
+            .add(
+                middleware: BasicAuthenticator { username in
+                    try await User.query(on: self.fluent.db())
+                        .filter(\.$email == username)
+                        .first()
+                }
+            )
             .post(use: self.login)
         group.add(middleware: SessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
             .get(use: self.current)
