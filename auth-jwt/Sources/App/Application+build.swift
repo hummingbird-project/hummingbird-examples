@@ -73,7 +73,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
     router.group("auth")
         .add(middleware: jwtAuthenticator)
         .get("/") { request, context in
-            let user = try context.auth.require(AuthenticatedUser.self)
+            let user = try context.auth.require(User.self)
             return "Authenticated (Subject: \(user.name))"
         }
 

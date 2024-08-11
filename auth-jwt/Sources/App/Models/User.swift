@@ -12,14 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Bcrypt
 import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdBasicAuth
 import NIOPosix
 
 /// Database description of a user
-final class User: Model {
+final class User: Model, BasicAuthenticationUser, @unchecked Sendable {
     static let schema = "user"
 
     @ID(key: .id)
@@ -50,6 +52,10 @@ final class User: Model {
     }
 }
 
+extension User {
+    var username: String { self.name }
+}
+
 /// Create user request object decoded from HTTP body
 struct CreateUserRequest: Decodable {
     let name: String
@@ -73,18 +79,6 @@ struct UserResponse: ResponseCodable {
 
     init(from user: User) {
         self.id = user.id
-        self.name = user.name
-    }
-}
-
-/// User stored in authentication login cache. Use this instead of User because
-/// User is not Sendable
-struct AuthenticatedUser: Authenticatable {
-    let id: UUID
-    let name: String
-
-    init(from user: User) throws {
-        self.id = try user.requireID()
         self.name = user.name
     }
 }
