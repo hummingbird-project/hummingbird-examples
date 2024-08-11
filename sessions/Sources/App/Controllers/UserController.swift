@@ -16,6 +16,7 @@ import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdBasicAuth
 import HummingbirdFluent
 import NIO
 
@@ -34,7 +35,13 @@ struct UserController {
         group
             .put(use: self.create)
         group.group("login")
-            .add(middleware: BasicAuthenticator(fluent: self.fluent))
+            .add(
+                middleware: BasicAuthenticator { username in
+                    try await User.query(on: self.fluent.db())
+                        .filter(\.$name == username)
+                        .first()
+                }
+            )
             .post(use: self.login)
         group
             .add(middleware: SessionAuthenticator(sessionStorage: self.sessionStorage, fluent: self.fluent))
@@ -60,7 +67,7 @@ struct UserController {
     /// Login user and create session
     @Sendable func login(_ request: Request, context: Context) async throws -> Response {
         // get authenticated user and return
-        let user = try context.auth.require(LoggedInUser.self)
+        let user = try context.auth.require(User.self)
         // create session lasting 1 hour
         let cookie = try await self.sessionStorage.save(session: user.id, expiresIn: .seconds(3600))
         return .init(status: .ok, headers: [.setCookie: cookie.description])
@@ -69,7 +76,7 @@ struct UserController {
     /// Get current logged in user
     @Sendable func current(_ request: Request, context: Context) throws -> UserResponse {
         // get authenticated user and return
-        let user = try context.auth.require(LoggedInUser.self)
-        return UserResponse(id: user.id, name: user.name)
+        let user = try context.auth.require(User.self)
+        return try UserResponse(id: user.requireID(), name: user.name)
     }
 }

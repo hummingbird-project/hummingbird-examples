@@ -20,7 +20,7 @@ import HummingbirdFluent
 
 struct SessionAuthenticator<Context: AuthRequestContext>: SessionMiddleware {
     typealias Session = UUID
-    typealias Value = LoggedInUser
+    typealias Value = User
 
     let sessionStorage: SessionStorage
     let fluent: Fluent
@@ -28,7 +28,7 @@ struct SessionAuthenticator<Context: AuthRequestContext>: SessionMiddleware {
     func getValue(from: UUID, request: Request, context: Context) async throws -> Value? {
         // find user from userId
         guard let user = try await User.find(from, on: self.fluent.db()) else { return nil }
-        return try .init(from: user)
+        return user
     }
 
     func getSession(request: Request, context: Context) async throws -> Session? {
