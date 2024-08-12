@@ -44,7 +44,11 @@ struct UserController {
             )
             .post(use: self.login)
         group
-            .add(middleware: SessionAuthenticator(sessionStorage: self.sessionStorage, fluent: self.fluent))
+            .add(
+                middleware: SessionAuthenticator(sessionStorage: self.sessionStorage) { (id: UUID, _) in
+                    try await User.find(id, on: self.fluent.db())
+                }
+            )
             .get(use: self.current)
     }
 
