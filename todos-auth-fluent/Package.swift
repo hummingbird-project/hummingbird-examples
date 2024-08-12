@@ -8,7 +8,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-rc.1"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", branch: "basic-auth"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", branch: "main"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0-beta.2"),
         .package(url: "https://github.com/hummingbird-project/swift-mustache.git", from: "2.0.0-beta.1"),
         .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.48.5"),
