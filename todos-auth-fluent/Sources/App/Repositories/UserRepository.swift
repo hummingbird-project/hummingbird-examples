@@ -2,7 +2,7 @@
 //
 // This source file is part of the Hummingbird server framework project
 //
-// Copyright (c) 2021-2021 the Hummingbird authors
+// Copyright (c) 2024 the Hummingbird authors
 // Licensed under Apache License v2.0
 //
 // See LICENSE.txt for license information
@@ -16,19 +16,22 @@ import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdBasicAuth
 import HummingbirdFluent
 
-/// Session authentication. Get UUID attached to session id in request and return
-/// the associated user
-struct SessionAuthenticator<Context: AuthRequestContext>: SessionMiddleware {
+struct UserRepository<Context: AuthRequestContext & RequestContext>: SessionUserRepository, PasswordUserRepository {
+    typealias User = App.User
     typealias Session = UUID
-    typealias Value = User
 
     let fluent: Fluent
-    let sessionStorage: SessionStorage
 
-    func getValue(from: UUID, request: Request, context: Context) async throws -> User? {
-        // find user from userId
-        return try await User.find(from, on: self.fluent.db())
+    func getUser(from session: UUID, context: Context) async throws -> User? {
+        try await User.find(session, on: self.fluent.db())
+    }
+
+    func getUser(named email: String) async throws -> User? {
+        try await User.query(on: self.fluent.db())
+            .filter(\.$email == email)
+            .first()
     }
 }

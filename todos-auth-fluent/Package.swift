@@ -21,6 +21,7 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
+                .product(name: "FluentKit", package: "fluent-kit"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "Bcrypt", package: "hummingbird-auth"),
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),

@@ -22,21 +22,15 @@ import NIO
 
 struct UserController<Context: AuthRequestContext & RequestContext> {
     let fluent: Fluent
-    let sessionStorage: SessionStorage
+    let sessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
 
     /// Add routes for user controller
     func addRoutes(to group: RouterGroup<Context>) {
         group.post(use: self.create)
         group.group("login")
-            .add(
-                middleware: BasicAuthenticator { username in
-                    try await User.query(on: self.fluent.db())
-                        .filter(\.$email == username)
-                        .first()
-                }
-            )
+            .add(middleware: BasicAuthenticator(users: self.sessionAuthenticator.users))
             .post(use: self.login)
-        group.add(middleware: SessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
+        group.add(middleware: self.sessionAuthenticator)
             .get(use: self.current)
             .post("logout", use: self.logout)
     }
@@ -62,7 +56,7 @@ struct UserController<Context: AuthRequestContext & RequestContext> {
         // get authenticated user and return
         let user = try context.auth.require(User.self)
         // create session lasting 1 hour
-        let cookie = try await self.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
+        let cookie = try await self.sessionAuthenticator.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
         var response = Response(status: .ok)
         response.setCookie(cookie)
         return response
@@ -73,7 +67,7 @@ struct UserController<Context: AuthRequestContext & RequestContext> {
         // get authenticated user and return
         let user = try context.auth.require(User.self)
         // create session finishing now
-        try await self.sessionStorage.update(session: user.requireID(), expiresIn: .seconds(0), request: request)
+        try await self.sessionAuthenticator.sessionStorage.update(session: user.requireID(), expiresIn: .seconds(0), request: request)
         return .ok
     }
 

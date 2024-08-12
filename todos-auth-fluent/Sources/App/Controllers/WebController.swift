@@ -37,14 +37,14 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
 /// Serves HTML pages
 struct WebController<Context: AuthRequestContext & RequestContext> {
     let fluent: Fluent
-    let sessionStorage: SessionStorage
+    let sessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
     let mustacheLibrary: MustacheLibrary
     let todosTemplate: MustacheTemplate
     let loginTemplate: MustacheTemplate
     let signupTemplate: MustacheTemplate
     let errorTemplate: MustacheTemplate
 
-    init(mustacheLibrary: MustacheLibrary, fluent: Fluent, sessionStorage: SessionStorage) {
+    init(mustacheLibrary: MustacheLibrary, fluent: Fluent, sessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>) {
         // get the mustache templates from the library
         self.mustacheLibrary = mustacheLibrary
         guard let todosTemplate = mustacheLibrary.getTemplate(named: "todos"),
@@ -60,7 +60,7 @@ struct WebController<Context: AuthRequestContext & RequestContext> {
         self.errorTemplate = errorTemplate
 
         self.fluent = fluent
-        self.sessionStorage = sessionStorage
+        self.sessionAuthenticator = sessionAuthenticator
     }
 
     /// Add routes for webpages
@@ -71,7 +71,7 @@ struct WebController<Context: AuthRequestContext & RequestContext> {
             .post("/login", use: self.loginDetails)
             .get("/signup", use: self.signup)
             .post("/signup", use: self.signupDetails)
-            .add(middleware: SessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
+            .add(middleware: self.sessionAuthenticator)
             .add(middleware: RedirectMiddleware(to: "/login"))
             .get("/", use: self.home)
     }
@@ -117,7 +117,7 @@ struct WebController<Context: AuthRequestContext & RequestContext> {
             db: fluent.db()
         ) {
             // create session lasting 1 hour
-            let cookie = try await self.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
+            let cookie = try await self.sessionAuthenticator.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
             // redirect to home page
             var response = Response.redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
             response.setCookie(cookie)

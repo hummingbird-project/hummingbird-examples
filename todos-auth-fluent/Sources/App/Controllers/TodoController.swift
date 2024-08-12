@@ -22,11 +22,11 @@ import NIO
 /// CRUD routes for todos
 struct TodoController<Context: AuthRequestContext & RequestContext> {
     let fluent: Fluent
-    let sessionStorage: SessionStorage
+    let sessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
 
     func addRoutes(to group: RouterGroup<Context>) {
         group
-            .add(middleware: SessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
+            .add(middleware: self.sessionAuthenticator)
             .add(middleware: IsAuthenticatedMiddleware(User.self))
             .get(use: self.list)
             .get(":id", use: self.get)
