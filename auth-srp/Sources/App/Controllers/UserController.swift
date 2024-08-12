@@ -36,7 +36,16 @@ struct UserController {
         routes.post("login", use: self.initLogin)
         routes.post("verify", use: self.verifyLogin)
         routes.group()
-            .add(middleware: SRPSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage))
+            .add(
+                middleware: SessionAuthenticator(sessionStorage: self.sessionStorage) { (session: Session, _) in
+                    switch session.state {
+                    case .authenticated:
+                        return try await User.find(session.userId, on: self.fluent.db())
+                    case .authenticating:
+                        return nil
+                    }
+                }
+            )
             .get("loggedIn.html", use: self.loggedIn)
         return routes
     }
@@ -100,7 +109,7 @@ struct UserController {
         let serverSharedSecret = try self.srp.calculateSharedSecret(clientPublicKey: A, serverKeys: serverKeys, verifier: verifier)
 
         // store session data and return server public key, salt and session id
-        let session = try SRPSessionAuthenticator.Session(
+        let session = try Session(
             userId: user.requireID(),
             state: .authenticating(
                 A: String(base64Encoding: A.bytes),
@@ -129,7 +138,7 @@ struct UserController {
 
     @Sendable func verifyLogin(request: Request, context: Context) async throws -> VerifyLoginOutput {
         let input = try await request.decode(as: VerifyLoginInput.self, context: context)
-        guard let session = try await self.sessionStorage.load(as: SRPSessionAuthenticator.Session.self, request: request) else {
+        guard let session = try await self.sessionStorage.load(as: Session.self, request: request) else {
             throw HTTPError(.unauthorized)
         }
         do {
