@@ -20,21 +20,21 @@ import WebAuthn
 
 /// cannot conform fluent model `User` to `HBAuthenticatable` as it is not Sendable
 /// so create a copy to store in login cache
-struct AuthenticatedUser: Authenticatable, Codable {
-    var id: UUID
-    var username: String
+/* struct AuthenticatedUser: Authenticatable, Codable {
+     var id: UUID
+     var username: String
 
-    var publicKeyCredentialUserEntity: PublicKeyCredentialUserEntity {
-        .init(id: .init(self.id.uuidString.utf8), name: self.username, displayName: self.username)
-    }
-}
+     var publicKeyCredentialUserEntity: PublicKeyCredentialUserEntity {
+         .init(id: .init(self.id.uuidString.utf8), name: self.username, displayName: self.username)
+     }
+ } */
 
 /// Authentication state stored in login cache
 enum AuthenticationSession: Sendable, Codable, Authenticatable, ResponseEncodable {
-    case signedUp(user: AuthenticatedUser)
-    case registering(user: AuthenticatedUser, challenge: [UInt8])
+    case signedUp(user: User)
+    case registering(user: User, challenge: [UInt8])
     case authenticating(challenge: [UInt8])
-    case authenticated(user: AuthenticatedUser)
+    case authenticated(user: User)
 }
 
 /// Session object saved to storage
@@ -45,67 +45,35 @@ enum WebAuthnSession: Codable {
     case authenticated(userId: UUID)
 
     /// init session object from authentication state
-    init(from session: AuthenticationSession) {
+    init(from session: AuthenticationSession) throws {
         switch session {
         case .authenticating(let challenge):
             self = .authenticating(encodedChallenge: challenge.base64URLEncodedString().asString())
         case .signedUp(let user):
-            self = .signedUp(userId: user.id)
+            self = try .signedUp(userId: user.requireID())
         case .registering(let user, let challenge):
-            self = .registering(userId: user.id, encodedChallenge: challenge.base64URLEncodedString().asString())
+            self = try .registering(userId: user.requireID(), encodedChallenge: challenge.base64URLEncodedString().asString())
         case .authenticated(let user):
-            self = .authenticated(userId: user.id)
+            self = try .authenticated(userId: user.requireID())
         }
     }
 
     /// return authentication state from session object
-    func session(for request: Request, fluent: Fluent) async throws -> AuthenticationSession? {
+    func session(fluent: Fluent) async throws -> AuthenticationSession? {
         switch self {
         case .authenticating(let encodedChallenge):
             guard let challenge = URLEncodedBase64(encodedChallenge).decodedBytes else { return nil }
             return .authenticating(challenge: challenge)
         case .signedUp(let userId):
             guard let user = try await User.find(userId, on: fluent.db()) else { return nil }
-            return .signedUp(user: .init(id: userId, username: user.username))
+            return .signedUp(user: user)
         case .registering(let userId, let encodedChallenge):
             guard let user = try await User.find(userId, on: fluent.db()) else { return nil }
             guard let challenge = URLEncodedBase64(encodedChallenge).decodedBytes else { return nil }
-            return .registering(user: .init(id: userId, username: user.username), challenge: challenge)
+            return .registering(user: user, challenge: challenge)
         case .authenticated(let userId):
             guard let user = try await User.find(userId, on: fluent.db()) else { return nil }
-            return .authenticated(user: .init(id: userId, username: user.username))
-        }
-    }
-}
-
-/// Authenticator that will return current state of authentication
-struct WebAuthnSessionStateAuthenticator<Context: AuthRequestContext>: SessionMiddleware {
-    typealias Session = WebAuthnSession
-    /// fluent reference
-    let fluent: Fluent
-    /// container for session objects
-    let sessionStorage: SessionStorage
-
-    func getValue(from session: Session, request: Request, context: Context) async throws -> AuthenticationSession? {
-        return try await session.session(for: request, fluent: self.fluent)
-    }
-}
-
-/// Authenticator that will return an authenticated user from a WebAuthnSession
-struct WebAuthnSessionAuthenticator<Context: AuthRequestContext>: SessionMiddleware {
-    typealias Session = WebAuthnSession
-
-    /// fluent reference
-    let fluent: Fluent
-    /// container for session objects
-    let sessionStorage: SessionStorage
-
-    func getValue(from session: Session, request: Request, context: Context) async throws -> AuthenticatedUser? {
-        guard case .authenticated(let userId) = session else { return nil }
-        if let user = try await User.find(userId, on: self.fluent.db()) {
-            return AuthenticatedUser(id: userId, username: user.username)
-        } else {
-            return nil
+            return .authenticated(user: user)
         }
     }
 }
