@@ -25,7 +25,7 @@ struct HBWebAuthnController {
 
     let webauthn: WebAuthnManager
     let fluent: Fluent
-    let webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserSessionClosure<WebAuthnSession, Context, User>>
+    let webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
 
     // return RouteGroup with user login endpoints
     var endpoints: some RouterMiddleware<Context> {

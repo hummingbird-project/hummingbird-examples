@@ -57,10 +57,10 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
     assert(library.getTemplate(named: "home") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     /// Authenticator storing the user
-    let webAuthnSessionAuthenticator = SessionAuthenticator(sessionStorage: sessionStorage) { (session: WebAuthnSession, _: WebAuthnRequestContext) -> User? in
-        guard case .authenticated(let userId) = session else { return nil }
-        return try await User.find(userId, on: fluent.db())
-    }
+    let webAuthnSessionAuthenticator = SessionAuthenticator(
+        users: UserRepository<WebAuthnRequestContext>(fluent: fluent),
+        sessionStorage: sessionStorage
+    )
     let router = RouterBuilder(context: WebAuthnRequestContext.self) {
         // add logging middleware
         LogRequestsMiddleware(.info)
