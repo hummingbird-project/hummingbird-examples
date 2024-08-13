@@ -29,7 +29,7 @@ final class AppTests: XCTestCase {
         let app = try await buildApplication(TestArguments())
         try await app.test(.live) { client in
             _ = try await client.ws("/echo") { inbound, outbound, context in
-                let byteBuffer = context.allocator.buffer(repeating: 5, count: 256)
+                let byteBuffer = ByteBuffer(repeating: 5, count: 256)
                 try await outbound.write(.binary(byteBuffer))
                 var inboundIterator = inbound.messages(maxSize: .max).makeAsyncIterator()
                 let frame = try await inboundIterator.next()

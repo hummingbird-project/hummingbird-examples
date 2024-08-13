@@ -23,7 +23,7 @@ extension FormDataEncoder {
     ///   - value: Value to encode
     ///   - request: Request used to generate response
     public func encode<T: Encodable>(_ value: T, from request: Request, context: some RequestContext) throws -> Response {
-        var buffer = context.allocator.buffer(capacity: 0)
+        var buffer = ByteBuffer()
 
         let boundary = "----HBFormBoundary" + String(base32Encoding: (0..<4).map { _ in UInt8.random(in: 0...255) })
         try self.encode(value, boundary: boundary, into: &buffer)
