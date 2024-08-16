@@ -4,7 +4,7 @@ import HummingbirdAuth
 import HummingbirdFluent
 import WebAuthn
 
-final class WebAuthnCredential: Model {
+final class WebAuthnCredential: Model, @unchecked Sendable {
     static let schema = "webauthn_credential"
 
     @ID(custom: "id", generatedBy: .user)

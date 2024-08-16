@@ -55,7 +55,7 @@ struct JWTAuthenticator<Context: AuthRequestContext & RequestContext>: Authentic
         await self.jwtKeyCollection.add(hmac: hmac, digestAlgorithm: digestAlgorithm, kid: kid)
     }
 
-    func authenticate(request: Request, context: Context) async throws -> AuthenticatedUser? {
+    func authenticate(request: Request, context: Context) async throws -> User? {
         // get JWT from bearer authorisation
         guard let jwtToken = request.headers.bearer?.token else { throw HTTPError(.unauthorized) }
 
@@ -72,7 +72,7 @@ struct JWTAuthenticator<Context: AuthRequestContext & RequestContext>: Authentic
             .filter(\.$name == payload.subject.value)
             .first()
         {
-            return try .init(from: existingUser)
+            return existingUser
         }
 
         // if user doesn't exist then JWT was created by a another service and we should create a user
@@ -80,6 +80,6 @@ struct JWTAuthenticator<Context: AuthRequestContext & RequestContext>: Authentic
         let user = User(id: nil, name: payload.subject.value, passwordHash: nil)
         try await user.save(on: db)
 
-        return try .init(from: user)
+        return user
     }
 }

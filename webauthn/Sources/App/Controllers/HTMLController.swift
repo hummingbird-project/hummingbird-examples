@@ -23,7 +23,7 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
     let to: String
     func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
         // check if authenticated
-        if context.auth.has(AuthenticatedUser.self) {
+        if context.auth.has(User.self) {
             return try await next(request, context)
         } else {
             // if not authenticated then redirect to login page
@@ -38,12 +38,12 @@ struct HTMLController {
 
     let homeTemplate: MustacheTemplate
     let fluent: Fluent
-    let sessionStorage: SessionStorage
+    let webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
 
     init(
         mustacheLibrary: MustacheLibrary,
         fluent: Fluent,
-        sessionStorage: SessionStorage
+        webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
     ) {
         // get the mustache templates from the library
         guard let homeTemplate = mustacheLibrary.getTemplate(named: "home")
@@ -52,13 +52,13 @@ struct HTMLController {
         }
         self.homeTemplate = homeTemplate
         self.fluent = fluent
-        self.sessionStorage = sessionStorage
+        self.webAuthnSessionAuthenticator = webAuthnSessionAuthenticator
     }
 
     // return Route for home page
     var endpoints: some RouterMiddleware<Context> {
         Get("/") {
-            WebAuthnSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
+            self.webAuthnSessionAuthenticator
             RedirectMiddleware(to: "/login.html")
             self.home
         }
@@ -67,7 +67,7 @@ struct HTMLController {
     /// Home page listing todos and with add todo UI
     @Sendable func home(request: Request, context: Context) async throws -> HTML {
         // get user
-        let user = try context.auth.require(AuthenticatedUser.self)
+        let user = try context.auth.require(User.self)
         // Render home template and return as HTML
         let object: [String: Any] = [
             "name": user.username,

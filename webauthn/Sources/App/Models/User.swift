@@ -5,7 +5,7 @@ import HummingbirdAuth
 import HummingbirdFluent
 import WebAuthn
 
-final class User: Model, ResponseEncodable {
+final class User: Model, ResponseEncodable, @unchecked Sendable, Authenticatable {
     static let schema = "user"
 
     @ID(key: .id)
@@ -18,5 +18,11 @@ final class User: Model, ResponseEncodable {
 
     init(username: String) {
         self.username = username
+    }
+
+    var publicKeyCredentialUserEntity: PublicKeyCredentialUserEntity {
+        get throws {
+            try .init(id: .init(self.requireID().uuidString.utf8), name: self.username, displayName: self.username)
+        }
     }
 }

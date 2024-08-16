@@ -12,14 +12,16 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Bcrypt
 import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdBasicAuth
 import NIOPosix
 
 /// Database description of a user
-final class User: Model {
+final class User: Model, BasicAuthenticatorUser, @unchecked Sendable {
     static let schema = "user"
 
     @ID(key: .id)
@@ -29,7 +31,7 @@ final class User: Model {
     var name: String
 
     @Field(key: "password-hash")
-    var passwordHash: String
+    var passwordHash: String?
 
     init() {}
 
@@ -48,16 +50,8 @@ final class User: Model {
     }
 }
 
-/// User type to pass around as authenticatable. This is required as Fluent
-/// model types are not Sendable
-struct LoggedInUser: Authenticatable {
-    let id: UUID
-    let name: String
-
-    init(from user: User) throws {
-        self.id = try user.requireID()
-        self.name = user.name
-    }
+extension User {
+    var username: String { self.name }
 }
 
 /// Create user request object decoded from HTTP body

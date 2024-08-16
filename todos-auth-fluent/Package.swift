@@ -8,7 +8,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-rc.1"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0-beta.4"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0-rc.1"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0-beta.2"),
         .package(url: "https://github.com/hummingbird-project/swift-mustache.git", from: "2.0.0-beta.1"),
         .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.48.5"),
@@ -21,8 +21,11 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "FluentSQLiteDriver", package: "fluent-sqlite-driver"),
+                .product(name: "FluentKit", package: "fluent-kit"),
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "Bcrypt", package: "hummingbird-auth"),
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
+                .product(name: "HummingbirdBasicAuth", package: "hummingbird-auth"),
                 .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
                 .product(name: "Mustache", package: "swift-mustache"),
             ],

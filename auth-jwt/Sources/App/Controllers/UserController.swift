@@ -16,6 +16,7 @@ import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdBasicAuth
 import HummingbirdFluent
 import JWTKit
 import NIO
@@ -29,7 +30,11 @@ struct UserController<Context: AuthRequestContext & RequestContext> {
     func addRoutes(to group: RouterGroup<Context>) {
         group.put(use: self.create)
         group.group("login").add(
-            middleware: BasicAuthenticator(fluent: self.fluent)
+            middleware: BasicAuthenticator { username in
+                try await User.query(on: self.fluent.db())
+                    .filter(\.$name == username)
+                    .first()
+            }
         )
         .post(use: self.login)
     }
@@ -60,7 +65,7 @@ struct UserController<Context: AuthRequestContext & RequestContext> {
     /// Login user and return JWT
     @Sendable func login(_ request: Request, context: Context) async throws -> [String: String] {
         // get authenticated user and return
-        let user = try context.auth.require(AuthenticatedUser.self)
+        let user = try context.auth.require(User.self)
         let payload = JWTPayloadData(
             subject: .init(value: user.name),
             expiration: .init(value: Date(timeIntervalSinceNow: 12 * 60 * 60))

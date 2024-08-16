@@ -25,23 +25,28 @@ struct HBWebAuthnController {
 
     let webauthn: WebAuthnManager
     let fluent: Fluent
-    let sessionStorage: SessionStorage
+    let webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
 
     // return RouteGroup with user login endpoints
     var endpoints: some RouterMiddleware<Context> {
-        RouteGroup("user") {
+        /// Authenticator storing the WebAuthn session state
+        let webAuthnSessionStateAuthenticator = SessionAuthenticator(sessionStorage: self.webAuthnSessionAuthenticator.sessionStorage) { (session: WebAuthnSession, _: WebAuthnRequestContext) in
+            return try await session.session(fluent: self.fluent)
+        }
+
+        return RouteGroup("user") {
             Post("signup", handler: self.signin)
             Get("login", handler: self.beginAuthentication)
             Post("login") {
-                WebAuthnSessionStateAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
+                webAuthnSessionStateAuthenticator
                 self.finishAuthentication
             }
             Get("logout") {
-                WebAuthnSessionAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
+                self.webAuthnSessionAuthenticator
                 self.logout
             }
             RouteGroup("register") {
-                WebAuthnSessionStateAuthenticator(fluent: self.fluent, sessionStorage: self.sessionStorage)
+                webAuthnSessionStateAuthenticator
                 Post("start", handler: self.beginRegistration)
                 Post("finish", handler: self.finishRegistration)
             }
@@ -63,7 +68,7 @@ struct HBWebAuthnController {
         let user = User(username: input.username)
         try await user.save(on: self.fluent.db())
         let session = try WebAuthnSession.signedUp(userId: user.requireID())
-        let cookie = try await self.sessionStorage.save(
+        let cookie = try await self.webAuthnSessionAuthenticator.sessionStorage.save(
             session: session,
             expiresIn: .seconds(600)
         )
@@ -76,12 +81,12 @@ struct HBWebAuthnController {
     @Sendable func beginRegistration(request: Request, context: Context) async throws -> PublicKeyCredentialCreationOptions {
         let authenticationSession = try context.auth.require(AuthenticationSession.self)
         guard case .signedUp(let user) = authenticationSession else { throw HTTPError(.unauthorized) }
-        let options = self.webauthn.beginRegistration(user: user.publicKeyCredentialUserEntity)
-        let session = WebAuthnSession(from: .registering(
+        let options = try self.webauthn.beginRegistration(user: user.publicKeyCredentialUserEntity)
+        let session = try WebAuthnSession(from: .registering(
             user: user,
             challenge: options.challenge
         ))
-        try await self.sessionStorage.update(session: session, expiresIn: .seconds(600), request: request)
+        try await self.webAuthnSessionAuthenticator.sessionStorage.update(session: session, expiresIn: .seconds(600), request: request)
         return options
     }
 
@@ -99,7 +104,7 @@ struct HBWebAuthnController {
                     return try await WebAuthnCredential.query(on: self.fluent.db()).filter(\.$id == id).first() == nil
                 }
             )
-            try await WebAuthnCredential(credential: credential, userId: user.id).save(on: self.fluent.db())
+            try await WebAuthnCredential(credential: credential, userId: user.requireID()).save(on: self.fluent.db())
         } catch {
             context.logger.error("\(error)")
             throw HTTPError(.unauthorized)
@@ -112,10 +117,10 @@ struct HBWebAuthnController {
     /// Begin Authenticating a user
     @Sendable func beginAuthentication(_ request: Request, context: Context) async throws -> EditedResponse<PublicKeyCredentialRequestOptions> {
         let options = try self.webauthn.beginAuthentication(timeout: 60000)
-        let session = WebAuthnSession(from: .authenticating(
+        let session = try WebAuthnSession(from: .authenticating(
             challenge: options.challenge
         ))
-        let cookie = try await sessionStorage.save(session: session, expiresIn: .seconds(600))
+        let cookie = try await self.webAuthnSessionAuthenticator.sessionStorage.save(session: session, expiresIn: .seconds(600))
         var editedResponse = EditedResponse(response: options)
         editedResponse.setCookie(cookie)
         return editedResponse
@@ -148,14 +153,14 @@ struct HBWebAuthnController {
             throw HTTPError(.unauthorized)
         }
         let session = try WebAuthnSession.authenticated(userId: webAuthnCredential.user.requireID())
-        try await self.sessionStorage.update(session: session, expiresIn: .seconds(24 * 60 * 60), request: request)
+        try await self.webAuthnSessionAuthenticator.sessionStorage.update(session: session, expiresIn: .seconds(24 * 60 * 60), request: request)
 
         return .ok
     }
 
     /// Test authenticated
     @Sendable func logout(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
-        try await self.sessionStorage.delete(request: request)
+        try await self.webAuthnSessionAuthenticator.sessionStorage.delete(request: request)
         return .ok
     }
 }

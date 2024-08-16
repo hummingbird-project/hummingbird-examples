@@ -56,6 +56,11 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
     let library = try await MustacheLibrary(directory: "resources/templates")
     assert(library.getTemplate(named: "home") != nil, "Set your working directory to the root folder of this example to get it to work")
 
+    /// Authenticator storing the user
+    let webAuthnSessionAuthenticator = SessionAuthenticator(
+        users: UserRepository<WebAuthnRequestContext>(fluent: fluent),
+        sessionStorage: sessionStorage
+    )
     let router = RouterBuilder(context: WebAuthnRequestContext.self) {
         // add logging middleware
         LogRequestsMiddleware(.info)
@@ -68,7 +73,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
         HTMLController(
             mustacheLibrary: library,
             fluent: fluent,
-            sessionStorage: sessionStorage
+            webAuthnSessionAuthenticator: webAuthnSessionAuthenticator
         ).endpoints
         RouteGroup("api") {
             HBWebAuthnController(
@@ -80,7 +85,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
                     )
                 ),
                 fluent: fluent,
-                sessionStorage: sessionStorage
+                webAuthnSessionAuthenticator: webAuthnSessionAuthenticator
             ).endpoints
         }
     }
