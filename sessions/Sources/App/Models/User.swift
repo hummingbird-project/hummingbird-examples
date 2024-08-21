@@ -17,7 +17,7 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 import NIOPosix
-
+import Bcrypt
 /// Database description of a user
 final class User: Model {
     static let schema = "user"

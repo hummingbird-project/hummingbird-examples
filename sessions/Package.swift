@@ -16,6 +16,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.48.5"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
+
     ],
     targets: [
         .executableTarget(
@@ -27,6 +28,7 @@ let package = Package(
                 .product(name: "HummingbirdAuth", package: "hummingbird-auth"),
                 .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
+                .product(name: "Bcrypt", package: "hummingbird-auth"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
@@ -41,6 +43,7 @@ let package = Package(
                 .byName(name: "App"),
                 .product(name: "HummingbirdTesting", package: "hummingbird"),
                 .product(name: "HummingbirdAuthTesting", package: "hummingbird-auth"),
+                .product(name: "Bcrypt", package: "hummingbird-auth"),
             ]
         ),
     ]

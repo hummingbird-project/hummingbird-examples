@@ -17,6 +17,7 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 import NIOPosix
+import Bcrypt
 
 struct BasicAuthenticator<Context: AuthRequestContext>: AuthenticatorMiddleware {
     let fluent: Fluent
