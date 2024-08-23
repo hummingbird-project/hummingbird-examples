@@ -28,10 +28,16 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
     router.add(middleware: AddSHA256DigestMiddleware())
     // Add echo route
     router.post("/echo") { request, context -> Response in
+        // Demostrating returning a ResponseBody initialized with a closure writing the contents
+        // of the body. This is the equivalent of `ResponseBody(asyncSequence: request.body)``
+        let responseBody = ResponseBody { writer in
+            try await writer.write(request.body)
+            try await writer.finish(nil)
+        }
         return Response(
             status: .ok,
             headers: [.contentType: request.headers[.contentType] ?? "application/octet-stream"],
-            body: .init(asyncSequence: request.body)
+            body: responseBody
         )
     }
     let app = Application(

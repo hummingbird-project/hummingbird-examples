@@ -25,7 +25,7 @@ final class AppTests: XCTestCase {
         let buffer = Self.randomBuffer(size: 256 * 000)
         let digest = SHA256.hash(data: Data(buffer.readableBytesView))
         try await app.test(.live) { client in
-            try await client.execute(uri: "/echo", method: .get, body: buffer) { response in
+            try await client.execute(uri: "/echo", method: .post, body: buffer) { response in
                 XCTAssertEqual(
                     response.trailerHeaders?[.digest],
                     "sha256=\(digest.hexDigest())"
