@@ -9,8 +9,8 @@ extension HTTPField.Name {
 
 /// ResponseBodyWriter that updates a SHA256 digest with the contents of a response body and
 /// once it is finished add the digest as a header in the trailer headers
-class CalculateSHA256DigestResponseBodyWriter<ParentWriter: ResponseBodyWriter>: ResponseBodyWriter {
-    let parentWriter: ParentWriter
+struct CalculateSHA256DigestResponseBodyWriter<ParentWriter: ResponseBodyWriter>: ResponseBodyWriter {
+    var parentWriter: ParentWriter
     var sha256: SHA256
 
     init(parentWriter: ParentWriter) {
@@ -18,14 +18,14 @@ class CalculateSHA256DigestResponseBodyWriter<ParentWriter: ResponseBodyWriter>:
         self.sha256 = SHA256()
     }
 
-    func write(_ buffer: ByteBuffer) async throws {
+    mutating func write(_ buffer: ByteBuffer) async throws {
         buffer.withUnsafeReadableBytes { bytes in
             self.sha256.update(bufferPointer: bytes)
         }
         try await self.parentWriter.write(buffer)
     }
 
-    func finish(_ trailingHeaders: HTTPFields?) async throws {
+    consuming func finish(_ trailingHeaders: HTTPFields?) async throws {
         // we've finished the response body, so lets calculate the final SHA256
         // and add it as a trailing header
         let digest = self.sha256.finalize()
