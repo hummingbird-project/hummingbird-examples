@@ -58,8 +58,9 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
 
     /// Authenticator storing the user
     let webAuthnSessionAuthenticator = SessionAuthenticator(
-        users: UserRepository<WebAuthnRequestContext>(fluent: fluent),
-        sessionStorage: sessionStorage
+        users: UserRepository(fluent: fluent),
+        sessionStorage: sessionStorage,
+        context: WebAuthnRequestContext.self
     )
     let router = RouterBuilder(context: WebAuthnRequestContext.self) {
         // add logging middleware

@@ -38,12 +38,12 @@ struct HTMLController {
 
     let homeTemplate: MustacheTemplate
     let fluent: Fluent
-    let webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
+    let webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository>
 
     init(
         mustacheLibrary: MustacheLibrary,
         fluent: Fluent,
-        webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
+        webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository>
     ) {
         // get the mustache templates from the library
         guard let homeTemplate = mustacheLibrary.getTemplate(named: "home")

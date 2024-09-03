@@ -37,14 +37,14 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
 /// Serves HTML pages
 struct WebController<Context: AuthRequestContext & RequestContext> {
     let fluent: Fluent
-    let sessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
+    let sessionAuthenticator: SessionAuthenticator<Context, UserRepository>
     let mustacheLibrary: MustacheLibrary
     let todosTemplate: MustacheTemplate
     let loginTemplate: MustacheTemplate
     let signupTemplate: MustacheTemplate
     let errorTemplate: MustacheTemplate
 
-    init(mustacheLibrary: MustacheLibrary, fluent: Fluent, sessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>) {
+    init(mustacheLibrary: MustacheLibrary, fluent: Fluent, sessionAuthenticator: SessionAuthenticator<Context, UserRepository>) {
         // get the mustache templates from the library
         self.mustacheLibrary = mustacheLibrary
         guard let todosTemplate = mustacheLibrary.getTemplate(named: "todos"),

@@ -25,12 +25,15 @@ struct HBWebAuthnController {
 
     let webauthn: WebAuthnManager
     let fluent: Fluent
-    let webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
+    let webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository>
 
     // return RouteGroup with user login endpoints
     var endpoints: some RouterMiddleware<Context> {
         /// Authenticator storing the WebAuthn session state
-        let webAuthnSessionStateAuthenticator = SessionAuthenticator(sessionStorage: self.webAuthnSessionAuthenticator.sessionStorage) { (session: WebAuthnSession, _: WebAuthnRequestContext) in
+        let webAuthnSessionStateAuthenticator = SessionAuthenticator(
+            sessionStorage: self.webAuthnSessionAuthenticator.sessionStorage,
+            context: Context.self
+        ) { (session: WebAuthnSession, _) in
             return try await session.session(fluent: self.fluent)
         }
 
