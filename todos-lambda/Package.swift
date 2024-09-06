@@ -8,9 +8,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0-rc.1"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-lambda.git", from: "2.0.0-beta.6"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-lambda.git", from: "2.0.0-rc.2"),
         .package(url: "https://github.com/swift-server/swift-aws-lambda-runtime.git", from: "1.0.0-alpha.2"),
-        .package(url: "https://github.com/soto-project/soto.git", from: "7.0.0-rc.1"),
+        .package(url: "https://github.com/soto-project/soto.git", from: "7.0.0"),
     ],
     targets: [
         .executableTarget(
