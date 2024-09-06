@@ -20,9 +20,9 @@ import HummingbirdBasicAuth
 import HummingbirdFluent
 import NIO
 
-struct UserController<Context: AuthRequestContext & RequestContext> {
+struct UserController<Context: AuthRequestContext> {
     let fluent: Fluent
-    let sessionAuthenticator: SessionAuthenticator<Context, UserRepository<Context>>
+    let sessionAuthenticator: SessionAuthenticator<Context, UserRepository>
 
     /// Add routes for user controller
     func addRoutes(to group: RouterGroup<Context>) {

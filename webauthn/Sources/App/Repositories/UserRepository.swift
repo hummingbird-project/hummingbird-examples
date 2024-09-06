@@ -18,10 +18,10 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 
-struct UserRepository<Context: AuthRequestContext & RequestContext>: SessionUserRepository {
+struct UserRepository: UserSessionRepository {
     let fluent: Fluent
 
-    func getUser(from session: WebAuthnSession, context: Context) async throws -> User? {
+    func getUser(from session: WebAuthnSession, context: UserRepositoryContext) async throws -> User? {
         guard case .authenticated(let userId) = session else { return nil }
         return try await User.find(userId, on: self.fluent.db())
     }

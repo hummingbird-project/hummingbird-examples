@@ -31,7 +31,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
         try await fluent.migrate()
     }
     let sessionStorage = SessionStorage(fluentPersist)
-    let userRepository = UserRepository<TodosAuthRequestContext>(fluent: fluent)
+    let userRepository = UserRepository(fluent: fluent)
     // router
     let router = Router(context: TodosAuthRequestContext.self)
 
@@ -53,7 +53,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     let library = try await MustacheLibrary(directory: "templates")
     assert(library.getTemplate(named: "head") != nil, "Set your working directory to the root folder of this example to get it to work")
 
-    let sessionAuthenticator = SessionAuthenticator(users: userRepository, sessionStorage: sessionStorage)
+    let sessionAuthenticator = SessionAuthenticator(users: userRepository, sessionStorage: sessionStorage, context: TodosAuthRequestContext.self)
     // Add routes serving HTML files
     WebController(mustacheLibrary: library, fluent: fluent, sessionAuthenticator: sessionAuthenticator).addRoutes(to: router)
     // Add api routes managing todos

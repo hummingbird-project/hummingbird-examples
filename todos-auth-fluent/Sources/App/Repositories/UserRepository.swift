@@ -19,17 +19,17 @@ import HummingbirdAuth
 import HummingbirdBasicAuth
 import HummingbirdFluent
 
-struct UserRepository<Context: AuthRequestContext & RequestContext>: SessionUserRepository, PasswordUserRepository {
+struct UserRepository: UserSessionRepository, UserPasswordRepository {
     typealias User = App.User
     typealias Session = UUID
 
     let fluent: Fluent
 
-    func getUser(from session: UUID, context: Context) async throws -> User? {
+    func getUser(from session: UUID, context: UserRepositoryContext) async throws -> User? {
         try await User.find(session, on: self.fluent.db())
     }
 
-    func getUser(named email: String) async throws -> User? {
+    func getUser(named email: String, context: UserRepositoryContext) async throws -> User? {
         try await User.query(on: self.fluent.db())
             .filter(\.$email == email)
             .first()
