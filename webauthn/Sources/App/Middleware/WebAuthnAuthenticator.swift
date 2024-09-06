@@ -18,17 +18,6 @@ import HummingbirdAuth
 import HummingbirdFluent
 import WebAuthn
 
-/// cannot conform fluent model `User` to `HBAuthenticatable` as it is not Sendable
-/// so create a copy to store in login cache
-/* struct AuthenticatedUser: Authenticatable, Codable {
-     var id: UUID
-     var username: String
-
-     var publicKeyCredentialUserEntity: PublicKeyCredentialUserEntity {
-         .init(id: .init(self.id.uuidString.utf8), name: self.username, displayName: self.username)
-     }
- } */
-
 /// Authentication state stored in login cache
 enum AuthenticationSession: Sendable, Codable, Authenticatable, ResponseEncodable {
     case signedUp(user: User)

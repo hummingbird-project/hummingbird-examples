@@ -30,7 +30,7 @@ struct UserController<Context: AuthRequestContext & RequestContext> {
     func addRoutes(to group: RouterGroup<Context>) {
         group.put(use: self.create)
         group.group("login").add(
-            middleware: BasicAuthenticator { username in
+            middleware: BasicAuthenticator { username, _ in
                 try await User.query(on: self.fluent.db())
                     .filter(\.$name == username)
                     .first()
