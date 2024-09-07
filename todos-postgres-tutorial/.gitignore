@@ -1,10 +1,9 @@
 .DS_Store
 /.build
+/.swiftpm
+/.devContainer
 /Packages
+/*.xcodeproj
 xcuserdata/
-DerivedData/
-.swiftpm/configuration/registries.json
-.swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
-.netrc
-.vscode
-Package.resolved
+/.vscode/*
+!/.vscode/hummingbird.code-snippets

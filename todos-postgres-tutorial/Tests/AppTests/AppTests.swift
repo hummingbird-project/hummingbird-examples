@@ -1,13 +1,15 @@
-import Foundation
 import Hummingbird
 import HummingbirdTesting
-@testable import Todos
+import Logging
 import XCTest
 
-final class TodosTests: XCTestCase {
+@testable import App
+
+final class AppTests: XCTestCase {
     struct TestArguments: AppArguments {
         let hostname = "127.0.0.1"
         let port = 8080
+        let logLevel: Logger.Level? = nil
         let inMemoryTesting = true
     }
 
