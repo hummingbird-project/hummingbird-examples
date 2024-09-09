@@ -64,7 +64,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
 func buildRouter(_ repository: some TodoRepository) -> Router<AppRequestContext> {
     let router = Router(context: AppRequestContext.self)
     // Add middleware
-    router.add {
+    router.addMiddleware {
         // logging middleware
         LogRequestsMiddleware(.info)
     }
