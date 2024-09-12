@@ -7,7 +7,7 @@ let package = Package(
         .macOS(.v14),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/mainhummingbird.git", from: "2.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-redis.git", from: "2.0.0-beta.2"),
         .package(url: "https://github.com/hummingbird-project/swift-jobs.git", branch: "1.0.0-beta.1"),
         .package(url: "https://github.com/hummingbird-project/swift-jobs-redis.git", branch: "1.0.0-beta.2"),

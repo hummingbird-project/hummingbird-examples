@@ -7,7 +7,7 @@ let package = Package(
         .macOS(.v14),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/mainhummingbird.git", from: "2.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0-rc.1"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0-beta.2"),
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.0.0"),
