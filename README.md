@@ -30,6 +30,7 @@ Examples converted to Hummingbird 2.0
 - [response-body-processing](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server) - Example showing how to process a response body in middleware.
 - [sessions](https://github.com/hummingbird-project/hummingbird-examples/tree/main/sessions) - Username/password and session authentication.
 - [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB.
+- [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
 - [todos-lambda](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-lambda) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB and running on AWS Lambda.
 - [todos-mongokitten-openapi](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-mongokitten-openapi) - Todos application, using MongoDB driver [MongoKitten](https://github.com/orlandos-nl/MongoKitten) and the [OpenAPI runtime](https://github.com/apple/swift-openapi-runtime).
 - [todos-postgres-tutorial](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-postgres-tutorial) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using PostgresNIO. Sample code that goes along with the [Todos tutorial](https://hummingbird-project.github.io/hummingbird-docs/2.0/tutorials/todos).
@@ -49,12 +50,3 @@ These packages bundle examples with Hummingbird 2:
 
 - [Elementary Demo](https://github.com/sliemeobn/elementary/tree/main/Examples/HummingbirdDemo) - An HTML application rendered from Hummingbird by [Elementary](https://github.com/sliemeobn/elementary)
 - [ElementaryHTMX Demo](https://github.com/sliemeobn/elementary-htmx/tree/main/Examples/HummingbirdDemo) - An [HTMX](https://htmx.org/) application that communicates with Hummingbird, rendered by [Elementary](https://github.com/sliemeobn/elementary) and [ElementaryHTMX](https://github.com/sliemeobn/elementary-htmx)
-
-### Hummingbird 1
-
-Examples still working with Hummingbird 1.0
-
-- [ios-image-server](https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x/ios-image-server) - iOS web server that provides access to iPhone photo library.
-- [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
-
-The full set of Hummingbird 1.0 examples can be found at https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x
