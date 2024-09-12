@@ -22,7 +22,7 @@ Examples converted to Hummingbird 2.0
 - [auth-srp](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-srp) - Secure Remote Password authentication.
 - [graphql-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/graphql-server) - GraphQL server using [Graphiti](https://github.com/GraphQLSwift/Graphiti)
 - [hello](https://github.com/hummingbird-project/hummingbird-examples/tree/main/hello) - Basic application setup.
-- [html-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/html-form) - Link HTML form to Hummingbird application.
+- [html-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/html-form) - Link a Mustache rendered HTML form to Hummingbird application.
 - [http2](https://github.com/hummingbird-project/hummingbird-examples/tree/main/http2) - Basic application with HTTP2 upgrade added.
 - [jobs](https://github.com/hummingbird-project/hummingbird-examples/tree/main/jobs) - Demonstrating offloading of jobs to another server.
 - [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit
