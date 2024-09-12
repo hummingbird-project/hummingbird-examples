@@ -5,9 +5,9 @@ struct TodoController<Repository: TodoRepository> {
     // Todo repository
     let repository: Repository
 
-    // add Todos API to router group
-    func addRoutes(to group: RouterGroup<some RequestContext>) {
-        group
+    // return todo endpoints
+    var endpoints: RouteCollection<AppRequestContext> {
+        return RouteCollection(context: AppRequestContext.self)
             .get(":id", use: self.get)
             .get(use: self.list)
             .post(use: self.create)
