@@ -43,6 +43,15 @@ And finally
 
 - [todos-auth-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-auth-fluent) - This is a more complete example which shows authentication, CRUD operations and mustache rendering all in one app.
 
+### External Examples
+
+These packages bundle examples with Hummingbird 2:
+
+- [Elementary Demo](https://github.com/sliemeobn/elementary/tree/main/Examples/HummingbirdDemo) - An HTML application rendered from Hummingbird by [Elementary](https://github.com/sliemeobn/elementary)
+- [ElementaryHTMX Demo](https://github.com/sliemeobn/elementary-htmx/tree/main/Examples/HummingbirdDemo) - An [HTMX](https://htmx.org/) application that communicates with Hummingbird, rendered by [Elementary](https://github.com/sliemeobn/elementary) and [ElementaryHTMX](https://github.com/sliemeobn/elementary-htmx)
+
+### Hummingbird 1
+
 Examples still working with Hummingbird 1.0
 
 - [ios-image-server](https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x/ios-image-server) - iOS web server that provides access to iPhone photo library.
