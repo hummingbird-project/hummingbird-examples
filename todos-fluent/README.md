@@ -1,6 +1,6 @@
 # Todos Fluent
 
-This is an implementation of the [TodoBackend](http://www.todobackend.com/) API using an SQLite database accessed via Fluent to store the todo data. The application has six routes
+This is an implementation of the [TodoBackend](http://www.todobackend.com/) API using an SQLite database accessed via the [Fluent](https://github.com/vapor/fluent) ORM to store the TODO data in SQLite. The application has six routes:
 
 - GET /todos: Lists all the todos in the database
 - POST /todos: Creates a new todo

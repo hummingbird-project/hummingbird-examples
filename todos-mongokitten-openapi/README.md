@@ -1,6 +1,6 @@
 # Todos MongoKitten OpenAPI
 
-This is an implementation of an API using an OpenAPI specification. The API uses a MongoDB database accessed via MongoKitten to store the todo data.
+This is an implementation of an API using an [OpenAPI](https://swagger.io/resources/open-api/) specification. The API uses a [MongoDB](https://mongodb.com) database accessed via [MongoKitten](https://github.com/orlandos-nl/MongoKitten) to store the todo data.
 
 This API has four routes:
 

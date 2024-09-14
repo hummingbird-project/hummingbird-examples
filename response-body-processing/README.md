@@ -2,11 +2,14 @@
 
 This is an example demostrating how you can process Response bodies in middleware using a type conforming to `ResponseBodyWriter`. The server has one endpoint `/echo` which will echo the body of the request back in its response. The response will also include in the response the SHA256 of the data being sent back as a trailing header.
 
-You can test the sample as follows
-```
+You can test the sample as follows:
+
+```sh
 curl localhost:8080/echo -i -d"Hello world"
 ```
-It should response with 
+
+It should respond with:
+
 ```
 HTTP/1.1 200 OK
 Content-Type: application/x-www-form-urlencoded

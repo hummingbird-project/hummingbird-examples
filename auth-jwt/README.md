@@ -1,10 +1,13 @@
 # Auth Token (JWT)
 
-This shows two ways in which you can use JWTs for authentication. 
+This project shows two ways in which you can use JWTs using [JWTKit](https://github.com/vapor/jwt-kit) for authentication. 
+
 - With `RS256` tokens issues by third party providers. 
 - And generating it's own JWTs after a basic username/password authentication 
 
 For the third party authentication to work you need to supply a URL to the JSON Web Key Store (JWKS).
+
+You can build and run the example from [VSCode](https://www.swift.org/documentation/articles/getting-started-with-vscode-swift.html) or [Xcode](https://developer.apple.com/xcode/).
 
 ## Usage
 

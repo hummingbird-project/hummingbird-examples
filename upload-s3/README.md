@@ -1,8 +1,8 @@
 # Example Async/Await File Upload using S3 as backing storage
 
-Demonstrating file uploads to S3 using the async/await APIs of Hummingbird.
+Demonstrating file uploads to S3 using Hummingbird and [Soto](https://github.com/soto-project/soto).
 
-This example requires you have an AWS account with access to S3. You should setup an S3 bucket to save your files to. Before running the application set the "s3_upload_bucket" environment variable to the name of your S3 bucket. You can also use the "s3_upload_folder" environment variable to control what folder inside your S3 bucket the files will be saved to.
+This example requires you have an [AWS](https://aws.amazon.com) account with access to S3. You should setup an S3 bucket to save your files to. Before running the application set the "s3_upload_bucket" environment variable to the name of your S3 bucket. You can also use the "s3_upload_folder" environment variable to control what folder inside your S3 bucket the files will be saved to.
 
 ## Requirements
 
