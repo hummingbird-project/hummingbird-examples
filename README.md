@@ -50,3 +50,4 @@ These packages bundle examples with Hummingbird 2:
 
 - [Elementary Demo](https://github.com/sliemeobn/elementary/tree/main/Examples/HummingbirdDemo) - An HTML application rendered from Hummingbird by [Elementary](https://github.com/sliemeobn/elementary)
 - [ElementaryHTMX Demo](https://github.com/sliemeobn/elementary-htmx/tree/main/Examples/HummingbirdDemo) - An [HTMX](https://htmx.org/) application that communicates with Hummingbird, rendered by [Elementary](https://github.com/sliemeobn/elementary) and [ElementaryHTMX](https://github.com/sliemeobn/elementary-htmx)
+- [OracleNIO Examples](https://github.com/kicsipixel/oracle-nio-examples) - Examples of using [OracleNIO](https://github.com/lovetodream/oracle-nio) with Hummingbird
