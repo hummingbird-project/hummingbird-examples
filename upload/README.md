@@ -1,6 +1,6 @@
 # Example Async/Await File Upload
 
-Demonstrating file uploads using the async/await APIs of Hummingbird.
+Demonstrating file uploads to disk using Hummingbird.
 
 This demo may be useful for organziations that handle secret / sensitive data or otherwise do not want to rely on third party object storage vendors.
 

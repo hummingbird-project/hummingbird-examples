@@ -1,6 +1,6 @@
 # Todos Lambda
 
-This is an implementation of the [TodoBackend](http://www.todobackend.com/) API using HummingbirdLambda to run on an AWS Lambda. It uses DynamoDB to store the todo data. It has six routes
+This is an implementation of the [TodoBackend](http://www.todobackend.com/) API using [HummingbirdLambda](https://github.com/hummingbird-project/hummingbird-lambda) to run on an [AWS Lambda](https://aws.amazon.com/lambda/). It uses [DynamoDB](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html) to store the todo data. It has six routes
 
 - GET /todos: Lists all the todos in the database
 - POST /todos: Creates a new todo

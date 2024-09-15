@@ -1,6 +1,7 @@
 # Auth Token (JWT)
 
-This shows two ways in which you can use JWTs for authentication. 
+This project shows two ways in which you can use JWTs using [JWTKit](https://github.com/vapor/jwt-kit) for authentication. 
+
 - With `RS256` tokens issues by third party providers. 
 - And generating it's own JWTs after a basic username/password authentication 
 

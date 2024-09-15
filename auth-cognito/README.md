@@ -1,8 +1,10 @@
 # Authentication with SotoCognitoAuthenticationKit
 
-Example of app using SotoCognitoAuthenticationKit. App includes four authenticators (basic username and password, basic username and password using SRP (Secure Remote Password) for authentication, JWT Access Token and JWT Id Token. This example also uses the result builder router from HummingbirdRouter.
+Example of app using [Soto's](https://github.com/soto-project/soto) SotoCognitoAuthenticationKit. This app includes four authenticators (basic username and password, basic username and password using SRP (Secure Remote Password) for authentication, JWT Access Token and JWT Id Token. This example also uses the result builder router from [HummingbirdRouter](https://docs.hummingbird.codes/2.0/documentation/hummingbirdrouter).
 
-Routes are as follows
+### Routes
+
+The following routes are present in this application.
 
 - PUT /user - Create a new user
 - POST /user/login - Login in user with username and password
@@ -18,4 +20,6 @@ Routes are as follows
 - POST /user/mfa/enable - Enable software MFA for user
 - POST /user/mfa/disable - Disable software MFA for user
 
-This example requires that you setup an AWS Cognito userpool and application client with ADMIN_USER_PASSWORD, REFRESH_TOKEN and USER_SRP authentication methods all enabled. You should then set environment variables `COGNITO_USER_POOL_ID` to the userpool id, `COGNITO_CLIENT_ID` to the application client id and if you added a client secret `COGNITO_CLIENT_SECRET` to that.
+### Running the Example
+
+This example requires that you setup an AWS Cognito userpool and application client with *ADMIN_USER_PASSWORD*, *REFRESH_TOKEN* and *USER_SRP* authentication methods all enabled. You should then set environment variables `COGNITO_USER_POOL_ID` to the userpool id, `COGNITO_CLIENT_ID` to the application client id and if you added a client secret `COGNITO_CLIENT_SECRET` to that.
