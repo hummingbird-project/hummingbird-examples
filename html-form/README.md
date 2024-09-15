@@ -4,4 +4,4 @@ This application demonstrates working with HTML forms. Set the working directory
 
 The HTML form is generated using the [Mustache](https://github.com/hummingbird-project/swift-mustache) library. A new type `HTML` is added that conforms to `ResponseGenerator`. This generates a response with the `HTML` text contents and a `content-type` header set to `text/html`.
 
-Added a new `RequestDecoder` that checks the header value `content-type` and if it is `application/x-www-form-urlencoded` then decodes request using `URLFormRequestDecoder`. Otherwise returns unsupported media type.
+Added a new `RequestDecoder` that checks the header value `content-type` and if it is `application/x-www-form-urlencoded` then decodes request using `URLFormRequestDecoder`. Otherwise returns unsupported media type.gp
