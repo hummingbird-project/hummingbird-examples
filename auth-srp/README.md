@@ -2,10 +2,6 @@
 
 Application demonstrating authentication using Secure Remote Password.
 
-You can run and experiment with the example by building the Dockerfile and running the container.
-
-Alternatively, you can build and run the example from [VSCode](https://www.swift.org/documentation/articles/getting-started-with-vscode-swift.html) or [Xcode](https://developer.apple.com/xcode/).
-
 ### What is SRP?
 
 Secure Remote Password (SRP) is a method to authenticate with your server application without ever passing your password to the server. Because the server never knows your password it can never be leaked in an attack on the server. Also because the password is never passed to the server it can not be obtained via an eavesdropper or man in the middle attack.
