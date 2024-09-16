@@ -50,7 +50,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     }
 
     // load mustache template library
-    let library = try await MustacheLibrary(directory: "templates")
+    let library = try await MustacheLibrary(directory: Bundle.module.bundleURL.path)
     assert(library.getTemplate(named: "head") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     let sessionAuthenticator = SessionAuthenticator(users: userRepository, sessionStorage: sessionStorage, context: TodosAuthRequestContext.self)
