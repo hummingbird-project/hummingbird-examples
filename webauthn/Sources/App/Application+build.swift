@@ -53,7 +53,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
     let sessionStorage = SessionStorage(memoryPersist)
 
     // load mustache template library
-    let library = try await MustacheLibrary(directory: "resources/templates")
+    let library = try await MustacheLibrary(directory: Bundle.module.bundleURL.path)
     assert(library.getTemplate(named: "home") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     /// Authenticator storing the user

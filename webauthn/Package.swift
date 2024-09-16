@@ -31,6 +31,7 @@ let package = Package(
                 .product(name: "Mustache", package: "swift-mustache"),
                 .product(name: "WebAuthn", package: "webauthn-swift"),
             ],
+            resources: [.process("Resources")],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
