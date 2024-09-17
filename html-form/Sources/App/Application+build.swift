@@ -1,3 +1,4 @@
+import Foundation
 import Hummingbird
 import Logging
 import Mustache
@@ -29,7 +30,7 @@ public func buildApplication(args: AppArguments) async throws -> some Applicatio
         logger.logLevel = args.logLevel ?? .info
         return logger
     }()
-    let library = try await MustacheLibrary(directory: "resources/templates")
+    let library = try await MustacheLibrary(directory: Bundle.module.bundleURL.path)
     assert(library.getTemplate(named: "page") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     let router = Router(context: HTMLFormRequestContext.self)

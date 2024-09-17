@@ -26,6 +26,7 @@ let package = Package(
                 .product(name: "ExtrasBase64", package: "swift-extras-base64"),
                 .product(name: "MultipartKit", package: "multipart-kit"),
             ],
+            resources: [.process("Resources")],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release

@@ -29,6 +29,7 @@ let package = Package(
                 .product(name: "HummingbirdFluent", package: "hummingbird-fluent"),
                 .product(name: "Mustache", package: "swift-mustache"),
             ],
+            resources: [.process("Resources")],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release

@@ -1,3 +1,4 @@
+import Foundation
 import Hummingbird
 import MultipartKit
 import Mustache
@@ -8,7 +9,7 @@ protocol AppArguments {
 }
 
 func buildApplication(_ args: AppArguments) async throws -> some ApplicationProtocol {
-    let library = try await MustacheLibrary(directory: "templates")
+    let library = try await MustacheLibrary(directory: Bundle.module.bundleURL.path)
     assert(library.getTemplate(named: "page") != nil, "Set your working directory to the root folder of this example to get it to work")
 
     let router = Router(context: MultipartRequestContext.self)
