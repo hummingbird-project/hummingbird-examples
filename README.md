@@ -28,6 +28,7 @@ Examples converted to Hummingbird 2.0
 - [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit
 - [proxy-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server) - Using AsyncHTTPClient to build a proxy server
 - [response-body-processing](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server) - Example showing how to process a response body in middleware.
+- [s3-file-provider](https://github.com/hummingbird-project/hummingbird-examples/tree/main/s3-file-provider) - Use a custom FileProvider to serve files from S3 with FileMiddleware.
 - [sessions](https://github.com/hummingbird-project/hummingbird-examples/tree/main/sessions) - Username/password and session authentication.
 - [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB.
 - [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent

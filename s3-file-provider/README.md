@@ -10,3 +10,7 @@ The example needs two environment variables:
 
 There is an optional environment variable:
 - `s3_file_path`: Prefix to add when generating S3 file path.
+
+When you run the app, as long as your AWS credentials allow it, you can go to a web browser and view the contents of your S3 bucket. 
+
+NB The S3 file provider does not recognise folders, so you will not get the automatic re-directing to `index.html` in folders.
