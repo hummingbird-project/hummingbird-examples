@@ -18,8 +18,7 @@ typealias AppRequestContext = BasicRequestContext
 
 ///  Build application
 /// - Parameter arguments: application arguments
-public func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
-    let environment = try await Environment().merging(with: .dotEnv())
+public func buildApplication(_ arguments: some AppArguments, environment: Environment) async throws -> some ApplicationProtocol {
     let logger = {
         var logger = Logger(label: "s3_file_provider")
         logger.logLevel = 

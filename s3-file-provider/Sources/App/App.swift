@@ -14,7 +14,8 @@ struct App: AsyncParsableCommand, AppArguments {
     var logLevel: Logger.Level?
 
     func run() async throws {
-        let app = try await buildApplication(self)
+        let environment = try await Environment().merging(with: .dotEnv())
+        let app = try await buildApplication(self, environment: environment)
         try await app.runService()
     }
 }

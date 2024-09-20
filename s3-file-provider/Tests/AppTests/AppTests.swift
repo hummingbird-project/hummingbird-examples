@@ -13,8 +13,9 @@ final class AppTests: XCTestCase {
     }
 
     func testApp() async throws {
+        let environment = try await Environment().merging(with: .dotEnv())
         let args = TestArguments()
-        let app = try await buildApplication(args)
+        let app = try await buildApplication(args, environment: environment)
         try await app.test(.router) { client in
             try await client.execute(uri: "/health", method: .get) { response in
                 XCTAssertEqual(response.status, .ok)
