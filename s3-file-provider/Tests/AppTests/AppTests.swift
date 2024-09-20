@@ -13,7 +13,9 @@ final class AppTests: XCTestCase {
     }
 
     func testApp() async throws {
-        let environment = try await Environment().merging(with: .dotEnv())
+        var environment = Environment()
+        environment.set("s3_file_region", value: "us-east-1")
+        environment.set("s3_file_bucket", value: "test-bucket")
         let args = TestArguments()
         let app = try await buildApplication(args, environment: environment)
         try await app.test(.router) { client in
