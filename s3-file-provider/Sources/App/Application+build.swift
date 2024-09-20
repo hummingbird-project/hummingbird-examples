@@ -23,8 +23,7 @@ public func buildApplication(_ arguments: some AppArguments, environment: Enviro
         var logger = Logger(label: "s3_file_provider")
         logger.logLevel = 
             arguments.logLevel ??
-            environment.get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ??
-            .info
+            environment.get("LOG_LEVEL").flatMap(Logger.Level.init) ?? .info
         return logger
     }()
 
