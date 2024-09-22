@@ -35,7 +35,8 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
 }
 
 /// Serves HTML pages
-struct WebController<Context: AuthRequestContext & RequestContext> {
+struct WebController {
+    typealias Context = TodosAuthRequestContext
     let fluent: Fluent
     let sessionAuthenticator: SessionAuthenticator<Context, UserRepository>
     let mustacheLibrary: MustacheLibrary
@@ -116,12 +117,10 @@ struct WebController<Context: AuthRequestContext & RequestContext> {
             password: details.password,
             db: fluent.db()
         ) {
-            // create session lasting 1 hour
-            let cookie = try await self.sessionAuthenticator.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
+            // create session
+            try context.sessions.setSession(user.requireID())
             // redirect to home page
-            var response = Response.redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
-            response.setCookie(cookie)
-            return response
+            return .redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
         } else {
             // login failed return login HTML with failed comment
             let html = self.loginTemplate.render(["failed": true], library: self.mustacheLibrary)
