@@ -26,6 +26,8 @@ public protocol AppArguments {
     var migrate: Bool { get }
 }
 
+typealias AppRequestContext = BasicSessionRequestContext<SRPSession>
+
 func buildApplication(_ args: some AppArguments) async throws -> some ApplicationProtocol {
     let logger = {
         var logger = Logger(label: "auth-srp")
@@ -51,21 +53,19 @@ func buildApplication(_ args: some AppArguments) async throws -> some Applicatio
         try await fluent.migrate()
     }
 
-    let router = Router(context: BasicAuthRequestContext.self)
-    router.add(middleware: RedirectMiddleware())
-    router.add(middleware: FileMiddleware(logger: logger))
-    router.add(middleware:
+    let router = Router(context: AppRequestContext.self)
+    router.addMiddleware {
         LogRequestsMiddleware(
             .info,
             includeHeaders: .all(),
             redactHeaders: []
         )
-    )
+        RedirectMiddleware()
+        FileMiddleware(logger: logger)
+        SessionMiddleware(sessionStorage: sessionStorage)
+    }
     router.addRoutes(
-        UserController(
-            fluent: fluent,
-            sessionStorage: sessionStorage
-        ).routes,
+        UserController(fluent: fluent).routes,
         atPath: "/api/user"
     )
     var application = Application(

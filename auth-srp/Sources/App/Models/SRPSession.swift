@@ -14,12 +14,12 @@
 
 import Foundation
 
-struct Session: Codable {
+struct SRPSession: Codable {
     enum AuthenticationState: Codable {
         case authenticating(A: String, B: String, serverSharedSecret: String)
         case authenticated
     }
 
-    let userId: UUID
+    let userID: UUID
     var state: AuthenticationState
 }

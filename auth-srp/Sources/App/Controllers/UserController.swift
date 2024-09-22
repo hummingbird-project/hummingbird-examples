@@ -23,11 +23,10 @@ import NIO
 import SRP
 
 struct UserController {
-    typealias Context = BasicAuthRequestContext
+    typealias Context = AppRequestContext
 
     let srp = SRPServer<Insecure.SHA1>(configuration: .init(.N2048))
     let fluent: Fluent
-    let sessionStorage: SessionStorage
 
     /// Return routes
     var routes: RouteCollection<Context> {
@@ -37,10 +36,10 @@ struct UserController {
         routes.post("verify", use: self.verifyLogin)
         routes.group()
             .add(
-                middleware: SessionAuthenticator(sessionStorage: self.sessionStorage) { (session: Session, _) in
+                middleware: SessionAuthenticator { (session: SRPSession, context) -> User? in
                     switch session.state {
                     case .authenticated:
-                        return try await User.find(session.userId, on: self.fluent.db())
+                        return try await User.find(session.userID, on: self.fluent.db())
                     case .authenticating:
                         return nil
                     }
@@ -48,14 +47,6 @@ struct UserController {
             )
             .get("loggedIn.html", use: self.loggedIn)
         return routes
-    }
-
-    /// SRP session. All keys are stored as base64
-    struct SRPSession: Codable {
-        let userId: UUID
-        let A: String // base64
-        let B: String // base64
-        let serverSharedSecret: String // base64
     }
 
     /// Create new user
@@ -93,7 +84,7 @@ struct UserController {
         let salt: String
     }
 
-    @Sendable func initLogin(request: Request, context: Context) async throws -> EditedResponse<InitLoginOutput> {
+    @Sendable func initLogin(request: Request, context: Context) async throws -> InitLoginOutput {
         let input = try await request.decode(as: InitLoginInput.self, context: context)
         let user = try await User.query(on: self.fluent.db())
             .filter(\.$name == input.name)
@@ -109,22 +100,18 @@ struct UserController {
         let serverSharedSecret = try self.srp.calculateSharedSecret(clientPublicKey: A, serverKeys: serverKeys, verifier: verifier)
 
         // store session data and return server public key, salt and session id
-        let session = try Session(
-            userId: user.requireID(),
+        let session = try SRPSession(
+            userID: user.requireID(),
             state: .authenticating(
                 A: String(base64Encoding: A.bytes),
                 B: String(base64Encoding: serverKeys.public.bytes),
                 serverSharedSecret: String(base64Encoding: serverSharedSecret.bytes)
             )
         )
-        let cookie = try await self.sessionStorage.save(session: session, expiresIn: .seconds(600))
+        context.sessions.setSession(session)
         return .init(
-            status: .ok,
-            headers: [.setCookie: cookie.description],
-            response: .init(
-                B: serverKeys.public.hex,
-                salt: user.salt
-            )
+            B: serverKeys.public.hex,
+            salt: user.salt
         )
     }
 
@@ -138,7 +125,7 @@ struct UserController {
 
     @Sendable func verifyLogin(request: Request, context: Context) async throws -> VerifyLoginOutput {
         let input = try await request.decode(as: VerifyLoginInput.self, context: context)
-        guard let session = try await self.sessionStorage.load(as: Session.self, request: request) else {
+        guard let session = context.sessions.session else {
             throw HTTPError(.unauthorized)
         }
         do {
@@ -154,8 +141,7 @@ struct UserController {
                 )
                 var session = session
                 session.state = .authenticated
-                // set session state to authenticated and return server proof
-                try await self.sessionStorage.update(session: session, expiresIn: .seconds(24 * 60 * 60), request: request)
+                context.sessions.setSession(session)
                 return VerifyLoginOutput(proof: SRPKey(serverProof).hex)
             case .authenticated:
                 throw HTTPError(.badRequest)
