@@ -38,30 +38,26 @@ struct HBWebAuthnController: RouterController {
         }
 
         return RouteGroup("user") {
-            Post("signup", handler: self.signin)
+            Post("signup", handler: self.signup)
             Get("login", handler: self.beginAuthentication)
-            Post("login") {
-                webAuthnSessionStateAuthenticator
-                self.finishAuthentication
-            }
+            Post("login", handler: self.finishAuthentication)
             Get("logout") {
                 self.webAuthnSessionAuthenticator
                 self.logout
             }
             RouteGroup("register") {
-                webAuthnSessionStateAuthenticator
                 Post("start", handler: self.beginRegistration)
                 Post("finish", handler: self.finishRegistration)
             }
         }
     }
 
-    struct SignInInput: Decodable {
+    struct SignUpInput: Decodable {
         let username: String
     }
 
-    @Sendable func signin(request: Request, context: Context) async throws -> Response {
-        let input = try await request.decode(as: SignInInput.self, context: context)
+    @Sendable func signup(request: Request, context: Context) async throws -> Response {
+        let input = try await request.decode(as: SignUpInput.self, context: context)
         guard try await User.query(on: self.fluent.db())
             .filter(\.$username == input.username)
             .first() == nil
@@ -70,34 +66,28 @@ struct HBWebAuthnController: RouterController {
         }
         let user = User(username: input.username)
         try await user.save(on: self.fluent.db())
-        let session = try WebAuthnSession.signedUp(userId: user.requireID())
-        let cookie = try await self.webAuthnSessionAuthenticator.sessionStorage.save(
-            session: session,
-            expiresIn: .seconds(600)
-        )
-        var response = Response.redirect(to: "/api/user/register/start", type: .temporary)
-        response.setCookie(cookie)
-        return response
+        try context.sessions.setSession(.signedUp(userId: user.requireID()), expiresIn: .seconds(600))
+        return .redirect(to: "/api/user/register/start", type: .temporary)
     }
 
     /// Begin registering a User
     @Sendable func beginRegistration(request: Request, context: Context) async throws -> PublicKeyCredentialCreationOptions {
-        let authenticationSession = try context.auth.require(AuthenticationSession.self)
-        guard case .signedUp(let user) = authenticationSession else { throw HTTPError(.unauthorized) }
+        let registrationSession = try await context.sessions.session?.session(fluent: self.fluent)
+        guard case .signedUp(let user) = registrationSession else { throw HTTPError(.unauthorized) }
         let options = try self.webauthn.beginRegistration(user: user.publicKeyCredentialUserEntity)
         let session = try WebAuthnSession(from: .registering(
             user: user,
             challenge: options.challenge
         ))
-        try await self.webAuthnSessionAuthenticator.sessionStorage.update(session: session, expiresIn: .seconds(600), request: request)
+        context.sessions.setSession(session, expiresIn: .seconds(600))
         return options
     }
 
     /// Finish registering a user
     @Sendable func finishRegistration(request: Request, context: Context) async throws -> HTTPResponse.Status {
-        let authenticationSession = try context.auth.require(AuthenticationSession.self)
+        let registrationSession = try await context.sessions.session?.session(fluent: self.fluent)
         let input = try await request.decode(as: RegistrationCredential.self, context: context)
-        guard case .registering(let user, let challenge) = authenticationSession else { throw HTTPError(.unauthorized) }
+        guard case .registering(let user, let challenge) = registrationSession else { throw HTTPError(.unauthorized) }
         do {
             let credential = try await self.webauthn.finishRegistration(
                 challenge: challenge,
@@ -112,26 +102,25 @@ struct HBWebAuthnController: RouterController {
             context.logger.error("\(error)")
             throw HTTPError(.unauthorized)
         }
+        context.sessions.clearSession()
         context.logger.info("Registration success, id: \(input.id)")
 
         return .ok
     }
 
     /// Begin Authenticating a user
-    @Sendable func beginAuthentication(_ request: Request, context: Context) async throws -> EditedResponse<PublicKeyCredentialRequestOptions> {
+    @Sendable func beginAuthentication(_ request: Request, context: Context) async throws -> PublicKeyCredentialRequestOptions {
         let options = try self.webauthn.beginAuthentication(timeout: 60000)
         let session = try WebAuthnSession(from: .authenticating(
             challenge: options.challenge
         ))
-        let cookie = try await self.webAuthnSessionAuthenticator.sessionStorage.save(session: session, expiresIn: .seconds(600))
-        var editedResponse = EditedResponse(response: options)
-        editedResponse.setCookie(cookie)
-        return editedResponse
+        context.sessions.setSession(session, expiresIn: .seconds(600))
+        return options
     }
 
     /// End Authenticating a user
     @Sendable func finishAuthentication(request: Request, context: Context) async throws -> HTTPResponse.Status {
-        let authenticationSession = try context.auth.require(AuthenticationSession.self)
+        let authenticationSession = try await context.sessions.session?.session(fluent: self.fluent)
         let input = try await request.decode(as: AuthenticationCredential.self, context: context)
         guard case .authenticating(let challenge) = authenticationSession else { throw HTTPError(.unauthorized) }
         let id = input.id.urlDecoded.asString()
@@ -155,20 +144,18 @@ struct HBWebAuthnController: RouterController {
             context.logger.error("\(error)")
             throw HTTPError(.unauthorized)
         }
-        let session = try WebAuthnSession.authenticated(userId: webAuthnCredential.user.requireID())
-        try await self.webAuthnSessionAuthenticator.sessionStorage.update(session: session, expiresIn: .seconds(24 * 60 * 60), request: request)
-
+        try context.sessions.setSession(.authenticated(userId: webAuthnCredential.user.requireID()), expiresIn: .seconds(24 * 60 * 60))
         return .ok
     }
 
     /// Test authenticated
     @Sendable func logout(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
-        try await self.webAuthnSessionAuthenticator.sessionStorage.delete(request: request)
+        context.sessions.clearSession()
         return .ok
     }
 }
 
-#if compiler(>=6.0)
+#if hasFeature(RetroactiveAttribute)
 extension PublicKeyCredentialCreationOptions: @retroactive ResponseEncodable {}
 extension PublicKeyCredentialRequestOptions: @retroactive ResponseEncodable {}
 #else
