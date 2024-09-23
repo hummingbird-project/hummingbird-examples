@@ -28,7 +28,7 @@ extension UploadModel {
         ).appendingPathComponent(self.filename)
 
         guard allowsOverwrite == false else { return fileURL }
-        guard FileManager.default.fileExists(atPath: fileURL.path) == false else {
+		guard (try? fileURL.checkResourceIsReachable()) == false else {
             throw HTTPError(.conflict)
         }
         return fileURL
