@@ -21,14 +21,14 @@ extension UploadModel {
     /// - Returns: the target directory for uploads
     func destinationURL(searchPath: FileManager.SearchPathDirectory = .documentDirectory, allowsOverwrite: Bool = false) throws -> URL {
         let fileURL = try FileManager.default.url(
-            for: .documentDirectory,
+            for: searchPath,
             in: .userDomainMask,
             appropriateFor: nil,
             create: true
         ).appendingPathComponent(self.filename)
 
         guard allowsOverwrite == false else { return fileURL }
-        guard FileManager.default.fileExists(atPath: fileURL.path) == false else {
+        guard (try? fileURL.checkResourceIsReachable()) == false else {
             throw HTTPError(.conflict)
         }
         return fileURL
