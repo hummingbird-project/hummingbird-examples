@@ -50,7 +50,6 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
 
     // sessions are stored in memory
     let memoryPersist = MemoryPersistDriver()
-    let sessionStorage = SessionStorage(memoryPersist)
 
     // load mustache template library
     let library = try await MustacheLibrary(directory: Bundle.module.bundleURL.path)
@@ -59,7 +58,6 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
     /// Authenticator storing the user
     let webAuthnSessionAuthenticator = SessionAuthenticator(
         users: UserRepository(fluent: fluent),
-        sessionStorage: sessionStorage,
         context: WebAuthnRequestContext.self
     )
     let router = RouterBuilder(context: WebAuthnRequestContext.self) {
@@ -67,6 +65,8 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
         LogRequestsMiddleware(.info)
         // add file middleware to server HTML files
         FileMiddleware(searchForIndexHtml: true, logger: logger)
+        // session loading
+        SessionMiddleware(storage: memoryPersist)
         // health check endpoint
         Get("/health") { _, _ -> HTTPResponse.Status in
             return .ok
