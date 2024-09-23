@@ -30,7 +30,6 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     if arguments.migrate || arguments.inMemoryDatabase {
         try await fluent.migrate()
     }
-    let sessionStorage = SessionStorage(fluentPersist)
     let userRepository = UserRepository(fluent: fluent)
     // router
     let router = Router(context: TodosAuthRequestContext.self)
@@ -44,7 +43,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
             allowHeaders: [.contentType],
             allowMethods: [.get, .options, .post, .delete, .patch]
         )
-        SessionMiddleware(sessionStorage: sessionStorage)
+        SessionMiddleware(storage: fluentPersist)
     }
     // add health check route
     router.get("/health") { _, _ in

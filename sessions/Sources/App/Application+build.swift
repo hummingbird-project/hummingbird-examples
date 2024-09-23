@@ -27,15 +27,12 @@ func buildApplication(_ arguments: AppArguments, configuration: ApplicationConfi
         try await fluent.migrate()
     }
 
-    // Sessions
-    let sessionStorage = SessionStorage(persist)
-
     let router = Router(context: AppRequestContext.self)
 
     // add logging middleware
     router.addMiddleware {
         LogRequestsMiddleware(.debug)
-        SessionMiddleware(sessionStorage: sessionStorage)
+        SessionMiddleware(storage: persist)
     }
 
     // routes
