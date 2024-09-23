@@ -21,7 +21,7 @@ extension UploadModel {
     /// - Returns: the target directory for uploads
     func destinationURL(searchPath: FileManager.SearchPathDirectory = .documentDirectory, allowsOverwrite: Bool = false) throws -> URL {
         let fileURL = try FileManager.default.url(
-            for: .documentDirectory,
+			for: searchPath,
             in: .userDomainMask,
             appropriateFor: nil,
             create: true
