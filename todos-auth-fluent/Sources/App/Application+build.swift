@@ -49,9 +49,10 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
         return HTTPResponse.Status.ok
     }
 
+    // Verify the working directory is correct
+    assert(FileManager.default.fileExists(atPath: "public/todos.js"), "Set your working directory to the root folder of this example to get it to work")
     // load mustache template library
-    let library = try await MustacheLibrary(directory: Bundle.module.bundleURL.path)
-    assert(library.getTemplate(named: "head") != nil, "Set your working directory to the root folder of this example to get it to work")
+    let library = try await MustacheLibrary(directory: Bundle.module.resourcePath!)
 
     let sessionAuthenticator = SessionAuthenticator(users: userRepository, sessionStorage: sessionStorage, context: TodosAuthRequestContext.self)
     // Add routes serving HTML files

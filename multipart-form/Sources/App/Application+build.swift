@@ -9,8 +9,10 @@ protocol AppArguments {
 }
 
 func buildApplication(_ args: AppArguments) async throws -> some ApplicationProtocol {
-    let library = try await MustacheLibrary(directory: Bundle.module.bundleURL.path)
-    assert(library.getTemplate(named: "page") != nil, "Set your working directory to the root folder of this example to get it to work")
+    // Verify the working directory is correct
+    assert(FileManager.default.fileExists(atPath: "public/images/hummingbird.png"), "Set your working directory to the root folder of this example to get it to work")
+    // load mustache template library
+    let library = try await MustacheLibrary(directory: Bundle.module.resourcePath!)
 
     let router = Router(context: MultipartRequestContext.self)
     router.add(middleware: FileMiddleware())
