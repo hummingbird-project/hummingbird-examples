@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OTP</title>
+<meta name="og:title" content="OTP"/>
+</head>
+<body>
+    <h1>Login</h1>
+    <p id="error" style="display: none;">Login failed</p>
+    <div id="enter-emailpassword">
+    <label for="email">Email</label><br/>
+    <input type="text" id="email" name="email"/><br/>
+    <label for="password">Password</label><br/>
+    <input type="password" id="password" name="password" autocomplete="current-password"/><br/>
+    <br>
+    <button type="button" id="login" onclick="login(event)">Login</button> 
+    </div>
+    <div id="enter-code" style="display: none;">
+    <label for="code">Code</label><br/>
+    <input type="code" id="code" name="code" autocomplete="one-time-code"/><br/>
+    <br>
+    <button type="button" id="login" onclick="loginWithCode(event)">Login</button> 
+    </div>
+    <p>
+    <a href="/signup.html">Sign Up</a>
+    </p>
+    <script>
+    let loginButton = document.getElementById("login");
+    let emailInput = document.getElementById("email");
+    let passwordInput = document.getElementById("password");
+    let codeInput = document.getElementById("code");
+    let errorDisplay = document.getElementById("error");
+    let emailPasswordDisplay = document.getElementById("enter-emailpassword");
+    let codeDisplay = document.getElementById("enter-code");
+    
+    /**
+    * Login user
+    */
+    async function login(event) {
+        event.preventDefault();
+        const details = {"email": emailInput.value, "password": passwordInput.value};
+        // Login
+        const credentials = btoa(`${details.email}:${details.password}`);
+        try {
+            let response = await fetch('/api/users/', {
+                method: 'POST',
+                headers: {
+                    "content-type": "application/json",
+                    "authorization": `Basic ${credentials}`
+                }
+            });
+            if (response.status == 200) {
+                window.location.href = "/"
+            } else if (response.status == 401 && response.headers.get("challenge") == "totp") {
+                emailPasswordDisplay.style.display = "none"
+                codeDisplay.style.display = "block"
+            }
+        } catch {
+            errorDisplay.style.display = "block"
+        }
+    }
+    /**
+    * Login with TOTP code
+    */
+    async function loginWithCode(event) {
+        event.preventDefault();
+        // Login
+        try {
+            let response = await fetch('/api/users/', {
+                method: 'POST',
+                headers: {
+                    "content-type": "application/json",
+                    "authorization": `totp ${codeInput.value}`
+                }
+            });
+            if (response.status == 200) {
+                window.location.href = "/"
+            } else {
+                errorDisplay.style.display = "block"
+            }
+        } catch {
+            errorDisplay.style.display = "block"
+        }
+    }
+    </script>
+</body>

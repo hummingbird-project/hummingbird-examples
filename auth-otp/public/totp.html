@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OTP</title>
+<meta name="og:title" content="OTP"/>
+<script type="text/javascript" src="js/qrcode.min.js"></script>
+</head>
+<body>
+    <h1>Add TOTP</h1>
+    <div id="qrcode"></div>
+    <p>Scan the QR Code with your authenticator application and enter the correct code.</p>
+    <p id="error" style="display: none;"></p>
+    <p>
+    <label for="code">Code</label><br/>
+    <input type="text" id="code" name="code" oninput="verifyCode(this.value)"/><br/>
+    <button type="button" id="login" onclick="addCodeToUser()">Ok</button> 
+    <script>
+    let errorDisplay = document.getElementById("error");
+    let session = ""
+    async function startTOTPVerify() {
+        try {
+            let response = await fetch('/api/users/totp/start', {
+                method: 'POST'
+            });
+            if (response.status == 200) {
+                session = response.headers.get("otp-session")
+                return response.text()
+            } else {
+                errorDisplay.style.display = "block"
+                errorDisplay.textContent = "Failed to get TOTP authentication URL"
+            }
+        } catch(error) {
+            errorDisplay.style.display = "block"
+            errorDisplay.textContent = `Failed to get TOTP authentication URL (${error.message})`
+        }
+    }
+    startTOTPVerify().then(url => {
+        if (url != undefined) {
+            new QRCode(document.getElementById("qrcode"), {
+                text: url,
+                width: 128,
+                height: 128,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    })
+
+    async function verifyCode(code) {
+        console.log(code)
+        if (code.length != 6) {
+            return
+        }
+        try {
+            let response = await fetch(`/api/users/totp/verify/${code}`, {
+                method: 'POST',
+                headers: {"otp-session": session }
+            });
+            if (response.status == 200) {
+                errorDisplay.style.display = "block"
+                errorDisplay.textContent = "Success"
+            } else {
+                errorDisplay.style.display = "block"
+                errorDisplay.textContent = "Verification of TOTP authentication URL failed"
+            }
+        } catch(error) {
+            errorDisplay.style.display = "block"
+            errorDisplay.textContent = `Verification of TOTP authentication URL failed (${error.message})`
+        }
+    }
+
+    async function addCodeToUser() {
+        try {
+            let response = await fetch(`/api/users/totp/complete`, {
+                method: 'POST',
+                headers: {"otp-session": session }
+            });
+            if (response.status == 200) {
+                window.location.href = "/"
+            } else {
+                errorDisplay.style.display = "block"
+                errorDisplay.textContent = "Failed to complete TOTP update"
+            }
+        } catch(error) {
+            errorDisplay.style.display = "block"
+            errorDisplay.textContent = "Failed to complete TOTP update"
+        }
+    }
+    </script>
+</body>
