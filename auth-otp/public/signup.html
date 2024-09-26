@@ -3,20 +3,25 @@
 <head>
 <title>OTP</title>
 <meta name="og:title" content="OTP"/>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <h1>Sign Up</h1>
-    <p class="error" style="display: none;">User already exists</p>
-    <p>
-    <label for="name">Name</label><br/>
-    <input type="text" id="name" name="name"/><br/>
-    <label for="email">Email</label><br/>
-    <input type="text" id="email" name="email"/><br/>
-    <label for="password">Password</label><br/>
-    <input type="password" id="password" name="password" autocomplete="new-password"/><br/>
-    <br>
-    <button type="submit" id="signup">Sign up</button> 
-    </p>
+<body class="bg-gray-100">
+    <div class="p-6 max-w-md mx-auto bg-white rounded-xl items-centered space-x-4 shadow-lg">
+        <div>
+            <img src="images/hummingbird.png" class="w-64 mx-auto"/>
+        </div>
+        <p class="error" style="display: none;">User already exists</p>
+        <p>
+        <label for="name">Name</label><br/>
+        <input type="text" id="name" name="name" class="border-2"/><br/>
+        <label for="email">Email</label><br/>
+        <input type="text" id="email" name="email" class="border-2"/><br/>
+        <label for="password">Password</label><br/>
+        <input type="password" id="password" name="password" autocomplete="new-password" class="border-2"/><br/>
+        <br>
+        <button type="submit" id="signup" class="shadow p-2 my-2">Sign up</button> 
+        </p>
+    </div>    
     <script>
     let signupButton = document.getElementById("signup");
     let nameInput = document.getElementById("name");
