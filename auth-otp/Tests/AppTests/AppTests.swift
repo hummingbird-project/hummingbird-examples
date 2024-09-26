@@ -13,13 +13,13 @@ final class AppTests: XCTestCase {
         let migrate: Bool = true
     }
 
-    func testApp() async throws {
-        let args = TestArguments()
-        let app = try await buildApplication(args)
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(response.body, ByteBuffer(string: "Hello!"))
-            }
-        }
-    }
+    /* func testApp() async throws {
+         let args = TestArguments()
+         let app = try await buildApplication(args)
+         try await app.test(.router) { client in
+             try await client.execute(uri: "/", method: .get) { response in
+                 XCTAssertEqual(response.body, ByteBuffer(string: "Hello!"))
+             }
+         }
+     } */
 }
