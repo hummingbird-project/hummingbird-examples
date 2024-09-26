@@ -13,9 +13,10 @@
     <p>
     <label for="code">Code</label><br/>
     <input type="text" id="code" name="code" oninput="verifyCode(this.value)"/><br/>
-    <button type="button" id="login" onclick="addCodeToUser()">Ok</button> 
+    <button type="button" id="addcode" disabled="true" onclick="addCodeToUser()">Ok</button> 
     <script>
     let errorDisplay = document.getElementById("error");
+    let addCodeButton = document.getElementById("addcode");
     let session = ""
     async function startTOTPVerify() {
         try {
@@ -58,9 +59,11 @@
                 headers: {"otp-session": session }
             });
             if (response.status == 200) {
+                addCodeButton.removeAttribute("disabled")
                 errorDisplay.style.display = "block"
-                errorDisplay.textContent = "Success"
+                errorDisplay.textContent = "Verified!"
             } else {
+                addCodeButton.setAttribute("disabled", "true")
                 errorDisplay.style.display = "block"
                 errorDisplay.textContent = "Verification of TOTP authentication URL failed"
             }
