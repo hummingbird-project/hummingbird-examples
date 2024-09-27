@@ -1,7 +1,7 @@
 import Foundation
 
 /// Interface for storing and editing todos
-protocol TodoRepository {
+protocol TodoRepository: Sendable {
     /// Create todo.
     func create(title: String, order: Int?, urlPrefix: String) async throws -> Todo
     /// Get todo
