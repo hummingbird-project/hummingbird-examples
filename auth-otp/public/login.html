@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OTP</title>
+<meta name="og:title" content="OTP"/>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="p-6 max-w-md mx-auto bg-white rounded-xl items-centered space-x-4 shadow-lg">
+        <div>
+            <img src="images/hummingbird.png" class="w-64 mx-auto"/>
+        </div>
+        <div id="enter-emailpassword">
+        <label for="email">Email</label><br/>
+        <input type="text" id="email" name="email" class="border-2"/><br/>
+        <label for="password">Password</label><br/>
+        <input type="password" id="password" name="password" autocomplete="current-password" class="border-2"/><br/>
+        <p id="error" style="display: none;" class="text-sm text-red-800">Login failed</p>
+        <br>
+        <button type="button" id="login" class="shadow p-2 my-2" onclick="login(event)">Login</button> 
+        </div>
+        <div id="enter-code" style="display: none;">
+        <label for="code">Code</label><br/>
+        <input type="code" id="code" name="code" autocomplete="one-time-code" class="border-2"/><br/>
+        <p id="code-error" style="display: none;" class="text-sm text-red-800">Login failed</p>
+        <br>
+        <button type="button" id="login" class="shadow p-2 my-2" onclick="loginWithCode(event)">Login</button> 
+        </div>
+        <p>
+        <a href="/signup.html" class="shadow p-2 my-2">Sign Up</a>
+        </p>
+    </div>
+    <script>
+    let loginButton = document.getElementById("login");
+    let emailInput = document.getElementById("email");
+    let passwordInput = document.getElementById("password");
+    let codeInput = document.getElementById("code");
+    let errorDisplay = document.getElementById("error");
+    let codeErrorDisplay = document.getElementById("code-error");
+    let emailPasswordDisplay = document.getElementById("enter-emailpassword");
+    let codeDisplay = document.getElementById("enter-code");
+    
+    /**
+    * Login user
+    */
+    async function login(event) {
+        event.preventDefault();
+        const details = {"email": emailInput.value, "password": passwordInput.value};
+        // Login
+        const credentials = btoa(`${details.email}:${details.password}`);
+        try {
+            let response = await fetch('/api/users/', {
+                method: 'POST',
+                headers: {
+                    "content-type": "application/json",
+                    "authorization": `Basic ${credentials}`
+                }
+            });
+            if (response.status == 200) {
+                window.location.href = "/"
+            } else if (response.status == 401 && response.headers.get("challenge") == "totp") {
+                errorDisplay.style.display = "none"
+                emailPasswordDisplay.style.display = "none"
+                codeDisplay.style.display = "block"
+            } else {
+                errorDisplay.style.display = "block"
+            }
+        } catch {
+            errorDisplay.style.display = "block"
+        }
+    }
+    /**
+    * Login with TOTP code
+    */
+    async function loginWithCode(event) {
+        event.preventDefault();
+        // Login
+        try {
+            let response = await fetch('/api/users/', {
+                method: 'POST',
+                headers: {
+                    "content-type": "application/json",
+                    "authorization": `totp ${codeInput.value}`
+                }
+            });
+            if (response.status == 200) {
+                window.location.href = "/"
+            } else {
+                codeErrorDisplay.style.display = "block"
+            }
+        } catch {
+            codeErrorDisplay.style.display = "block"
+        }
+    }
+    </script>
+</body>

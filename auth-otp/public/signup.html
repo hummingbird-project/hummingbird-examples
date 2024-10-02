@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OTP</title>
+<meta name="og:title" content="OTP"/>
+<script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="p-6 max-w-md mx-auto bg-white rounded-xl items-centered space-x-4 shadow-lg">
+        <div>
+            <img src="images/hummingbird.png" class="w-64 mx-auto"/>
+        </div>
+        <p class="error" style="display: none;">User already exists</p>
+        <p>
+        <label for="name">Name</label><br/>
+        <input type="text" id="name" name="name" class="border-2"/><br/>
+        <label for="email">Email</label><br/>
+        <input type="text" id="email" name="email" class="border-2"/><br/>
+        <label for="password">Password</label><br/>
+        <input type="password" id="password" name="password" autocomplete="new-password" class="border-2"/><br/>
+        <br>
+        <button type="submit" id="signup" class="shadow p-2 my-2">Sign up</button> 
+        </p>
+    </div>    
+    <script>
+    let signupButton = document.getElementById("signup");
+    let nameInput = document.getElementById("name");
+    let emailInput = document.getElementById("email");
+    let passwordInput = document.getElementById("password");
+    let errorDisplay = document.getElementById("error");
+    // add event listener for login
+    signupButton.addEventListener("click", async (event) => {
+        event.preventDefault();
+        await signup({
+            "name": nameInput.value,
+            "email": emailInput.value, 
+            "password": passwordInput.value
+        });
+    })
+    
+    /**
+    * Register user
+    */
+    async function signup(details) {
+        // Signup
+        try {
+            let response = await fetch('/api/users/', {
+                method: 'PUT',
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify(details)
+            });
+            if (response.status == 200) {
+                window.location.href = "/login.html"
+            } else {
+                errorDisplay.style.display = "block"
+            }
+        } catch {
+            errorDisplay.style.display = "block"
+        }
+    }
+    </script>
+</body>

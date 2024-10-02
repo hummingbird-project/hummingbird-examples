@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>OTP</title>
+<meta name="og:title" content="OTP"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script type="text/javascript" src="js/qrcode.min.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="p-6 max-w-md mx-auto bg-white rounded-xl items-center space-x-4 shadow-lg">
+        <div>
+            <img src="images/hummingbird.png" class="w-64 mx-auto"/>
+        </div>
+        <h1 class="text-xl">Add One Time Password</h1>
+        <p class="py-2">
+        <div id="qrcode"></div>
+        </p>
+        <p class="text-sm py-2">Scan the QR Code with your authenticator application and enter the correct code.</p>
+        <p id="error" style="display: none;" class="text-sm text-red-800"></p>
+        <p>
+        <label for="code">Code</label><br/>
+        <input type="text" id="code" name="code" oninput="verifyCode(this.value)" class="border-2"/><br/>
+        <button type="button" id="addcode" disabled="true" onclick="addCodeToUser()" class="shadow p-2 my-2 disabled:text-gray-300">Ok</button> 
+    </div>
+    <script>
+    let errorDisplay = document.getElementById("error");
+    let addCodeButton = document.getElementById("addcode");
+    let session = ""
+    async function startTOTPVerify() {
+        try {
+            let response = await fetch('/api/users/totp/start', {
+                method: 'POST'
+            });
+            if (response.status == 200) {
+                session = response.headers.get("otp-session")
+                return response.text()
+            } else {
+                errorDisplay.style.display = "block"
+                errorDisplay.textContent = "Failed to get TOTP authentication URL"
+            }
+        } catch(error) {
+            errorDisplay.style.display = "block"
+            errorDisplay.textContent = `Failed to get TOTP authentication URL (${error.message})`
+        }
+    }
+    startTOTPVerify().then(url => {
+        if (url != undefined) {
+            new QRCode(document.getElementById("qrcode"), {
+                text: url,
+                width: 128,
+                height: 128,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+        }
+    })
+
+    async function verifyCode(code) {
+        console.log(code)
+        if (code.length != 6) {
+            return
+        }
+        try {
+            let response = await fetch(`/api/users/totp/verify/${code}`, {
+                method: 'POST',
+                headers: {"otp-session": session }
+            });
+            if (response.status == 200) {
+                addCodeButton.removeAttribute("disabled")
+                errorDisplay.style.display = "block"
+                errorDisplay.textContent = "Verified!"
+            } else {
+                addCodeButton.setAttribute("disabled", "true")
+                errorDisplay.style.display = "block"
+                errorDisplay.textContent = "Verification of one time password code failed"
+            }
+        } catch(error) {
+            errorDisplay.style.display = "block"
+            errorDisplay.textContent = `Verification of one time password code failed (${error.message})`
+        }
+    }
+
+    async function addCodeToUser() {
+        try {
+            let response = await fetch(`/api/users/totp/complete`, {
+                method: 'POST',
+                headers: {"otp-session": session }
+            });
+            if (response.status == 200) {
+                window.location.href = "/"
+            } else {
+                errorDisplay.style.display = "block"
+                errorDisplay.textContent = "Failed to complete one time password update"
+            }
+        } catch(error) {
+            errorDisplay.style.display = "block"
+            errorDisplay.textContent = "Failed to complete one time password update"
+        }
+    }
+    </script>
+</body>
