@@ -21,13 +21,11 @@ import HummingbirdFluent
 import NIO
 
 struct UserController {
-    typealias Context = BasicAuthRequestContext
+    typealias Context = AppRequestContext
     let fluent: Fluent
-    let sessionStorage: SessionStorage
 
-    init(fluent: Fluent, sessionStorage: SessionStorage) {
+    init(fluent: Fluent) {
         self.fluent = fluent
-        self.sessionStorage = sessionStorage
     }
 
     /// Add routes for user controller
@@ -45,7 +43,7 @@ struct UserController {
             .post(use: self.login)
         group
             .add(
-                middleware: SessionAuthenticator(sessionStorage: self.sessionStorage) { (id: UUID, _) in
+                middleware: SessionAuthenticator { id, context in
                     try await User.find(id, on: self.fluent.db())
                 }
             )
@@ -69,12 +67,12 @@ struct UserController {
     }
 
     /// Login user and create session
-    @Sendable func login(_ request: Request, context: Context) async throws -> Response {
+    @Sendable func login(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         // get authenticated user and return
         let user = try context.auth.require(User.self)
-        // create session lasting 1 hour
-        let cookie = try await self.sessionStorage.save(session: user.id, expiresIn: .seconds(3600))
-        return .init(status: .ok, headers: [.setCookie: cookie.description])
+        // create session
+        try context.sessions.setSession(user.requireID())
+        return .ok
     }
 
     /// Get current logged in user
