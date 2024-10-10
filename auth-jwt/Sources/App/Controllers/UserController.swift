@@ -21,7 +21,8 @@ import HummingbirdFluent
 import JWTKit
 import NIO
 
-struct UserController<Context: AuthRequestContext & RequestContext> {
+struct UserController {
+    typealias Context = AppRequestContext
     let jwtKeyCollection: JWTKeyCollection
     let kid: JWKIdentifier
     let fluent: Fluent
@@ -65,7 +66,7 @@ struct UserController<Context: AuthRequestContext & RequestContext> {
     /// Login user and return JWT
     @Sendable func login(_ request: Request, context: Context) async throws -> [String: String] {
         // get authenticated user and return
-        let user = try context.auth.require(User.self)
+        guard let user = context.identity else { throw HTTPError(.unauthorized) }
         let payload = JWTPayloadData(
             subject: .init(value: user.name),
             expiration: .init(value: Date(timeIntervalSinceNow: 12 * 60 * 60))
