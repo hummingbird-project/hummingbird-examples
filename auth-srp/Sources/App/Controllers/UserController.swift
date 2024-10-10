@@ -152,7 +152,7 @@ struct UserController {
     }
 
     @Sendable func loggedIn(request: Request, context: Context) throws -> String {
-        let user = try context.auth.require(User.self)
+        guard let user = context.identity else { throw HTTPError(.unauthorized) }
         return "Logged in as \(user.name)"
     }
 }
