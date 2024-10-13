@@ -2,9 +2,6 @@ import Hummingbird
 import HummingbirdAuth
 import SotoCognitoAuthenticationKit
 
-// extension CognitoAuthenticateResponse: Authenticatable {}
-// extension CognitoAccessToken: Authenticatable {}
-
 /// Authenticator for Cognito username and password
 struct CognitoBasicAuthenticator: AuthenticatorMiddleware {
     typealias Context = AuthCognitoRequestContext
