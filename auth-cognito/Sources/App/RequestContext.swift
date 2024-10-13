@@ -7,9 +7,15 @@ import SotoCognitoAuthenticationKit
 
 /// Request context
 struct AuthCognitoRequestContext: AuthRequestContext, RemoteAddressRequestContext, RouterRequestContext, RequestContext {
+    enum Identity {
+        case authenticateResponse(CognitoAuthenticateResponse)
+        case accessToken(CognitoAccessToken)
+        case user(User)
+    }
+
     var coreContext: CoreRequestContextStorage
     /// required by authentication framework
-    var auth: LoginCache
+    var identity: Identity?
     /// required by result builder router
     var routerContext: RouterBuilderContext
     let channel: Channel?
@@ -22,7 +28,7 @@ struct AuthCognitoRequestContext: AuthRequestContext, RemoteAddressRequestContex
     /// initializer required by live server
     init(source: Source) {
         self.coreContext = .init(source: source)
-        self.auth = .init()
+        self.identity = nil
         self.routerContext = .init()
         self.channel = source.channel
     }

@@ -2,7 +2,7 @@ import Hummingbird
 import HummingbirdAuth
 import SotoCognitoAuthenticationKit
 
-struct User: ResponseCodable & Authenticatable {
+struct User: ResponseCodable {
     let username: String
     let email: String
 
