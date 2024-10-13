@@ -86,14 +86,6 @@ extension User {
     }
 }
 
-/// Authenticatable data from User
-struct UserAuthenticatable: Authenticatable {
-    let id: UUID?
-    let email: String
-    let name: String
-    let passwordHash: String
-}
-
 /// Create user request object decoded from HTTP body
 struct CreateUserRequest: Decodable {
     let name: String

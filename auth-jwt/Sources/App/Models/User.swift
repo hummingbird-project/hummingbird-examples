@@ -21,7 +21,7 @@ import HummingbirdBasicAuth
 import NIOPosix
 
 /// Database description of a user
-final class User: Model, BasicAuthenticatorUser, @unchecked Sendable {
+final class User: Model, PasswordAuthenticatable, @unchecked Sendable {
     static let schema = "user"
 
     @ID(key: .id)

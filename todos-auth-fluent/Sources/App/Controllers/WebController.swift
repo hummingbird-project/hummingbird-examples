@@ -26,7 +26,7 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
         context: Context,
         next: (Request, Context) async throws -> Output
     ) async throws -> Response {
-        if context.auth.has(User.self) {
+        if context.identity != nil {
             return try await next(request, context)
         } else {
             return .redirect(to: "\(self.to)?from=\(request.uri)", type: .found)
@@ -85,7 +85,7 @@ struct WebController {
     /// Home page listing todos and with add todo UI
     @Sendable func home(request: Request, context: Context) async throws -> HTML {
         // get user and list of todos attached to user from database
-        let user = try context.auth.require(User.self)
+        guard let user = context.identity else { throw HTTPError(.unauthorized) }
         let todos = try await user.$todos.get(on: self.fluent.db())
         // Render todos template and return as HTML
         let object: [String: Any] = [

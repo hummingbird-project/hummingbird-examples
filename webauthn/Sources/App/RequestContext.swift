@@ -6,13 +6,13 @@ import NIOCore
 
 struct WebAuthnRequestContext: AuthRequestContext, RouterRequestContext, SessionRequestContext {
     var coreContext: CoreRequestContextStorage
-    var auth: LoginCache
+    var identity: User?
     var routerContext: RouterBuilderContext
     let sessions: SessionContext<WebAuthnSession>
 
     init(source: Source) {
         self.coreContext = .init(source: source)
-        self.auth = .init()
+        self.identity = nil
         self.routerContext = .init()
         self.sessions = .init()
     }

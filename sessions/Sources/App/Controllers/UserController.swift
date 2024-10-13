@@ -69,7 +69,7 @@ struct UserController {
     /// Login user and create session
     @Sendable func login(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         // get authenticated user and return
-        let user = try context.auth.require(User.self)
+        guard let user = context.identity else { throw HTTPError(.unauthorized) }
         // create session
         try context.sessions.setSession(user.requireID())
         return .ok
@@ -78,7 +78,7 @@ struct UserController {
     /// Get current logged in user
     @Sendable func current(_ request: Request, context: Context) throws -> UserResponse {
         // get authenticated user and return
-        let user = try context.auth.require(User.self)
+        guard let user = context.identity else { throw HTTPError(.unauthorized) }
         return try UserResponse(id: user.requireID(), name: user.name)
     }
 }
