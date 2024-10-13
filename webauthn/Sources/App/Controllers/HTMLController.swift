@@ -22,13 +22,11 @@ import Mustache
 struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
     let to: String
     func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
-        // check if authenticated
-        if context.auth.has(User.self) {
-            return try await next(request, context)
-        } else {
+        guard context.identity != nil else {
             // if not authenticated then redirect to login page
             return .redirect(to: "\(self.to)?from=\(request.uri)", type: .found)
         }
+        return try await next(request, context)
     }
 }
 
@@ -67,7 +65,9 @@ struct HTMLController: RouterController {
     /// Home page listing todos and with add todo UI
     @Sendable func home(request: Request, context: Context) async throws -> HTML {
         // get user
-        let user = try context.auth.require(User.self)
+        guard let user = context.identity else {
+            throw HTTPError(.unauthorized)
+        }
         // Render home template and return as HTML
         let object: [String: Any] = [
             "name": user.username,
