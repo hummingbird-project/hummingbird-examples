@@ -10,7 +10,7 @@ protocol AppArguments {
     var inMemoryDatabase: Bool { get }
 }
 
-typealias AppRequestContext = BasicSessionRequestContext<UUID>
+typealias AppRequestContext = BasicSessionRequestContext<UUID, User>
 
 /// build application
 func buildApplication(_ arguments: AppArguments, configuration: ApplicationConfiguration) async throws -> some ApplicationProtocol {

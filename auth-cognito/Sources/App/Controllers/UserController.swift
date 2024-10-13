@@ -5,9 +5,9 @@ import HummingbirdRouter
 import SotoCognitoAuthenticationKit
 import SotoCognitoAuthenticationSRP
 
-extension CognitoAccessToken: ResponseEncodable {}
-extension CognitoAuthenticateResponse: ResponseEncodable {}
-extension CognitoCreateUserResponse: ResponseEncodable {}
+extension CognitoAccessToken: @retroactive ResponseEncodable {}
+extension CognitoAuthenticateResponse: @retroactive ResponseEncodable {}
+extension CognitoCreateUserResponse: @retroactive ResponseEncodable {}
 
 struct UserController {
     typealias Context = AuthCognitoRequestContext
@@ -38,7 +38,7 @@ struct UserController {
                 self.login
             }
             Get("id") {
-                CognitoIdAuthenticator<User>(
+                CognitoUserAuthenticator(
                     cognitoAuthenticatable: self.cognitoAuthenticatable
                 )
                 self.authenticateId
@@ -148,10 +148,10 @@ struct UserController {
         _ request: Request,
         context: Context
     ) throws -> CognitoAuthenticateResponse {
-        let authenticateResponse = try context.auth.require(
-            CognitoAuthenticateResponse.self
-        )
-        return authenticateResponse
+        guard case .authenticateResponse(let response) = context.identity else {
+            throw HTTPError(.unauthorized)
+        }
+        return response
     }
 
     /// Logs a user in using Secure Remote Password, returning a token for accessing protected endpoints.
@@ -159,10 +159,10 @@ struct UserController {
         _ request: Request,
         context: Context
     ) throws -> CognitoAuthenticateResponse {
-        let authenticateResponse = try context.auth.require(
-            CognitoAuthenticateResponse.self
-        )
-        return authenticateResponse
+        guard case .authenticateResponse(let response) = context.identity else {
+            throw HTTPError(.unauthorized)
+        }
+        return response
     }
 
     /// respond to authentication challenge
@@ -214,7 +214,9 @@ struct UserController {
         _ request: Request,
         context: Context
     ) throws -> CognitoAccessToken {
-        let token = try context.auth.require(CognitoAccessToken.self)
+        guard case .accessToken(let token) = context.identity else {
+            throw HTTPError(.unauthorized)
+        }
         return token
     }
 
@@ -226,7 +228,9 @@ struct UserController {
         struct AttributesRequest: Codable {
             let attributes: [String: String]
         }
-        let token = try context.auth.require(CognitoAccessToken.self)
+        guard case .accessToken(let token) = context.identity else {
+            throw HTTPError(.unauthorized)
+        }
         let attr = try await request.decode(as: AttributesRequest.self, context: context)
         try await self.cognitoAuthenticatable.updateUserAttributes(
             username: token.username,
@@ -240,8 +244,10 @@ struct UserController {
         _ request: Request,
         context: Context
     ) throws -> User {
-        let token = try context.auth.require(User.self)
-        return token
+        guard case .user(let user) = context.identity else {
+            throw HTTPError(.unauthorized)
+        }
+        return user
     }
 
     /// refresh tokens
@@ -277,7 +283,9 @@ struct UserController {
         _ request: Request,
         context: Context
     ) async throws -> MfaGetTokenResponse {
-        let token = try context.auth.require(CognitoAccessToken.self)
+        guard case .accessToken(let token) = context.identity else {
+            throw HTTPError(.unauthorized)
+        }
         guard let accessToken = request.headers.bearer else {
             throw HTTPError(.unauthorized)
         }
@@ -355,7 +363,9 @@ struct UserController {
         _ request: Request,
         context: Context
     ) async throws -> HTTPResponse.Status {
-        let token = try context.auth.require(CognitoAccessToken.self)
+        guard case .accessToken(let token) = context.identity else {
+            throw HTTPError(.unauthorized)
+        }
         let setUserMfaRequest = CognitoIdentityProvider.AdminSetUserMFAPreferenceRequest(
             softwareTokenMfaSettings: .init(
                 enabled: true,
@@ -378,8 +388,9 @@ struct UserController {
         struct Password: Decodable {
             let password: String
         }
-
-        let token = try context.auth.require(CognitoAccessToken.self)
+        guard case .accessToken(let token) = context.identity else {
+            throw HTTPError(.unauthorized)
+        }
         let password = try await request.decode(
             as: Password.self,
             context: context

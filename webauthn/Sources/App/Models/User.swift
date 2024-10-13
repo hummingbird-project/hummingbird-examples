@@ -5,7 +5,7 @@ import HummingbirdAuth
 import HummingbirdFluent
 import WebAuthn
 
-final class User: Model, ResponseEncodable, @unchecked Sendable, Authenticatable {
+final class User: Model, ResponseEncodable, @unchecked Sendable {
     static let schema = "user"
 
     @ID(key: .id)

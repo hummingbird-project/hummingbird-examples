@@ -26,7 +26,7 @@ public protocol AppArguments {
     var migrate: Bool { get }
 }
 
-typealias AppRequestContext = BasicSessionRequestContext<SRPSession>
+typealias AppRequestContext = BasicSessionRequestContext<SRPSession, User>
 
 func buildApplication(_ args: some AppArguments) async throws -> some ApplicationProtocol {
     let logger = {
@@ -46,8 +46,6 @@ func buildApplication(_ args: some AppArguments) async throws -> some Applicatio
 
     // set up persist driver before migrate
     let persist = await FluentPersistDriver(fluent: fluent)
-    // Sessions
-    let sessionStorage = SessionStorage(persist)
 
     if args.migrate || args.inMemoryDatabase {
         try await fluent.migrate()
@@ -62,7 +60,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some Applicatio
         )
         RedirectMiddleware()
         FileMiddleware(logger: logger)
-        SessionMiddleware(sessionStorage: sessionStorage)
+        SessionMiddleware(storage: persist)
     }
     router.addRoutes(
         UserController(fluent: fluent).routes,

@@ -6,12 +6,12 @@ import NIOCore
 
 struct TodosAuthRequestContext: AuthRequestContext, SessionRequestContext, RequestContext {
     var coreContext: CoreRequestContextStorage
-    var auth: LoginCache
+    var identity: User?
     var sessions: SessionContext<UUID>
 
     init(source: Source) {
         self.coreContext = .init(source: source)
-        self.auth = .init()
+        self.identity = nil
         self.sessions = .init()
     }
 
