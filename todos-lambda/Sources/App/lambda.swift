@@ -21,6 +21,8 @@ import SotoDynamoDB
 
 @main
 struct AppLambda: APIGatewayLambdaFunction {
+    typealias Context = BasicLambdaRequestContext<APIGatewayRequest>
+    
     let awsClient: AWSClient
     let logger: Logger
 
