@@ -18,15 +18,15 @@ import HummingbirdAuth
 import HummingbirdFluent
 import WebAuthn
 
-/// Authentication state stored in login cache
-enum AuthenticationSession: Sendable, Codable, Authenticatable, ResponseEncodable {
+/// Authentication session state
+enum AuthenticationSession: Sendable, Codable {
     case signedUp(user: User)
     case registering(user: User, challenge: [UInt8])
     case authenticating(challenge: [UInt8])
     case authenticated(user: User)
 }
 
-/// Session object saved to storage
+/// Session object extracted from session state
 enum WebAuthnSession: Codable {
     case signedUp(userId: UUID)
     case registering(userId: UUID, encodedChallenge: String)

@@ -35,7 +35,8 @@ struct JWTPayloadData: JWTPayload, Equatable {
     }
 }
 
-struct JWTAuthenticator<Context: AuthRequestContext & RequestContext>: AuthenticatorMiddleware, @unchecked Sendable {
+struct JWTAuthenticator: AuthenticatorMiddleware, @unchecked Sendable {
+    typealias Context = AppRequestContext
     let jwtKeyCollection: JWTKeyCollection
     let fluent: Fluent
 

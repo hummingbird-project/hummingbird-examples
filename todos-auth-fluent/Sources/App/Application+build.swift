@@ -30,20 +30,21 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     if arguments.migrate || arguments.inMemoryDatabase {
         try await fluent.migrate()
     }
-    let sessionStorage = SessionStorage(fluentPersist)
     let userRepository = UserRepository(fluent: fluent)
     // router
     let router = Router(context: TodosAuthRequestContext.self)
 
     // add logging middleware
-    router.add(middleware: LogRequestsMiddleware(.info))
-    // add file middleware to server css and js files
-    router.add(middleware: FileMiddleware(logger: logger))
-    router.add(middleware: CORSMiddleware(
-        allowOrigin: .originBased,
-        allowHeaders: [.contentType],
-        allowMethods: [.get, .options, .post, .delete, .patch]
-    ))
+    router.addMiddleware {
+        LogRequestsMiddleware(.info)
+        FileMiddleware(logger: logger)
+        CORSMiddleware(
+            allowOrigin: .originBased,
+            allowHeaders: [.contentType],
+            allowMethods: [.get, .options, .post, .delete, .patch]
+        )
+        SessionMiddleware(storage: fluentPersist)
+    }
     // add health check route
     router.get("/health") { _, _ in
         return HTTPResponse.Status.ok
@@ -54,7 +55,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     // load mustache template library
     let library = try await MustacheLibrary(directory: Bundle.module.resourcePath!)
 
-    let sessionAuthenticator = SessionAuthenticator(users: userRepository, sessionStorage: sessionStorage, context: TodosAuthRequestContext.self)
+    let sessionAuthenticator = SessionAuthenticator(users: userRepository, context: TodosAuthRequestContext.self)
     // Add routes serving HTML files
     WebController(mustacheLibrary: library, fluent: fluent, sessionAuthenticator: sessionAuthenticator).addRoutes(to: router)
     // Add api routes managing todos

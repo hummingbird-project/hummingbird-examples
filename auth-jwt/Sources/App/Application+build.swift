@@ -14,6 +14,8 @@ protocol AppArguments {
     var migrate: Bool { get }
 }
 
+typealias AppRequestContext = BasicAuthRequestContext<User>
+
 func buildApplication(_ args: AppArguments) async throws -> some ApplicationProtocol {
     let env = try await Environment().merging(with: .dotEnv())
     let logger = {
@@ -36,7 +38,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
         try await fluent.migrate()
     }
 
-    let jwtAuthenticator: JWTAuthenticator<BasicAuthRequestContext>
+    let jwtAuthenticator: JWTAuthenticator
     let jwtLocalSignerKid = JWKIdentifier("_hb_local_")
     if let jwksUrl = env.get("JWKS_URL") {
         do {
@@ -53,7 +55,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
     }
     await jwtAuthenticator.useSigner(hmac: "my-secret-key", digestAlgorithm: .sha256, kid: jwtLocalSignerKid)
 
-    let router = Router(context: BasicAuthRequestContext.self)
+    let router = Router(context: AppRequestContext.self)
     router.add(middleware: LogRequestsMiddleware(.debug))
     router.add(middleware:
         CORSMiddleware(
@@ -73,7 +75,7 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
     router.group("auth")
         .add(middleware: jwtAuthenticator)
         .get("/") { request, context in
-            let user = try context.auth.require(User.self)
+            guard let user = context.identity else { throw HTTPError(.unauthorized) }
             return "Authenticated (Subject: \(user.name))"
         }
 
