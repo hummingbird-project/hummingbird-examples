@@ -42,7 +42,7 @@ func buildApplication(
         UserController(
             cognitoAuthenticatable: authenticatable,
             cognitoIdentityProvider: cognitoIdentityProvider
-        ).endpoints
+        )
     }
 
     var app = Application(router: router)

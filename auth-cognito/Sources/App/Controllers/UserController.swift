@@ -5,17 +5,17 @@ import HummingbirdRouter
 import SotoCognitoAuthenticationKit
 import SotoCognitoAuthenticationSRP
 
-extension CognitoAccessToken: ResponseEncodable {}
-extension CognitoAuthenticateResponse: ResponseEncodable {}
-extension CognitoCreateUserResponse: ResponseEncodable {}
+extension CognitoAccessToken: @retroactive ResponseEncodable {}
+extension CognitoAuthenticateResponse: @retroactive ResponseEncodable {}
+extension CognitoCreateUserResponse: @retroactive ResponseEncodable {}
 
-struct UserController {
+struct UserController: RouterController {
     typealias Context = AuthCognitoRequestContext
 
     let cognitoAuthenticatable: CognitoAuthenticatable
     let cognitoIdentityProvider: CognitoIdentityProvider
 
-    var endpoints: some RouterMiddleware<Context> {
+    var body: some RouterMiddleware<Context> {
         RouteGroup("user") {
             Put(handler: self.create)
             Patch(handler: self.resend)

@@ -2,8 +2,8 @@ import Hummingbird
 import HummingbirdAuth
 import SotoCognitoAuthenticationKit
 
-extension CognitoAuthenticateResponse: Authenticatable {}
-extension CognitoAccessToken: Authenticatable {}
+extension CognitoAuthenticateResponse: @retroactive Authenticatable {}
+extension CognitoAccessToken: @retroactive Authenticatable {}
 
 /// Authenticator for Cognito username and password
 struct CognitoBasicAuthenticator: AuthenticatorMiddleware {
