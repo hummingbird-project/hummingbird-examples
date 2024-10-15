@@ -33,7 +33,7 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
 }
 
 /// Serves HTML pages
-struct HTMLController {
+struct HTMLController: RouterController {
     typealias Context = WebAuthnRequestContext
 
     let homeTemplate: MustacheTemplate
@@ -56,7 +56,7 @@ struct HTMLController {
     }
 
     // return Route for home page
-    var endpoints: some RouterMiddleware<Context> {
+    var body: some RouterMiddleware<Context> {
         Get("/") {
             self.webAuthnSessionAuthenticator
             RedirectMiddleware(to: "/login.html")
