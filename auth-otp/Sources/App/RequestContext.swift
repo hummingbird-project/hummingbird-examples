@@ -9,12 +9,12 @@ struct AppSessionRequestContext: SessionRequestContext, AuthRequestContext {
     typealias Source = AppRequestContext
 
     var sessions: SessionContext<Session>
-    var auth: LoginCache
+    var identity: User?
     var coreContext: CoreRequestContextStorage
 
     init(source: Source) {
         self.coreContext = source.coreContext
-        self.auth = .init()
+        self.identity = nil
         self.sessions = .init()
     }
 }
