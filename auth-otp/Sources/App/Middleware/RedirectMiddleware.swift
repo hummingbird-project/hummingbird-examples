@@ -9,7 +9,7 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
         context: Context,
         next: (Request, Context) async throws -> Output
     ) async throws -> Response {
-        if context.auth.has(User.self) {
+        if context.identity != nil {
             return try await next(request, context)
         } else {
             return .redirect(to: "\(self.to)?from=\(request.uri)", type: .found)

@@ -33,8 +33,9 @@ struct TOTPController<Users: UserRepository, Storage: PersistDriver> {
                 let code = try context.parameters.require("code", as: Int.self)
                 guard let otpSession = request.headers[.otpSession] else { return .badRequest }
                 guard var otpVerificationSession = try await self.storage.get(key: otpSession, as: TOTPVerificationSession.self) else { return .notFound }
-                let computedTOTP = TOTP(secret: otpVerificationSession.secret).compute(date: .now - 15.0)
-                let computedTOTP2 = TOTP(secret: otpVerificationSession.secret).compute(date: .now + 15.0)
+                let now = Date.now
+                let computedTOTP = TOTP(secret: otpVerificationSession.secret).compute(date: now - 15.0)
+                let computedTOTP2 = TOTP(secret: otpVerificationSession.secret).compute(date: now + 15.0)
                 guard code == computedTOTP || code == computedTOTP2 else {
                     return .unauthorized
                 }
@@ -43,7 +44,7 @@ struct TOTPController<Users: UserRepository, Storage: PersistDriver> {
                 return .ok
             }
             .post("complete") { request, context -> HTTPResponse.Status in
-                let user = try context.auth.require(User.self)
+                guard let user = context.identity else { throw HTTPError(.unauthorized) }
                 guard let otpSession = request.headers[.otpSession] else { return .badRequest }
                 guard let otpVerificationSession = try await self.storage.get(key: otpSession, as: TOTPVerificationSession.self) else {
                     return .notFound
@@ -55,13 +56,13 @@ struct TOTPController<Users: UserRepository, Storage: PersistDriver> {
                 return .ok
             }
             .delete { request, context -> HTTPResponse.Status in
-                let user = try context.auth.require(User.self)
+                guard let user = context.identity else { throw HTTPError(.unauthorized) }
                 guard user.otpSecret != nil else { return .ok }
                 try await self.users.removeTOTP(userID: user.id, logger: context.logger)
                 return .ok
             }
             .get { request, context in
-                let user = try context.auth.require(User.self)
+                guard let user = context.identity else { throw HTTPError(.unauthorized) }
                 guard let secret = user.otpSecret else { throw HTTPError(.noContent) }
                 return TOTP(secret: secret).createAuthenticatorURL(label: "auth-otp")
             }

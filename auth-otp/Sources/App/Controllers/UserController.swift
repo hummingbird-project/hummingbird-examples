@@ -17,7 +17,7 @@ struct UserController<Users: UserRepository, Storage: PersistDriver>: Sendable {
                 TOTPAuthenticator(users: self.users)
             }
             .post { _, context in
-                let user = try context.auth.require(User.self)
+                guard let user = context.identity else { throw HTTPError(.unauthorized) }
                 let session = context.sessions.session
                 if user.otpSecret != nil {
                     switch session {

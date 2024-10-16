@@ -25,14 +25,14 @@ struct WebController<Users: UserRepository, Storage: PersistDriver> {
         routes.group("", context: AppSessionRequestContext.self)
             .addMiddleware {
                 SessionMiddleware(storage: self.storage)
-                SessionAuthenticator(users: users)
+                SessionAuthenticator(users: self.users)
                 RedirectMiddleware(to: "/login.html")
             }
             .get { _, context in
-                let user = try context.auth.require(User.self)
+                guard let user = context.identity else { throw HTTPError(.unauthorized) }
                 let context: [String: Any] = [
-                    "name": user.name, 
-                    "addOTP": user.otpSecret == nil
+                    "name": user.name,
+                    "addOTP": user.otpSecret == nil,
                 ]
                 return HTML(self.indexTemplate.render(context, library: self.mustacheLibrary))
             }
