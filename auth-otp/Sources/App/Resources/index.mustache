@@ -1,0 +1,63 @@
+{{<base}}
+    {{$body}}
+    <h1 class="text-lg">Hello {{name}}</h1>
+    {{#addOTP}}
+    <p>
+    <input id="addTOTP" type="button" value="Add One Time Password" onClick="addTOTP()" class="shadow p-2 my-2"/>
+    </p>
+    {{/addOTP}}
+    {{^addOTP}}
+    <p>
+    <input id="removeTOTP" type="button" value="Remove One Time Password" onClick="removeTOTP()" class="shadow p-2 my-2" />
+    </p>
+    {{/addOTP}}
+    <p>
+    <input id="logout" type="button" value="Logout" onClick="logout()" class="shadow p-2 my-2" />
+    </p>
+    {{/body}}
+    {{$script}}
+    <script>
+    
+    /**
+    * Logout user
+    */
+    async function logout() {
+        // Log out
+        try {
+            let response = await fetch('/api/users/logout', {
+                method: 'POST',
+                headers: { "content-type": "application/json" }
+            });
+            if (response.status == 200) {
+                window.location.href = "/login.html"
+            }
+        } catch {
+            window.location.href = "/login.html"
+        }
+    }
+
+    /**
+    * Add TOTP secret
+    */
+    async function addTOTP() {
+        window.location.href = "/totp.html"
+    }
+
+    /**
+    * Remove TOTP secret
+    */
+    async function removeTOTP() {
+        try {
+            let response = await fetch('/api/users/totp', {
+                method: 'DELETE'
+            });
+            if (response.status == 200) {
+                window.location.href = "/"
+            }
+        } catch {
+            window.location.href = "/"
+        }
+    }
+    </script>
+    {{/script}}
+{{/base}}
