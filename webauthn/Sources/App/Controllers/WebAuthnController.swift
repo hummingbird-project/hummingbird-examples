@@ -20,7 +20,7 @@ import HummingbirdFluent
 import HummingbirdRouter
 import WebAuthn
 
-struct HBWebAuthnController {
+struct HBWebAuthnController: RouterController {
     typealias Context = WebAuthnRequestContext
 
     let webauthn: WebAuthnManager
@@ -28,7 +28,7 @@ struct HBWebAuthnController {
     let webAuthnSessionAuthenticator: SessionAuthenticator<Context, UserRepository>
 
     // return RouteGroup with user login endpoints
-    var endpoints: some RouterMiddleware<Context> {
+    var body: some RouterMiddleware<Context> {
         /// Authenticator storing the WebAuthn session state
         let webAuthnSessionStateAuthenticator = SessionAuthenticator(
             sessionStorage: self.webAuthnSessionAuthenticator.sessionStorage,
@@ -168,5 +168,10 @@ struct HBWebAuthnController {
     }
 }
 
+#if compiler(>=6.0)
+extension PublicKeyCredentialCreationOptions: @retroactive ResponseEncodable {}
+extension PublicKeyCredentialRequestOptions: @retroactive ResponseEncodable {}
+#else
 extension PublicKeyCredentialCreationOptions: ResponseEncodable {}
 extension PublicKeyCredentialRequestOptions: ResponseEncodable {}
+#endif

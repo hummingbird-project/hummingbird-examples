@@ -76,7 +76,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
             mustacheLibrary: library,
             fluent: fluent,
             webAuthnSessionAuthenticator: webAuthnSessionAuthenticator
-        ).endpoints
+        )
         RouteGroup("api") {
             HBWebAuthnController(
                 webauthn: .init(
@@ -88,7 +88,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
                 ),
                 fluent: fluent,
                 webAuthnSessionAuthenticator: webAuthnSessionAuthenticator
-            ).endpoints
+            )
         }
     }
 
