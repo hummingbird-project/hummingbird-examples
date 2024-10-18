@@ -2,6 +2,7 @@ import FluentSQLiteDriver
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdCompression
 import HummingbirdFluent
 import Mustache
 
@@ -37,6 +38,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     // add logging middleware
     router.addMiddleware {
         LogRequestsMiddleware(.info)
+        ResponseCompressionMiddleware(minimumResponseSizeToCompress: 256)
         FileMiddleware(logger: logger)
         CORSMiddleware(
             allowOrigin: .originBased,
