@@ -4,7 +4,7 @@ import HummingbirdAuth
 import Logging
 import NIOCore
 
-struct TodosAuthRequestContext: AuthRequestContext, SessionRequestContext, RequestContext {
+struct AppRequestContext: AuthRequestContext, SessionRequestContext, RequestContext {
     var coreContext: CoreRequestContextStorage
     var identity: User?
     var sessions: SessionContext<UUID>

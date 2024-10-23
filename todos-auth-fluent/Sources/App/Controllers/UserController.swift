@@ -21,7 +21,7 @@ import HummingbirdFluent
 import NIO
 
 struct UserController {
-    typealias Context = TodosAuthRequestContext
+    typealias Context = AppRequestContext
     let fluent: Fluent
     let sessionAuthenticator: SessionAuthenticator<Context, UserRepository>
 

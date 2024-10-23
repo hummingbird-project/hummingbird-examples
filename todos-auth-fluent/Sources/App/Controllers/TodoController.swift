@@ -26,7 +26,7 @@ struct TodoController {
         var coreContext: CoreRequestContextStorage
         var user: User
 
-        init(context: TodosAuthRequestContext) throws {
+        init(context: AppRequestContext) throws {
             self.coreContext = context.coreContext
             self.user = try context.requireIdentity()
         }
@@ -36,9 +36,9 @@ struct TodoController {
         }
     }
     let fluent: Fluent
-    let sessionAuthenticator: SessionAuthenticator<TodosAuthRequestContext, UserRepository>
+    let sessionAuthenticator: SessionAuthenticator<AppRequestContext, UserRepository>
 
-    func addRoutes(to group: RouterGroup<TodosAuthRequestContext>) {
+    func addRoutes(to group: RouterGroup<AppRequestContext>) {
         group
             .add(middleware: self.sessionAuthenticator)
             .group("", context: Context.self)

@@ -36,7 +36,7 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
 
 /// Serves HTML pages
 struct WebController {
-    typealias Context = TodosAuthRequestContext
+    typealias Context = AppRequestContext
     let fluent: Fluent
     let sessionAuthenticator: SessionAuthenticator<Context, UserRepository>
     let mustacheLibrary: MustacheLibrary
