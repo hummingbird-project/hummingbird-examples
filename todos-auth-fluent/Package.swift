@@ -8,7 +8,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", branch: "throwing-request-context-init"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", branch: "require-identity"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", branch: "main"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-compression.git", from: "2.0.0-rc"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0-beta.2"),
         .package(url: "https://github.com/hummingbird-project/swift-mustache.git", from: "2.0.0-beta.1"),
