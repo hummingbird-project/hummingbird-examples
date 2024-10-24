@@ -2,7 +2,7 @@ import GraphQL
 import HTTPTypes
 import Hummingbird
 
-extension GraphQLResult: ResponseGenerator {
+extension GraphQLResult {
     public func response(from _: Request, context _: some RequestContext) throws -> Response {
         let encoder = GraphQLJSONEncoder()
         let data = try encoder.encode(self)
@@ -16,3 +16,9 @@ extension GraphQLResult: ResponseGenerator {
         )
     }
 }
+
+#if hasFeature(RetroactiveAttribute)
+extension GraphQLResult: @retroactive ResponseGenerator {}
+#else
+extension GraphQLResult: ResponseGenerator {}
+#endif
