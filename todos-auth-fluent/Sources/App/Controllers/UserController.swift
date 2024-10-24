@@ -21,7 +21,7 @@ import HummingbirdFluent
 import NIO
 
 struct UserController {
-    typealias Context = TodosAuthRequestContext
+    typealias Context = AppRequestContext
     let fluent: Fluent
     let sessionAuthenticator: SessionAuthenticator<Context, UserRepository>
 
@@ -67,7 +67,7 @@ struct UserController {
 
     /// Get current logged in user
     @Sendable func current(_ request: Request, context: Context) throws -> UserResponse {
-        guard let user = context.identity else { throw HTTPError(.unauthorized) }
+        let user = try context.requireIdentity()
         return UserResponse(from: user)
     }
 }

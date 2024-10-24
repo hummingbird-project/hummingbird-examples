@@ -78,7 +78,7 @@ struct UserController {
     /// Get current logged in user
     @Sendable func current(_ request: Request, context: Context) throws -> UserResponse {
         // get authenticated user and return
-        guard let user = context.identity else { throw HTTPError(.unauthorized) }
+        let user = try context.requireIdentity()
         return try UserResponse(id: user.requireID(), name: user.name)
     }
 }
