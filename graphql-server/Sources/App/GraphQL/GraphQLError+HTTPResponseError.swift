@@ -19,6 +19,6 @@ extension GraphQLError: HTTPResponseError {
     }
 
     public func response(from request: Request, context: some RequestContext) -> Response {
-        .init(status: status, headers: headers, body: .init(byteBuffer: ByteBuffer(string: message)))
+        .init(status: self.status, headers: self.headers, body: .init(byteBuffer: ByteBuffer(string: message)))
     }
 }
