@@ -78,7 +78,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
             webAuthnSessionAuthenticator: webAuthnSessionAuthenticator
         )
         RouteGroup("api") {
-            HBWebAuthnController(
+            WebAuthnController(
                 webauthn: .init(
                     config: .init(
                         relyingPartyID: "localhost",

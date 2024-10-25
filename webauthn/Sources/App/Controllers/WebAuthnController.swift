@@ -20,7 +20,7 @@ import HummingbirdFluent
 import HummingbirdRouter
 import WebAuthn
 
-struct HBWebAuthnController: RouterController {
+struct WebAuthnController: RouterController {
     typealias Context = WebAuthnRequestContext
 
     let webauthn: WebAuthnManager
@@ -29,14 +29,6 @@ struct HBWebAuthnController: RouterController {
 
     // return RouteGroup with user login endpoints
     var body: some RouterMiddleware<Context> {
-        /// Authenticator storing the WebAuthn session state
-        let webAuthnSessionStateAuthenticator = SessionAuthenticator(
-            sessionStorage: self.webAuthnSessionAuthenticator.sessionStorage,
-            context: Context.self
-        ) { (session: WebAuthnSession, _) in
-            return try await session.session(fluent: self.fluent)
-        }
-
         return RouteGroup("user") {
             Post("signup", handler: self.signup)
             Get("login", handler: self.beginAuthentication)
