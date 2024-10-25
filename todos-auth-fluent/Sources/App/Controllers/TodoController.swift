@@ -21,13 +21,14 @@ import NIO
 
 /// CRUD routes for todos
 struct TodoController {
-    // Request context used by Todos routes
-    struct Context: ChildRequestContext {
+    // Request context used by Todos routes.
+    struct TodoContext: ChildRequestContext {
         var coreContext: CoreRequestContextStorage
         var user: User
 
         init(context: AppRequestContext) throws {
             self.coreContext = context.coreContext
+            // if user identity doesn't exist then throw an unauthorized HTTP error
             self.user = try context.requireIdentity()
         }
 
@@ -35,22 +36,23 @@ struct TodoController {
             TodosAuthRequestDecoder()
         }
     }
+
     let fluent: Fluent
     let sessionAuthenticator: SessionAuthenticator<AppRequestContext, UserRepository>
 
     func addRoutes(to group: RouterGroup<AppRequestContext>) {
         group
             .add(middleware: self.sessionAuthenticator)
-            .group("", context: Context.self)
-                .get(use: self.list)
-                .get(":id", use: self.get)
-                .post(use: self.create)
-                .patch(":id", use: self.update)
-                .delete(":id", use: self.deleteId)
+            .group(context: TodoContext.self)
+            .get(use: self.list)
+            .get(":id", use: self.get)
+            .post(use: self.create)
+            .patch(":id", use: self.update)
+            .delete(":id", use: self.deleteId)
     }
 
     /// List all todos created by current user
-    @Sendable func list(_ request: Request, context: Context) async throws -> [Todo] {
+    @Sendable func list(_ request: Request, context: TodoContext) async throws -> [Todo] {
         return try await context.user.$todos.get(on: self.fluent.db())
     }
 
@@ -59,7 +61,7 @@ struct TodoController {
     }
 
     /// Create new todo
-    @Sendable func create(_ request: Request, context: Context) async throws -> EditedResponse<Todo> {
+    @Sendable func create(_ request: Request, context: TodoContext) async throws -> EditedResponse<Todo> {
         let todoRequest = try await request.decode(as: CreateTodoRequest.self, context: context)
         guard let host = request.head.authority else { throw HTTPError(.badRequest, message: "No host header") }
         let todo = try Todo(title: todoRequest.title, ownerID: context.user.requireID())
@@ -72,7 +74,7 @@ struct TodoController {
     }
 
     /// Get todo
-    @Sendable func get(_ request: Request, context: Context) async throws -> Todo? {
+    @Sendable func get(_ request: Request, context: TodoContext) async throws -> Todo? {
         let id = try context.parameters.require("id", as: UUID.self)
         return try await Todo.query(on: self.fluent.db())
             .filter(\.$id == id)
@@ -86,7 +88,7 @@ struct TodoController {
     }
 
     /// Edit todo
-    @Sendable func update(_ request: Request, context: Context) async throws -> Todo {
+    @Sendable func update(_ request: Request, context: TodoContext) async throws -> Todo {
         let id = try context.parameters.require("id", as: UUID.self)
         let editTodo = try await request.decode(as: EditTodoRequest.self, context: context)
         let db = self.fluent.db()
@@ -104,7 +106,7 @@ struct TodoController {
     }
 
     /// delete todo
-    @Sendable func deleteId(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+    @Sendable func deleteId(_ request: Request, context: TodoContext) async throws -> HTTPResponse.Status {
         let id = try context.parameters.require("id", as: UUID.self)
         let db = self.fluent.db()
         guard let todo = try await Todo.query(on: db)
