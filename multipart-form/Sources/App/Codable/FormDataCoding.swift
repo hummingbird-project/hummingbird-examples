@@ -48,7 +48,7 @@ extension FormDataDecoder {
         else {
             throw HTTPError(.unsupportedMediaType)
         }
-        let buffer = try await request.body.collect(upTo: 1_000_000)
+        let buffer = try await request.body.collect(upTo: context.maxUploadSize)
         return try self.decode(T.self, from: buffer, boundary: parameter.value)
     }
 }
