@@ -43,8 +43,8 @@ struct TOTPController<Users: UserRepository, Storage: PersistDriver> {
                 try await self.storage.set(key: otpSession, value: otpVerificationSession)
                 return .ok
             }
+            .group(context: AuthenticatedRequestContext.self)
             .post("complete") { request, context -> HTTPResponse.Status in
-                guard let user = context.identity else { throw HTTPError(.unauthorized) }
                 guard let otpSession = request.headers[.otpSession] else { return .badRequest }
                 guard let otpVerificationSession = try await self.storage.get(key: otpSession, as: TOTPVerificationSession.self) else {
                     return .notFound
@@ -52,18 +52,16 @@ struct TOTPController<Users: UserRepository, Storage: PersistDriver> {
                 guard otpVerificationSession.verified else {
                     return .badRequest
                 }
-                try await self.users.addTOTP(userID: user.id, secret: otpVerificationSession.secret, logger: context.logger)
+                try await self.users.addTOTP(userID: context.user.id, secret: otpVerificationSession.secret, logger: context.logger)
                 return .ok
             }
             .delete { request, context -> HTTPResponse.Status in
-                guard let user = context.identity else { throw HTTPError(.unauthorized) }
-                guard user.otpSecret != nil else { return .ok }
-                try await self.users.removeTOTP(userID: user.id, logger: context.logger)
+                guard context.user.otpSecret != nil else { return .ok }
+                try await self.users.removeTOTP(userID: context.user.id, logger: context.logger)
                 return .ok
             }
             .get { request, context in
-                guard let user = context.identity else { throw HTTPError(.unauthorized) }
-                guard let secret = user.otpSecret else { throw HTTPError(.noContent) }
+                guard let secret = context.user.otpSecret else { throw HTTPError(.noContent) }
                 return TOTP(secret: secret).createAuthenticatorURL(label: "auth-otp")
             }
         return routes
