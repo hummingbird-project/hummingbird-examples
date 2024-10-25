@@ -33,7 +33,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     }
     let userRepository = UserRepository(fluent: fluent)
     // router
-    let router = Router(context: TodosAuthRequestContext.self)
+    let router = Router(context: AppRequestContext.self)
 
     // add logging middleware
     router.addMiddleware {
@@ -57,7 +57,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     // load mustache template library
     let library = try await MustacheLibrary(directory: Bundle.module.resourcePath!)
 
-    let sessionAuthenticator = SessionAuthenticator(users: userRepository, context: TodosAuthRequestContext.self)
+    let sessionAuthenticator = SessionAuthenticator(users: userRepository, context: AppRequestContext.self)
     // Add routes serving HTML files
     WebController(mustacheLibrary: library, fluent: fluent, sessionAuthenticator: sessionAuthenticator).addRoutes(to: router)
     // Add api routes managing todos

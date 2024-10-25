@@ -65,9 +65,7 @@ struct HTMLController: RouterController {
     /// Home page listing todos and with add todo UI
     @Sendable func home(request: Request, context: Context) async throws -> HTML {
         // get user
-        guard let user = context.identity else {
-            throw HTTPError(.unauthorized)
-        }
+        let user = try context.requireIdentity()
         // Render home template and return as HTML
         let object: [String: Any] = [
             "name": user.username,

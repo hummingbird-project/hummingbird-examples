@@ -21,25 +21,37 @@ import NIO
 
 /// CRUD routes for todos
 struct TodoController {
-    typealias Context = TodosAuthRequestContext
-    let fluent: Fluent
-    let sessionAuthenticator: SessionAuthenticator<Context, UserRepository>
+    // Request context used by Todos routes
+    struct Context: ChildRequestContext {
+        var coreContext: CoreRequestContextStorage
+        var user: User
 
-    func addRoutes(to group: RouterGroup<Context>) {
+        init(context: AppRequestContext) throws {
+            self.coreContext = context.coreContext
+            self.user = try context.requireIdentity()
+        }
+
+        var requestDecoder: TodosAuthRequestDecoder {
+            TodosAuthRequestDecoder()
+        }
+    }
+    let fluent: Fluent
+    let sessionAuthenticator: SessionAuthenticator<AppRequestContext, UserRepository>
+
+    func addRoutes(to group: RouterGroup<AppRequestContext>) {
         group
             .add(middleware: self.sessionAuthenticator)
-            .add(middleware: IsAuthenticatedMiddleware())
-            .get(use: self.list)
-            .get(":id", use: self.get)
-            .post(use: self.create)
-            .patch(":id", use: self.update)
-            .delete(":id", use: self.deleteId)
+            .group("", context: Context.self)
+                .get(use: self.list)
+                .get(":id", use: self.get)
+                .post(use: self.create)
+                .patch(":id", use: self.update)
+                .delete(":id", use: self.deleteId)
     }
 
     /// List all todos created by current user
     @Sendable func list(_ request: Request, context: Context) async throws -> [Todo] {
-        guard let user = context.identity else { throw HTTPError(.unauthorized) }
-        return try await user.$todos.get(on: self.fluent.db())
+        return try await context.user.$todos.get(on: self.fluent.db())
     }
 
     struct CreateTodoRequest: ResponseCodable {
@@ -48,10 +60,9 @@ struct TodoController {
 
     /// Create new todo
     @Sendable func create(_ request: Request, context: Context) async throws -> EditedResponse<Todo> {
-        guard let user = context.identity else { throw HTTPError(.unauthorized) }
         let todoRequest = try await request.decode(as: CreateTodoRequest.self, context: context)
         guard let host = request.head.authority else { throw HTTPError(.badRequest, message: "No host header") }
-        let todo = try Todo(title: todoRequest.title, ownerID: user.requireID())
+        let todo = try Todo(title: todoRequest.title, ownerID: context.user.requireID())
         let db = self.fluent.db()
         _ = try await todo.save(on: db)
         todo.completed = false
@@ -76,7 +87,6 @@ struct TodoController {
 
     /// Edit todo
     @Sendable func update(_ request: Request, context: Context) async throws -> Todo {
-        guard let user = context.identity else { throw HTTPError(.unauthorized) }
         let id = try context.parameters.require("id", as: UUID.self)
         let editTodo = try await request.decode(as: EditTodoRequest.self, context: context)
         let db = self.fluent.db()
@@ -87,7 +97,7 @@ struct TodoController {
         else {
             throw HTTPError(.notFound)
         }
-        guard todo.owner.id == user.id else { throw HTTPError(.unauthorized) }
+        guard todo.owner.id == context.user.id else { throw HTTPError(.unauthorized) }
         todo.update(title: editTodo.title, completed: editTodo.completed)
         try await todo.update(on: db)
         return todo
@@ -95,7 +105,6 @@ struct TodoController {
 
     /// delete todo
     @Sendable func deleteId(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
-        guard let user = context.identity else { throw HTTPError(.unauthorized) }
         let id = try context.parameters.require("id", as: UUID.self)
         let db = self.fluent.db()
         guard let todo = try await Todo.query(on: db)
@@ -105,7 +114,7 @@ struct TodoController {
         else {
             throw HTTPError(.notFound)
         }
-        guard todo.owner.id == user.id else { throw HTTPError(.unauthorized) }
+        guard todo.owner.id == context.user.id else { throw HTTPError(.unauthorized) }
         try await todo.delete(on: db)
         return .ok
     }

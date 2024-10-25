@@ -36,7 +36,7 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
 
 /// Serves HTML pages
 struct WebController {
-    typealias Context = TodosAuthRequestContext
+    typealias Context = AppRequestContext
     let fluent: Fluent
     let sessionAuthenticator: SessionAuthenticator<Context, UserRepository>
     let mustacheLibrary: MustacheLibrary
@@ -85,7 +85,7 @@ struct WebController {
     /// Home page listing todos and with add todo UI
     @Sendable func home(request: Request, context: Context) async throws -> HTML {
         // get user and list of todos attached to user from database
-        guard let user = context.identity else { throw HTTPError(.unauthorized) }
+        let user = try context.requireIdentity()
         let todos = try await user.$todos.get(on: self.fluent.db())
         // Render todos template and return as HTML
         let object: [String: Any] = [
