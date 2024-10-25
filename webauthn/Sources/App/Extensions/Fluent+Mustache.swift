@@ -31,7 +31,7 @@ extension IDProperty {
     }
 }
 
-#if compiler(>=6.0)
+#if hasFeature(RetroactiveAttribute)
 extension FieldProperty: @retroactive MustacheTransformable {}
 extension IDProperty: @retroactive MustacheTransformable {}
 #else

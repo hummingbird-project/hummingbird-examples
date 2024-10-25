@@ -1,4 +1,5 @@
 import FluentSQLiteDriver
+import Foundation
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
@@ -8,6 +9,8 @@ protocol AppArguments {
     var migrate: Bool { get }
     var inMemoryDatabase: Bool { get }
 }
+
+typealias AppRequestContext = BasicSessionRequestContext<UUID, User>
 
 /// build application
 func buildApplication(_ arguments: AppArguments, configuration: ApplicationConfiguration) async throws -> some ApplicationProtocol {
@@ -24,20 +27,20 @@ func buildApplication(_ arguments: AppArguments, configuration: ApplicationConfi
         try await fluent.migrate()
     }
 
-    // Sessions
-    let sessionStorage = SessionStorage(persist)
-
-    let router = Router(context: BasicAuthRequestContext.self)
+    let router = Router(context: AppRequestContext.self)
 
     // add logging middleware
-    router.add(middleware: LogRequestsMiddleware(.debug))
+    router.addMiddleware {
+        LogRequestsMiddleware(.debug)
+        SessionMiddleware(storage: persist)
+    }
 
     // routes
     router.get("/") { _, _ in
         return "Hello"
     }
 
-    let userController = UserController(fluent: fluent, sessionStorage: sessionStorage)
+    let userController = UserController(fluent: fluent)
     userController.addRoutes(to: router.group("user"))
 
     var application = Application(

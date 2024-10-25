@@ -20,7 +20,8 @@ import HummingbirdBasicAuth
 import HummingbirdFluent
 import NIO
 
-struct UserController<Context: AuthRequestContext> {
+struct UserController {
+    typealias Context = AppRequestContext
     let fluent: Fluent
     let sessionAuthenticator: SessionAuthenticator<Context, UserRepository>
 
@@ -52,29 +53,21 @@ struct UserController<Context: AuthRequestContext> {
 
     /// Login user and create session
     /// Used in tests, as user creation is done by ``WebController.loginDetails``
-    @Sendable func login(_ request: Request, context: Context) async throws -> Response {
-        // get authenticated user and return
-        let user = try context.auth.require(User.self)
-        // create session lasting 1 hour
-        let cookie = try await self.sessionAuthenticator.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
-        var response = Response(status: .ok)
-        response.setCookie(cookie)
-        return response
+    @Sendable func login(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+        guard let user = context.identity else { throw HTTPError(.unauthorized) }
+        try context.sessions.setSession(user.requireID())
+        return .ok
     }
 
     /// Login user and create session
     @Sendable func logout(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
-        // get authenticated user and return
-        let user = try context.auth.require(User.self)
-        // create session finishing now
-        try await self.sessionAuthenticator.sessionStorage.update(session: user.requireID(), expiresIn: .seconds(0), request: request)
+        context.sessions.clearSession()
         return .ok
     }
 
     /// Get current logged in user
     @Sendable func current(_ request: Request, context: Context) throws -> UserResponse {
-        // get authenticated user and return
-        let user = try context.auth.require(User.self)
+        let user = try context.requireIdentity()
         return UserResponse(from: user)
     }
 }

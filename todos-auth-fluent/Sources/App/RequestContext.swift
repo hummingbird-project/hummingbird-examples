@@ -1,15 +1,18 @@
+import Foundation
 import Hummingbird
 import HummingbirdAuth
 import Logging
 import NIOCore
 
-struct TodosAuthRequestContext: AuthRequestContext, RequestContext {
+struct AppRequestContext: AuthRequestContext, SessionRequestContext, RequestContext {
     var coreContext: CoreRequestContextStorage
-    var auth: LoginCache
+    var identity: User?
+    var sessions: SessionContext<UUID>
 
     init(source: Source) {
         self.coreContext = .init(source: source)
-        self.auth = .init()
+        self.identity = nil
+        self.sessions = .init()
     }
 
     var requestDecoder: TodosAuthRequestDecoder {

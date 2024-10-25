@@ -17,7 +17,7 @@ import Foundation
 import HummingbirdAuth
 
 /// Database description of a user
-final class User: Model, Authenticatable, @unchecked Sendable {
+final class User: Model, @unchecked Sendable {
     static let schema = "user"
 
     @ID(key: .id)

@@ -26,7 +26,7 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
         context: Context,
         next: (Request, Context) async throws -> Output
     ) async throws -> Response {
-        if context.auth.has(User.self) {
+        if context.identity != nil {
             return try await next(request, context)
         } else {
             return .redirect(to: "\(self.to)?from=\(request.uri)", type: .found)
@@ -35,7 +35,8 @@ struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware {
 }
 
 /// Serves HTML pages
-struct WebController<Context: AuthRequestContext & RequestContext> {
+struct WebController {
+    typealias Context = AppRequestContext
     let fluent: Fluent
     let sessionAuthenticator: SessionAuthenticator<Context, UserRepository>
     let mustacheLibrary: MustacheLibrary
@@ -84,7 +85,7 @@ struct WebController<Context: AuthRequestContext & RequestContext> {
     /// Home page listing todos and with add todo UI
     @Sendable func home(request: Request, context: Context) async throws -> HTML {
         // get user and list of todos attached to user from database
-        let user = try context.auth.require(User.self)
+        let user = try context.requireIdentity()
         let todos = try await user.$todos.get(on: self.fluent.db())
         // Render todos template and return as HTML
         let object: [String: Any] = [
@@ -116,12 +117,10 @@ struct WebController<Context: AuthRequestContext & RequestContext> {
             password: details.password,
             db: fluent.db()
         ) {
-            // create session lasting 1 hour
-            let cookie = try await self.sessionAuthenticator.sessionStorage.save(session: user.requireID(), expiresIn: .seconds(3600))
+            // create session
+            try context.sessions.setSession(user.requireID())
             // redirect to home page
-            var response = Response.redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
-            response.setCookie(cookie)
-            return response
+            return .redirect(to: request.uri.queryParameters.get("from") ?? "/", type: .found)
         } else {
             // login failed return login HTML with failed comment
             let html = self.loginTemplate.render(["failed": true], library: self.mustacheLibrary)
