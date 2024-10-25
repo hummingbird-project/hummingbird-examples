@@ -19,6 +19,7 @@ Examples converted to Hummingbird 2.0
 
 - [auth-cognito](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-cognito) - Authentication via AWS Cognito.
 - [auth-jwt](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-jwt) - Authentication using JWT.
+- [auth-otp](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-otp) - Using one time passwords authentication.
 - [auth-srp](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-srp) - Secure Remote Password authentication.
 - [graphql-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/graphql-server) - GraphQL server using [Graphiti](https://github.com/GraphQLSwift/Graphiti)
 - [hello](https://github.com/hummingbird-project/hummingbird-examples/tree/main/hello) - Basic application setup.
