@@ -44,11 +44,16 @@ struct AppLambda: APIGatewayLambdaFunction {
         router.get("/") { _, _ in
             return "Hello"
         }
+
+        // When enabling Lambda function URLs, CORS can be configured at the AWS level, and there's
+        // no need for this middleware.
+        // If you prefer to manage CORS internally instead, use this:
         router.add(middleware: CORSMiddleware(
             allowOrigin: .originBased,
             allowHeaders: [.contentType],
             allowMethods: [.get, .options, .post, .delete, .patch]
         ))
+
         TodoController(dynamoDB: dynamoDB, tableName: tableName).addRoutes(to: router.group("todos"))
 
         return router.buildResponder()
