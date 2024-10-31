@@ -62,12 +62,14 @@ final class AppTests: XCTestCase {
                 clientKeys: keys,
                 serverPublicKey: serverPublicKey
             )
-            let proof = srpClient.calculateSimpleClientProof(
-                clientPublicKey: keys.public,
-                serverPublicKey: serverPublicKey,
-                sharedSecret: sharedSecret
-            )
-            let verifyLogin = UserController.VerifyLoginInput(proof: proof.hexDigest())
+            // The SRP client has a non-standard shared secret proof
+            // The client proof is M = H(A+B+K) with everything padded
+            // The server proof is M2 = H(A+M+K) with everything padded
+            let A = keys.public
+            let B = serverPublicKey
+            let K = SRPKey(srpClient.hash(data: sharedSecret.unpaddedBytes), padding: srpClient.configuration.sizeN)
+            let clientProof = [UInt8](srpClient.hash(data: A.bytes + B.bytes + K.bytes))
+            let verifyLogin = UserController.VerifyLoginInput(proof: clientProof.hexDigest())
             let verifyLoginBody = try JSONEncoder().encode(verifyLogin)
             try await client.execute(
                 uri: "/api/user/verify",
@@ -78,12 +80,10 @@ final class AppTests: XCTestCase {
                 XCTAssertEqual(response.status, .ok)
                 let verifyLoginResponse = try JSONDecoder().decode(UserController.VerifyLoginOutput.self, from: response.body)
                 let serverProof = try XCTUnwrap(SRPKey(hex: verifyLoginResponse.proof))
-                try srpClient.verifySimpleServerProof(
-                    serverProof: serverProof.bytes,
-                    clientProof: proof,
-                    clientKeys: keys,
-                    sharedSecret: sharedSecret
-                )
+                // verify server proof
+                let M = SRPKey(clientProof, padding: srpClient.configuration.sizeN)
+                let calculatedServerProof = [UInt8](srpClient.hash(data: A.bytes + M.bytes + K.bytes))
+                XCTAssertEqual(serverProof.bytes, calculatedServerProof)
             }
         }
     }

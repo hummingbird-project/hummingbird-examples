@@ -47,10 +47,13 @@
                     // 5. The client generates its premaster secret.
                     var Sc = srp.calculateS(B, salt, u, a);
 
-                    // 6. Calculate proof
-                    var M = srp.calculateM(A, B, Sc)
+                    // 6. Calculate hashed secret
+                    var K = srp.calculateK(Sc)
+
+                    // 7. Calculate proof
+                    var M = srp.calculateM(A, B, K)
                     
-                    // 7. The client sends proof to the server.
+                    // 8. The client sends proof to the server.
                     let verifyData = {
                         "proof": M.toString(16)
                     }
@@ -63,14 +66,17 @@
                         processData: false,
                         success: function(data) {
                             // 8. Calculate server proof
-                            var M2 = srp.calculateM(A, M, Sc)
-
+                            var M2 = srp.calculateM(A, M, K)
+                            var M2hex = M2.toString(16)
+                            if (M2hex.length & 1 !== 0) {
+                                M2hex = "0" + M2hex
+                            }
                             // 9. Compare server proofs
-                            if (data.proof == M2.toString(16)) {
+                            if (data.proof == M2hex) {
                                 alert("Login success")
                                 window.location.href = 'api/user/loggedIn.html'
                             } else {
-                                alert("Login failed, server failed to prove it has secret")
+                                alert(`Login failed, server failed to prove it has secret ${data.proof}:${M2.toString(16)}`)
                             }
                         },
                         error: function(data) {
@@ -88,7 +94,7 @@
 </head>
 <body class="bg-gray-100">
     <div class="text-center">
-        <h2 class="text-3xl p-3">Login</h2>
+        <h2 class="text-3xl p-3">Secure Remote Password</h2>
     </div>
     <div class="p-6 max-w-md mx-auto bg-white rounded-xl space-x-4 shadow-lg">
         <div>

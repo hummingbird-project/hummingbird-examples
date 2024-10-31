@@ -13,7 +13,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/fluent-sqlite-driver.git", from: "4.7.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "1.1.0"),
-        .package(url: "https://github.com/adam-fowler/swift-srp.git", from: "0.4.0"),
+        .package(url: "https://github.com/adam-fowler/swift-srp.git", from: "2.1.0"),
     ],
     targets: [
         .executableTarget(

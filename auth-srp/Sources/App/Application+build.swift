@@ -53,11 +53,7 @@ func buildApplication(_ args: some AppArguments) async throws -> some Applicatio
 
     let router = Router(context: AppRequestContext.self)
     router.addMiddleware {
-        LogRequestsMiddleware(
-            .info,
-            includeHeaders: .all(),
-            redactHeaders: []
-        )
+        LogRequestsMiddleware(.info)
         RedirectMiddleware()
         FileMiddleware(logger: logger)
         SessionMiddleware(storage: persist)
