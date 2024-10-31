@@ -92,7 +92,7 @@ struct UserController {
 
         // get data
         guard let user = user else { throw HTTPError(.unauthorized) }
-        guard let A = SRPKey(hex: input.A) else { throw HTTPError(.badRequest) }
+        guard let A = SRPKey(hex: input.A, padding: srp.configuration.sizeN) else { throw HTTPError(.badRequest) }
         let verifier = try SRPKey(user.verifier.base64decoded())
         // calculate server keys
         let serverKeys = self.srp.generateKeys(verifier: verifier)
@@ -131,18 +131,23 @@ struct UserController {
         do {
             switch session.state {
             case .authenticating(let A, let B, let sharedSecret):
-                guard let clientProof = SRPKey(hex: input.proof)?.bytes else { throw HTTPError(.badRequest) }
-                // verify client proof is correct and generate server proof
-                let serverProof = try srp.verifySimpleClientProof(
-                    proof: clientProof,
-                    clientPublicKey: SRPKey(A.base64decoded()),
-                    serverPublicKey: SRPKey(B.base64decoded()),
-                    sharedSecret: SRPKey(sharedSecret.base64decoded())
-                )
+                guard let clientProof = SRPKey(hex: input.proof) else {
+                    throw HTTPError(.badRequest)
+                }
+                let A = try SRPKey(A.base64decoded())
+                let B = try SRPKey(B.base64decoded())
+                let sharedSecret = try SRPKey(sharedSecret.base64decoded())
+                let calculatedClientProof = srp.calculateClientProof(clientPublicKey: A, serverPublicKey: B, sharedSecret: sharedSecret)
+                // verify client proof is correct
+                guard clientProof.bytes == calculatedClientProof else {
+                    throw HTTPError(.unauthorized)
+                }
+                // generate server proof
+                let serverProof = srp.calculateServerProof(clientPublicKey: A, clientProof: clientProof.bytes, sharedSecret: sharedSecret)
                 var session = session
                 session.state = .authenticated
                 context.sessions.setSession(session)
-                return VerifyLoginOutput(proof: SRPKey(serverProof).hex)
+                return VerifyLoginOutput(proof: serverProof.hexdigest())
             case .authenticated:
                 throw HTTPError(.badRequest)
             }
@@ -154,5 +159,32 @@ struct UserController {
     @Sendable func loggedIn(request: Request, context: Context) throws -> String {
         guard let user = context.identity else { throw HTTPError(.unauthorized) }
         return "Logged in as \(user.name)"
+    }
+}
+
+extension Array where Element: FixedWidthInteger {
+    /// generate a hexdigest of the array of bytes
+    func hexdigest() -> String {
+        return self.map({
+            let characters = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"]
+            return "\(characters[Int($0 >> 4)])\(characters[Int($0 & 0xf)])"
+        }).joined()
+    }
+}
+
+extension SRPServer {
+    // The SRP client has a non-standard shared secret proof
+    // The client proof is M = H(A+B+K) with everything padded
+    func calculateClientProof(clientPublicKey: SRPKey, serverPublicKey: SRPKey, sharedSecret: SRPKey) -> [UInt8] {
+        let K = SRPKey(self.hash(data: sharedSecret.unpaddedBytes), padding: self.configuration.sizeN)
+        return [UInt8](self.hash(data: clientPublicKey.bytes + serverPublicKey.bytes + K.bytes))
+    }
+
+    // The SRP client has a non-standard shared secret proof
+    // The server proof is M2 = H(A+M+K) with everything padded
+    func calculateServerProof(clientPublicKey: SRPKey, clientProof: [UInt8], sharedSecret: SRPKey) -> [UInt8] {
+        let M = SRPKey(clientProof, padding: self.configuration.sizeN)
+        let K = SRPKey(self.hash(data: sharedSecret.unpaddedBytes), padding: self.configuration.sizeN)
+        return [UInt8](self.hash(data: clientPublicKey.bytes + M.bytes + K.bytes))
     }
 }

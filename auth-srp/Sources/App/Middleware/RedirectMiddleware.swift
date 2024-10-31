@@ -9,7 +9,7 @@ public struct RedirectMiddleware<Context: AuthRequestContext>: RouterMiddleware 
             return response
         } catch let error as HTTPError {
             // redirect for unauthorized or not found status
-            if error.status == .unauthorized || error.status == .notFound {
+            if error.status == .unauthorized || error.status == .notFound, request.method == .get {
                 return .redirect(to: "/login.html", type: .temporary)
             } else {
                 throw error
