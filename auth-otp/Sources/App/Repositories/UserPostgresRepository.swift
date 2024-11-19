@@ -1,4 +1,4 @@
-import Bcrypt
+import HummingbirdBcrypt
 import Foundation
 import Hummingbird
 import Logging
