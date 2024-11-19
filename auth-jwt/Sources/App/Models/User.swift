@@ -12,7 +12,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Bcrypt
+import HummingbirdBcrypt
 import FluentKit
 import Foundation
 import Hummingbird

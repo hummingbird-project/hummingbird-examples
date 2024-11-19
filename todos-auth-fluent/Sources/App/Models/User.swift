@@ -12,12 +12,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Bcrypt
 import FluentKit
 import Foundation
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdBasicAuth
+import HummingbirdBcrypt
 import HummingbirdFluent
 import NIOPosix
 

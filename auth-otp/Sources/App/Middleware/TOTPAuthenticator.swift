@@ -2,7 +2,7 @@ import Foundation
 import HTTPTypes
 import Hummingbird
 import HummingbirdAuth
-import OTP
+import HummingbirdOTP
 
 struct TOTPAuthenticator<Users: UserRepository>: AuthenticatorMiddleware {
     typealias Context = AppSessionRequestContext
