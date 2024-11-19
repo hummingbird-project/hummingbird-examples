@@ -1,7 +1,7 @@
 import Foundation
 import Hummingbird
 import HummingbirdAuth
-import OTP
+import HummingbirdOTP
 
 struct TOTPVerificationSession: Codable {
     let secret: String
