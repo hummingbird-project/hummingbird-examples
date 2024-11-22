@@ -13,6 +13,9 @@ struct HummingbirdArguments: AsyncParsableCommand, AppArguments {
     var migrate: Bool = false
 
     @Flag(name: .shortAndLong)
+    var revert: Bool = false
+
+    @Flag(name: .shortAndLong)
     var inMemoryDatabase: Bool = false
 
     func run() async throws {

@@ -6,6 +6,7 @@ import HummingbirdFluent
 public protocol AppArguments {
     var inMemoryDatabase: Bool { get }
     var migrate: Bool { get }
+    var revert: Bool { get }
     var hostname: String { get }
     var port: Int { get }
 }
@@ -23,6 +24,10 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     await fluent.migrations.add(CreateTodo())
 
     let fluentPersist = await FluentPersistDriver(fluent: fluent)
+    // revert
+    if arguments.revert {
+        try await fluent.revert()
+    }
     // migrate
     if arguments.migrate || arguments.inMemoryDatabase {
         try await fluent.migrate()
