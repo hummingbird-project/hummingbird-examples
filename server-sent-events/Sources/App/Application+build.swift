@@ -26,7 +26,9 @@ struct AppRequestContext: RequestContext {
 
 ///  Build application
 /// - Parameter arguments: application arguments
-public func buildApplication(_ arguments: some AppArguments) async throws
+public func buildApplication(
+    _ arguments: some AppArguments
+) async throws
     -> some ApplicationProtocol
 {
     let environment = Environment()
@@ -38,20 +40,22 @@ public func buildApplication(_ arguments: some AppArguments) async throws
             } ?? .info
         return logger
     }()
-    let router = buildRouter()
+    let requestPublisher = Publisher<String>()
+    let router = buildRouter(requestPublisher: requestPublisher)
     let app = Application(
         router: router,
         configuration: .init(
             address: .hostname(arguments.hostname, port: arguments.port),
             serverName: "server_sent_events"
         ),
+        services: [requestPublisher],
         logger: logger
     )
     return app
 }
 
 /// Build router
-func buildRouter() -> Router<AppRequestContext> {
+func buildRouter(requestPublisher: Publisher<String>) -> Router<AppRequestContext> {
     let router = Router(context: AppRequestContext.self)
     // Add middleware
     router.addMiddleware {
@@ -60,22 +64,47 @@ func buildRouter() -> Router<AppRequestContext> {
     }
     // Add health endpoint
     router.get("/health") { _, _ -> HTTPResponse.Status in
-        return .ok
+        .ok
     }
-    router.get("events") { _, context -> Response in
-        return .init(
-            status: .ok, headers: [.contentType: "text/event-stream"],
+    router.get("events") { request, context -> Response in
+        .init(
+            status: .ok,
+            headers: [.contentType: "text/event-stream"],
             body: .init { writer in
                 let allocator = ByteBufferAllocator()
-                for value in 0..<250 {
-                    try await Task.sleep(for: .seconds(10))
-                    try await writer.write(
-                        ServerSentEvent(data: .init(string: value.description)).makeBuffer(
-                            allocator: allocator))
+                let (stream, id) = requestPublisher.addSubsciber()
+                var unsafeWriter = UnsafeTransfer(writer)
+                try await request.body.consumeWithInboundCloseHandler { request in
+                    for try await value in stream {
+                        try await unsafeWriter.wrappedValue.write(
+                            ServerSentEvent(data: .init(string: value)).makeBuffer(
+                                allocator: allocator
+                            )
+                        )
+                    }
+                } onInboundClosed: {
+                    requestPublisher.removeSubsciber(id)
                 }
                 try await writer.finish(nil)
             }
         )
     }
+    router.get("**") { request, _ -> HTTPResponse.Status in
+        await requestPublisher.publish("\(request.method): \(request.uri.path)")
+        return .ok
+    }
     return router
 }
+
+@usableFromInline
+package struct UnsafeTransfer<Wrapped> {
+    @usableFromInline
+    package var wrappedValue: Wrapped
+
+    @inlinable
+    package init(_ wrappedValue: Wrapped) {
+        self.wrappedValue = wrappedValue
+    }
+}
+
+extension UnsafeTransfer: @unchecked Sendable {}
