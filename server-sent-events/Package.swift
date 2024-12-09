@@ -15,7 +15,7 @@ let package = Package(
             branch: "cancel-on-inbound-close2"
         ),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
-        .package(url: "https://github.com/orlandos-nl/SSEKit.git", branch: "main"),
+        .package(url: "https://github.com/orlandos-nl/SSEKit.git", from: "1.1.0"),
     ],
     targets: [
         .executableTarget(
