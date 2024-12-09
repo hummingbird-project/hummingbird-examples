@@ -2,6 +2,7 @@ import Hummingbird
 import Logging
 import NIOCore
 import SSEKit
+import ServiceLifecycle
 
 /// Application arguments protocol. We use a protocol so we can call
 /// `buildApplication` inside Tests as well as in the App executable.
@@ -61,10 +62,7 @@ func buildRouter(requestPublisher: Publisher<String>) -> Router<AppRequestContex
     router.addMiddleware {
         // logging middleware
         LogRequestsMiddleware(.info)
-    }
-    // Add health endpoint
-    router.get("/health") { _, _ -> HTTPResponse.Status in
-        .ok
+        PublishRequestsMiddleware(requestPublisher: requestPublisher)
     }
     router.get("events") { request, context -> Response in
         .init(
@@ -72,39 +70,35 @@ func buildRouter(requestPublisher: Publisher<String>) -> Router<AppRequestContex
             headers: [.contentType: "text/event-stream"],
             body: .init { writer in
                 let allocator = ByteBufferAllocator()
-                let (stream, id) = requestPublisher.addSubsciber()
-                var unsafeWriter = UnsafeTransfer(writer)
-                try await request.body.consumeWithInboundCloseHandler { request in
-                    for try await value in stream {
-                        try await unsafeWriter.wrappedValue.write(
-                            ServerSentEvent(data: .init(string: value)).makeBuffer(
-                                allocator: allocator
+                let (stream, id) = requestPublisher.subscribe()
+                try await withGracefulShutdownHandler {
+                    // If connection if closed then this function will call the `onInboundCLosed` closure
+                    try await request.body.consumeWithInboundCloseHandler { request in
+                        for try await value in stream {
+                            try await writer.write(
+                                ServerSentEvent(data: .init(string: value)).makeBuffer(
+                                    allocator: allocator
+                                )
                             )
-                        )
+                        }
+                    } onInboundClosed: {
+                        requestPublisher.unsubscribe(id)
                     }
-                } onInboundClosed: {
-                    requestPublisher.removeSubsciber(id)
+                } onGracefulShutdown: {
+                    requestPublisher.unsubscribe(id)
                 }
                 try await writer.finish(nil)
             }
         )
     }
-    router.get("**") { request, _ -> HTTPResponse.Status in
-        await requestPublisher.publish("\(request.method): \(request.uri.path)")
-        return .ok
-    }
     return router
 }
 
-@usableFromInline
-package struct UnsafeTransfer<Wrapped> {
-    @usableFromInline
-    package var wrappedValue: Wrapped
-
-    @inlinable
-    package init(_ wrappedValue: Wrapped) {
-        self.wrappedValue = wrappedValue
+/// Middleware to publish requests
+struct PublishRequestsMiddleware<Context: RequestContext>: RouterMiddleware {
+    let requestPublisher: Publisher<String>
+    func handle(_ request: Request, context: Context, next: (Request, Context) async throws -> Response) async throws -> Response {
+        await requestPublisher.publish("\(request.method): \(request.uri.path)")
+        return try await next(request, context)
     }
 }
-
-extension UnsafeTransfer: @unchecked Sendable {}

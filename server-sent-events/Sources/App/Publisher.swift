@@ -1,6 +1,7 @@
 import Foundation
 import ServiceLifecycle
 
+/// Basic PUB/SUB service.
 actor Publisher<Value: Sendable>: Service {
     typealias SubscriptionID = UUID
     enum SubscriptionCommand {
@@ -13,29 +14,36 @@ actor Publisher<Value: Sendable>: Service {
         self.subscriptions = [:]
     }
 
+    /// Publish to service
+    /// - Parameter value: Value being published
     func publish(_ value: Value) async {
         for subscription in self.subscriptions.values {
             subscription.yield(value)
         }
     }
 
-    nonisolated func addSubsciber() -> (AsyncStream<Value>, SubscriptionID) {
+    ///  Subscribe to service
+    /// - Returns: AsyncStream of values, and subscription identifier
+    nonisolated func subscribe() -> (AsyncStream<Value>, SubscriptionID) {
         let id = SubscriptionID()
         let (stream, source) = AsyncStream<Value>.makeStream()
         subSource.yield(.add(id, source))
         return (stream, id)
     }
 
-    nonisolated func removeSubsciber(_ id: SubscriptionID) {
+    ///  Unsubscribe from service
+    /// - Parameter id: Subscription identifier
+    nonisolated func unsubscribe(_ id: SubscriptionID) {
         subSource.yield(.remove(id))
     }
 
+    /// Service run function
     func run() async throws {
         try await withGracefulShutdownHandler {
             for try await command in self.subStream {
                 switch command {
                 case .add(let id, let source):
-                    await self._addSubsciber(id, source: source)
+                    self._addSubsciber(id, source: source)
                 case .remove(let id):
                     self._removeSubsciber(id)
                 }
@@ -45,7 +53,7 @@ actor Publisher<Value: Sendable>: Service {
         }
     }
 
-    private func _addSubsciber(_ id: SubscriptionID, source: AsyncStream<Value>.Continuation) async {
+    private func _addSubsciber(_ id: SubscriptionID, source: AsyncStream<Value>.Continuation) {
         self.subscriptions[id] = source
     }
 
