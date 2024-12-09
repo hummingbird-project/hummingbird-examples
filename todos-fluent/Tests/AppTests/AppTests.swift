@@ -8,6 +8,7 @@ final class AppTests: XCTestCase {
         var hostname: String { "localhost" }
         var port: Int { 8080 }
         var migrate: Bool { true }
+        var revert: Bool { false }
         var inMemoryDatabase: Bool { true }
     }
 
