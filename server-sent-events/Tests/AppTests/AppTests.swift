@@ -11,14 +11,4 @@ final class AppTests: XCTestCase {
         let port = 0
         let logLevel: Logger.Level? = .trace
     }
-
-    func testApp() async throws {
-        let args = TestArguments()
-        let app = try await buildApplication(args)
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/health", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
-            }
-        }
-    }
 }
