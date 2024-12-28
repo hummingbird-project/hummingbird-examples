@@ -73,7 +73,7 @@ func buildRouter(requestPublisher: Publisher<String>) -> Router<AppRequestContex
                 let (stream, id) = requestPublisher.subscribe()
                 try await withGracefulShutdownHandler {
                     // If connection if closed then this function will call the `onInboundCLosed` closure
-                    try await request.body.consumeWithInboundCloseHandler { request in
+                    try await request.body.consumeWithInboundCloseHandler { requestBody in
                         for try await value in stream {
                             try await writer.write(
                                 ServerSentEvent(data: .init(string: value)).makeBuffer(
