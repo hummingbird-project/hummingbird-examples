@@ -46,11 +46,6 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
 }
 
 func setupOTEL() async throws -> (metrics: Service, tracer: Service) {
-    struct EmptyService: Service {
-        func run() async throws {
-            try await gracefulShutdown()
-        }
-    }
     // Bootstrap the logging backend with the OTel metadata provider which includes span IDs in logging messages.
     LoggingSystem.bootstrap { label in
         var handler = StreamLogHandler.standardError(label: label, metadataProvider: .otel)
