@@ -22,22 +22,18 @@ typealias AppRequestContext = BasicRequestContext
 ///  Build application
 /// - Parameter arguments: application arguments
 public func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
+    let environment = Environment()
     // Bootstrap the logging backend with the OTel metadata provider which includes span IDs in logging messages.
+    let logLevel = arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .debug
     LoggingSystem.bootstrap { label in
         var handler = StreamLogHandler.standardError(label: label, metadataProvider: .otel)
-        handler.logLevel = .trace
+        handler.logLevel = logLevel
         return handler
     }
 
-    let environment = Environment()
-    let logger = {
-        var logger = Logger(label: "open-telemetry")
-        logger.logLevel =
-            arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .info
-        return logger
-    }()
+    let logger = Logger(label: "open-telemetry")
 
-    let otel = try await setupOTEL()
+    let otel = try await setupOTel()
 
     let router = buildRouter()
     var app = Application(
@@ -52,7 +48,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
     return app
 }
 
-func setupOTEL() async throws -> (metrics: Service, tracer: Service) {
+func setupOTel() async throws -> (metrics: Service, tracer: Service) {
     // Configure OTel resource detection to automatically apply helpful attributes to events.
     let environment = OTelEnvironment.detected()
     let resourceDetection = OTelResourceDetection(detectors: [
