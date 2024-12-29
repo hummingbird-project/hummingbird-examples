@@ -2,6 +2,7 @@ import Hummingbird
 import Instrumentation
 import Logging
 import Metrics
+import NIOCore
 import OTLPGRPC
 import OTel
 import ServiceLifecycle
@@ -17,7 +18,21 @@ public protocol AppArguments {
 }
 
 // Request context used by application
-typealias AppRequestContext = BasicRequestContext
+struct AppRequestContext: RequestContext {
+    var coreContext: CoreRequestContextStorage
+    let channel: Channel
+
+    init(source: Source) {
+        self.coreContext = .init(source: source)
+        self.channel = source.channel
+    }
+}
+
+// By conforming to the RequestContext to RemoteAddressRequestContext the TracingMiddleware
+// can extract the values for `net.sock.peer.addr` and `net.sock.peer.port`
+extension AppRequestContext: RemoteAddressRequestContext {
+    var remoteAddress: NIOCore.SocketAddress? { self.channel.remoteAddress }
+}
 
 ///  Build application
 /// - Parameter arguments: application arguments
