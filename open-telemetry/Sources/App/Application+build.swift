@@ -1,11 +1,11 @@
 import Hummingbird
-import Instrumentation
 import Logging
 import Metrics
 import NIOCore
 import OTLPGRPC
 import OTel
 import ServiceLifecycle
+import Tracing
 
 /// Application arguments protocol. We use a protocol so we can call
 /// `buildApplication` inside Tests as well as in the App executable.
@@ -127,7 +127,7 @@ func buildRouter() -> Router<AppRequestContext> {
     router.post("/wait") { request, _ in
         let time = try request.uri.queryParameters.require("time", as: Double.self)
         // Add child span
-        try await InstrumentationSystem.tracer.withSpan("sleep") { span in
+        try await withSpan("sleep") { span in
             span.attributes["wait.time"] = time
             try await Task.sleep(for: .seconds(time))
         }
