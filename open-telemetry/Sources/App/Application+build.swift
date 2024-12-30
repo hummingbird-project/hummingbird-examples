@@ -112,7 +112,7 @@ func buildRouter() -> Router<AppRequestContext> {
         // tracing middleware
         TracingMiddleware()
         // logging middleware
-        LogRequestsMiddleware(.info)
+        LogRequestsMiddleware(.debug)
     }
     // Add default endpoint
     router.get("/") { _, _ in
@@ -127,7 +127,8 @@ func buildRouter() -> Router<AppRequestContext> {
     router.post("/wait") { request, _ in
         let time = try request.uri.queryParameters.require("time", as: Double.self)
         // Add child span
-        try await InstrumentationSystem.tracer.withSpan("sleep") { _ in
+        try await InstrumentationSystem.tracer.withSpan("sleep") { span in
+            span.attributes["wait.time"] = time
             try await Task.sleep(for: .seconds(time))
         }
         return HTTPResponse.Status.ok
