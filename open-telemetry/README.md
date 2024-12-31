@@ -22,4 +22,4 @@ Everything is stored in shared volumes so data will persist between docker compo
 
 ### Grafana
 
-There is also a Grafana service included that will take results from both the Prometheus and Jaeger services. The Grafana endpoint is `http://localhost:3000`. When stating up Grafana it will ask for a username and password. You can use `admin` for both.
+The docker compose file also includes a Grafana service that can be used to visualize the results from both the Prometheus and Jaeger services. The Grafana endpoint is `http://localhost:3000`. When starting up Grafana it will ask for a username and password. You can use `admin` for both.
