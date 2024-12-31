@@ -1,0 +1,12 @@
+.DS_Store
+/.build
+/.swiftpm
+/.devContainer
+/Packages
+/*.xcodeproj
+xcuserdata/
+/.vscode/*
+!/.vscode/hummingbird.code-snippets
+.env.*
+.env
+/data/

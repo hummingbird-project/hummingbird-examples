@@ -1,0 +1,25 @@
+# Receive metrics on :4317
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: otel-collector:4317
+
+exporters:
+  prometheus:
+    endpoint: otel-collector:7070
+    const_labels:
+      collector: "otel-collector"
+  otlp/jaeger:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    metrics:
+      receivers: [otlp]
+      exporters: [prometheus]
+    traces:
+      receivers: [otlp]
+      exporters: [otlp/jaeger]
