@@ -27,6 +27,7 @@ Examples converted to Hummingbird 2.0
 - [http2](https://github.com/hummingbird-project/hummingbird-examples/tree/main/http2) - Basic application with HTTP2 upgrade added.
 - [jobs](https://github.com/hummingbird-project/hummingbird-examples/tree/main/jobs) - Demonstrating offloading of jobs to another server.
 - [multipart-form](https://github.com/hummingbird-project/hummingbird-examples/tree/main/multipart-form) - HTML form using Multipart form data, using MultipartKit
+- [open-telemetry](https://github.com/hummingbird-project/hummingbird-examples/tree/main/open-telemetry) - Integration with Open Telemetry
 - [proxy-server](https://github.com/hummingbird-project/hummingbird-examples/tree/main/proxy-server) - Using AsyncHTTPClient to build a proxy server
 - [response-body-processing](https://github.com/hummingbird-project/hummingbird-examples/tree/main/response-body-processing) - Example showing how to process a response body in middleware.
 - [s3-file-provider](https://github.com/hummingbird-project/hummingbird-examples/tree/main/s3-file-provider) - Use a custom FileProvider to serve files from S3 with FileMiddleware.
