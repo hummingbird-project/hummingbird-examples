@@ -1,0 +1,52 @@
+version: "3.3"
+
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib
+    depends_on:
+      - jaeger
+    command: ["--config=/etc/otel-collector-config.yml"]
+    ports:
+      - "7070:7070"
+      - "4317:4317"
+    volumes:
+      - "./config/otel-collector-config.yml:/etc/otel-collector-config.yml"
+    
+  prometheus:
+    image: prom/prometheus
+    depends_on:
+      - otel-collector
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./data/prometheus:/prometheus
+
+  jaeger:
+    # Jaeger is one of many options we can choose from as our distributed tracing backend.
+    # It supports OTLP out of the box so it's very easy to get started.
+    # https://www.jaegertracing.io
+    image: jaegertracing/all-in-one
+    ports:
+      - "4317"
+      - "16686:16686" # This is Jaeger's Web UI, visualizing recorded traces
+    volumes:
+      - "./data/jaeger:/badger"
+    environment:
+      - SPAN_STORAGE_TYPE=badger # Use local storage
+      - BADGER_EPHEMERAL=false  # Don't use ephemeral storage
+      - BADGER_DIRECTORY_VALUE=/badger/data
+      - BADGER_DIRECTORY_KEY=/badger/key
+  
+  grafana:
+    image: grafana/grafana
+    depends_on:
+      - prometheus
+      - jaeger
+    ports:
+      - "3000:3000" # Grafana UI
+    volumes:
+      - ./config/grafana.yml:/etc/grafana/provisioning/datasources/grafana.yml
+      - ./data/grafana:/var/lib/grafana
+    environment:
+      - GF_PATHS_DATA=/var/lib/grafana
