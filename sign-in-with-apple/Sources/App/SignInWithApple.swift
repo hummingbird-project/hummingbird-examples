@@ -4,27 +4,6 @@ import Hummingbird
 import JWTKit
 
 struct SignInWithApple {
-    struct AppleAuthResponse: Decodable {
-        struct User: Decodable {
-            struct Name: Decodable {
-                let firstName: String
-                let lastName: String
-            }
-            let email: String
-            let name: Name
-        }
-        let code: String
-        let state: String
-        let idToken: String
-        let user: String?
-
-        private enum CodingKeys: String, CodingKey {
-            case code
-            case state
-            case idToken = "id_token"
-            case user
-        }
-    }
     struct AppleTokenRequestBody: Encodable {
         /// The application identifier for your app.
         let clientId: String
@@ -118,13 +97,13 @@ struct SignInWithApple {
 
     /// The AppleIdentityToken is only short lived so we need to exchange it for an access token
     /// that lives for much longer
-    func requestAccessToken(appleAuthResponse: AppleAuthResponse) async throws -> String {
+    func requestAccessToken(code: String) async throws -> String {
         let secret = SignInWithApple.AppleAuthToken(clientId: self.siwaId, teamId: self.teamId)
         let secretJWTToken = try await self.keys.sign(secret, kid: self.jwkIdentifier)
         let appleTokenRequest = SignInWithApple.AppleTokenRequestBody(
             clientId: self.siwaId,
             clientSecret: secretJWTToken,
-            code: appleAuthResponse.code,
+            code: code,
             redirectUri: self.redirectURL
         )
         let requestBody = try URLEncodedFormEncoder().encode(appleTokenRequest)

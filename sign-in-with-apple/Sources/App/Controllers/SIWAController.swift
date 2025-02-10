@@ -34,13 +34,35 @@ struct SIWAController {
             "scope": "name email",
             "redirectURI": siwa.redirectURL,
             "state": state,
-            "usePopup": false,
+            "usePopup": false,  // If you set this to true it doesnt call the redirect for some reason
         ]
         return HTML(signInTemplate.render(context, library: mustacheLibrary))
     }
 
+    // authentication response sent to redirect handler
+    struct AppleAuthResponse: Decodable {
+        struct User: Decodable {
+            struct Name: Decodable {
+                let firstName: String
+                let lastName: String
+            }
+            let email: String
+            let name: Name
+        }
+        let code: String
+        let state: String
+        let idToken: String
+        let user: String?
+
+        private enum CodingKeys: String, CodingKey {
+            case code
+            case state
+            case idToken = "id_token"
+            case user
+        }
+    }
     func siwaRedirect(request: Request, context: AppRequestContext) async throws -> String {
-        let appleAuthResponse = try await request.decode(as: SignInWithApple.AppleAuthResponse.self, context: context)
+        let appleAuthResponse = try await request.decode(as: AppleAuthResponse.self, context: context)
         let state = context.sessions.session?.state ?? ""
         guard state == appleAuthResponse.state else { throw HTTPError(.badRequest) }
         let token = try await siwa.verify(appleAuthResponse.idToken)
@@ -55,15 +77,15 @@ struct SIWAController {
                 siwaToken.user.email = email
                 try await siwaToken.user.update(on: fluent.db())
             }
-            return try await siwa.requestAccessToken(appleAuthResponse: appleAuthResponse)
+            return try await siwa.requestAccessToken(code: appleAuthResponse.code)
         } else if let userString = appleAuthResponse.user {
             let userData = ByteBuffer(string: userString)
-            let userInfo = try JSONDecoder().decode(SignInWithApple.AppleAuthResponse.User.self, from: userData)
+            let userInfo = try JSONDecoder().decode(AppleAuthResponse.User.self, from: userData)
             let user = User(name: "\(userInfo.name.firstName) \(userInfo.name.lastName)", email: userInfo.email)
             try await user.create(on: fluent.db())
             let siwaToken = SIWAToken(token: token.subject.value, userID: try user.requireID())
             try await siwaToken.create(on: fluent.db())
-            return try await siwa.requestAccessToken(appleAuthResponse: appleAuthResponse)
+            return try await siwa.requestAccessToken(code: appleAuthResponse.code)
         } else {
             // User isn't in database, and we havent been supplied user info so throw error
             throw HTTPError(.unauthorized)
