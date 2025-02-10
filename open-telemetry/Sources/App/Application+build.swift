@@ -1,4 +1,5 @@
 import Hummingbird
+import Jobs
 import Logging
 import Metrics
 import NIOCore
@@ -50,7 +51,16 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
 
     let otel = try await setupOTel()
 
-    let router = buildRouter()
+    let jobQueue = JobQueue(
+        .memory,
+        numWorkers: 100,
+        logger: logger
+    )
+    jobQueue.registerJob(parameters: WaitJob.self, maxRetryCount: 4) { parameters, context in
+        try await Task.sleep(for: .milliseconds(parameters.milliseconds))
+    }
+
+    let router = buildRouter(jobQueue: jobQueue)
     var app = Application(
         router: router,
         configuration: .init(
@@ -59,7 +69,8 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
         ),
         logger: logger
     )
-    app.addServices(otel.metrics, otel.tracer)
+    app.addServices(otel.metrics, otel.tracer, jobQueue)
+
     return app
 }
 
@@ -103,7 +114,7 @@ func setupOTel() async throws -> (metrics: Service, tracer: Service) {
 }
 
 /// Build router
-func buildRouter() -> Router<AppRequestContext> {
+func buildRouter(jobQueue: JobQueue<MemoryQueue>) -> Router<AppRequestContext> {
     let router = Router(context: AppRequestContext.self)
     // Add middleware
     router.addMiddleware {
@@ -133,5 +144,14 @@ func buildRouter() -> Router<AppRequestContext> {
         }
         return HTTPResponse.Status.ok
     }
+    router.get("/job") { request, _ in
+        try await jobQueue.push(WaitJob(milliseconds: 20))
+        return HTTPResponse.Status.ok
+    }
     return router
+}
+
+struct WaitJob: JobParameters {
+    static let jobName = "wait"
+    let milliseconds: Int
 }
