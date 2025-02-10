@@ -1,6 +1,9 @@
+import FluentKit
+import FluentSQLiteDriver
 import Foundation
 import Hummingbird
 import HummingbirdAuth
+import HummingbirdFluent
 import Logging
 import Mustache
 
@@ -12,15 +15,12 @@ public protocol AppArguments {
     var hostname: String { get }
     var port: Int { get }
     var logLevel: Logger.Level? { get }
+    var migrate: Bool { get }
+    var inMemoryDatabase: Bool { get }
 }
 
 struct Session: Codable {
     let state: String
-}
-
-struct User: Codable {
-    let username: String
-    let email: String
 }
 
 ///  Build application
@@ -33,11 +33,27 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
             arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .info
         return logger
     }()
+    let fluent = Fluent(logger: logger)
+    // add sqlite database
+    if arguments.inMemoryDatabase {
+        fluent.databases.use(.sqlite(.memory), as: .sqlite)
+    } else {
+        fluent.databases.use(.sqlite(.file("db.sqlite")), as: .sqlite)
+    }
+    // add migrations
+    await fluent.migrations.add(CreateUser())
+    await fluent.migrations.add(CreateSIWAToken())
+    // migrate
+    if arguments.migrate || arguments.inMemoryDatabase {
+        try await fluent.migrate()
+    }
+
     let keyValueStore = MemoryPersistDriver()
 
     let router = try await buildRouter(
         environment: environment,
-        keyValueStore: keyValueStore
+        keyValueStore: keyValueStore,
+        fluent: fluent
     )
     let app = Application(
         router: router,
@@ -45,6 +61,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
             address: .hostname(arguments.hostname, port: arguments.port),
             serverName: "SIWA"
         ),
+        services: [fluent],
         logger: logger
     )
     return app
@@ -53,7 +70,8 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
 /// Build router
 func buildRouter(
     environment: Environment,
-    keyValueStore: some PersistDriver
+    keyValueStore: some PersistDriver,
+    fluent: Fluent
 ) async throws -> Router<AppRequestContext> {
     // load mustache template library
     let mustacheLibrary = try await MustacheLibrary(directory: Bundle.module.resourcePath!)
@@ -77,6 +95,12 @@ func buildRouter(
         // session middleware
         SessionMiddleware(storage: keyValueStore)
     }
-    router.addRoutes(SIWAController(signInWithApple: signInWithApple, mustacheLibrary: mustacheLibrary).routes)
+    router.addRoutes(
+        SIWAController(
+            signInWithApple: signInWithApple,
+            mustacheLibrary: mustacheLibrary,
+            fluent: fluent
+        ).routes
+    )
     return router
 }

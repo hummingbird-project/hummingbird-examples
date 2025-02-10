@@ -13,6 +13,12 @@ struct AppCommand: AsyncParsableCommand, AppArguments {
     @Option(name: .shortAndLong)
     var logLevel: Logger.Level?
 
+    @Flag(name: .shortAndLong)
+    var migrate: Bool = false
+
+    @Flag(name: .shortAndLong)
+    var inMemoryDatabase: Bool = false
+
     func run() async throws {
         let app = try await buildApplication(self)
         try await app.runService()
@@ -21,7 +27,7 @@ struct AppCommand: AsyncParsableCommand, AppArguments {
 
 /// Extend `Logger.Level` so it can be used as an argument
 #if hasFeature(RetroactiveAttribute)
-    extension Logger.Level: @retroactive ExpressibleByArgument {}
+extension Logger.Level: @retroactive ExpressibleByArgument {}
 #else
-    extension Logger.Level: ExpressibleByArgument {}
+extension Logger.Level: ExpressibleByArgument {}
 #endif

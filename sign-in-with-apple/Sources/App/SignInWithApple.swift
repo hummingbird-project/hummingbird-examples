@@ -5,6 +5,14 @@ import JWTKit
 
 struct SignInWithApple {
     struct AppleAuthResponse: Decodable {
+        struct User: Decodable {
+            struct Name: Decodable {
+                let firstName: String
+                let lastName: String
+            }
+            let email: String
+            let name: Name
+        }
         let code: String
         let state: String
         let idToken: String
