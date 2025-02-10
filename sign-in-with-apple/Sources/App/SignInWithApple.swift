@@ -78,7 +78,6 @@ struct SignInWithApple {
     let redirectURL: String
     let jwkIdentifier: JWKIdentifier
     let keys: JWTKeyCollection
-    let appleKeys: JWTKeyCollection
     let httpClient: HTTPClient
 
     internal init(
@@ -94,8 +93,9 @@ struct SignInWithApple {
         self.redirectURL = redirectURL
         self.jwkIdentifier = JWKIdentifier(string: jwkId)
         let jwks = try await Self.getJWKS(httpClient: httpClient)
-        self.appleKeys = try await .init().add(jwks: jwks)
-        self.keys = try await .init().add(ecdsa: ES256PrivateKey(pem: key), kid: self.jwkIdentifier)
+        self.keys = try await .init()
+            .add(ecdsa: ES256PrivateKey(pem: key), kid: self.jwkIdentifier)
+            .add(jwks: jwks)
         self.httpClient = httpClient
     }
 
@@ -103,11 +103,13 @@ struct SignInWithApple {
         _ message: String
     ) async throws -> AppleIdentityToken {
         let messageBytes = [UInt8](message.utf8)
-        let token = try await appleKeys.verify(messageBytes, as: AppleIdentityToken.self)
+        let token = try await keys.verify(messageBytes, as: AppleIdentityToken.self)
         try token.audience.verifyIntendedAudience(includes: siwaId)
         return token
     }
 
+    /// The AppleIdentityToken is only short lived so we need to exchange it for an access token
+    /// that lives for much longer
     func requestAccessToken(appleAuthResponse: AppleAuthResponse) async throws -> String {
         let secret = SignInWithApple.AppleAuthToken(clientId: self.siwaId, teamId: self.teamId)
         let secretJWTToken = try await self.keys.sign(secret, kid: self.jwkIdentifier)
@@ -131,6 +133,7 @@ struct SignInWithApple {
         return responseBody
     }
 
+    /// Load JWKS from Apple
     static func getJWKS(httpClient: HTTPClient) async throws -> JWKS {
         let request = HTTPClientRequest(url: "https://appleid.apple.com/auth/keys")
         let response = try await httpClient.execute(request, timeout: .seconds(60))
