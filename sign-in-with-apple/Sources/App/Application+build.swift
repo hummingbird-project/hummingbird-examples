@@ -23,9 +23,6 @@ struct User: Codable {
     let email: String
 }
 
-// Request context used by application
-typealias AppRequestContext = BasicSessionRequestContext<Session, User>
-
 ///  Build application
 /// - Parameter arguments: application arguments
 public func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {

@@ -29,7 +29,7 @@ struct SIWAController {
             "scope": "name email",
             "redirectURI": siwa.redirectURL,
             "state": state,
-            "usePopup": true,
+            "usePopup": false,
         ]
         return HTML(signInTemplate.render(context, library: mustacheLibrary))
     }
@@ -39,6 +39,6 @@ struct SIWAController {
         let state = context.sessions.session?.state ?? ""
         guard state == appleAuthResponse.state else { throw HTTPError(.badRequest) }
         _ = try await siwa.verify(appleAuthResponse.idToken)
-        return try await siwa.authTokenRequest(appleAuthResponse: appleAuthResponse)
+        return try await siwa.requestAccessToken(appleAuthResponse: appleAuthResponse)
     }
 }

@@ -8,7 +8,7 @@ struct SignInWithApple {
         let code: String
         let state: String
         let idToken: String
-        let user: String
+        let user: String?
 
         private enum CodingKeys: String, CodingKey {
             case code
@@ -18,14 +18,6 @@ struct SignInWithApple {
         }
     }
     struct AppleTokenRequestBody: Encodable {
-        enum CodingKeys: String, CodingKey {
-            case clientId = "client_id"
-            case clientSecret = "client_secret"
-            case code
-            case grantType = "grant_type"
-            case redirectUri = "redirect_uri"
-        }
-
         /// The application identifier for your app.
         let clientId: String
 
@@ -40,6 +32,14 @@ struct SignInWithApple {
 
         /// The grant type that determines how the client interacts with the server.
         let grantType: String = "authorization_code"
+
+        private enum CodingKeys: String, CodingKey {
+            case clientId = "client_id"
+            case clientSecret = "client_secret"
+            case code
+            case grantType = "grant_type"
+            case redirectUri = "redirect_uri"
+        }
     }
 
     struct AppleAuthToken: JWTPayload {
@@ -108,7 +108,7 @@ struct SignInWithApple {
         return token
     }
 
-    func authTokenRequest(appleAuthResponse: AppleAuthResponse) async throws -> String {
+    func requestAccessToken(appleAuthResponse: AppleAuthResponse) async throws -> String {
         let secret = SignInWithApple.AppleAuthToken(clientId: self.siwaId, teamId: self.teamId)
         let secretJWTToken = try await self.keys.sign(secret, kid: self.jwkIdentifier)
         let appleTokenRequest = SignInWithApple.AppleTokenRequestBody(
@@ -127,7 +127,8 @@ struct SignInWithApple {
         ]
         request.body = .bytes([UInt8](requestBody.utf8))
         let response = try await httpClient.execute(request, timeout: .seconds(60))
-        return String(buffer: try await response.body.collect(upTo: 1_000_000))
+        let responseBody = String(buffer: try await response.body.collect(upTo: 1_000_000))
+        return responseBody
     }
 
     static func getJWKS(httpClient: HTTPClient) async throws -> JWKS {
