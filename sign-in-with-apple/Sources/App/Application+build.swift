@@ -4,6 +4,7 @@ import Foundation
 import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
+import JWTKit
 import Logging
 import Mustache
 
@@ -73,6 +74,7 @@ func buildRouter(
     keyValueStore: some PersistDriver,
     fluent: Fluent
 ) async throws -> Router<AppRequestContext> {
+    let jwtKeys = JWTKeyCollection()
     // load mustache template library
     let mustacheLibrary = try await MustacheLibrary(directory: Bundle.module.resourcePath!)
     // set Sign in with Apple
@@ -82,6 +84,7 @@ func buildRouter(
         jwkId: environment.require("SIWA_JWK_ID"),
         redirectURL: environment.require("SIWA_REDIRECT_URL"),
         key: environment.require("SIWA_KEY"),
+        jwtKeys: jwtKeys,
         httpClient: .shared
     )
 

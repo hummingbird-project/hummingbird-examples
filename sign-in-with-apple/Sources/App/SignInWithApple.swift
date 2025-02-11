@@ -4,6 +4,7 @@ import Hummingbird
 import JWTKit
 
 struct SignInWithApple {
+    /// Request body sent to Apple when requesting access, id tokens
     struct AppleTokenRequestBody: Encodable {
         /// The application identifier for your app.
         let clientId: String
@@ -29,6 +30,7 @@ struct SignInWithApple {
         }
     }
 
+    /// Payload used in JWT passed to Apple when requesting access, id tokens
     struct AppleAuthToken: JWTPayload {
         let iss: IssuerClaim
         let iat: IssuedAtClaim
@@ -60,11 +62,17 @@ struct SignInWithApple {
         }
     }
 
+    /// Sign in with Apple Service ID
     let siwaId: String
+    /// Account team ID
     let teamId: String
+    /// Redirect URL
     let redirectURL: String
+    /// Identifier of key
     let jwkIdentifier: JWKIdentifier
-    let keys: JWTKeyCollection
+    /// JWT Key collection
+    let jwtKeys: JWTKeyCollection
+    /// HTTP client used to request access token/Apple JWKs
     let httpClient: HTTPClient
 
     internal init(
@@ -73,6 +81,7 @@ struct SignInWithApple {
         jwkId: String,
         redirectURL: String,
         key: String,
+        jwtKeys: JWTKeyCollection,
         httpClient: HTTPClient
     ) async throws {
         self.siwaId = siwaId
@@ -80,17 +89,20 @@ struct SignInWithApple {
         self.redirectURL = redirectURL
         self.jwkIdentifier = JWKIdentifier(string: jwkId)
         let jwks = try await Self.getJWKS(httpClient: httpClient)
-        self.keys = try await .init()
+        self.jwtKeys = jwtKeys
+        /// Add private key, and Apple keys
+        try await self.jwtKeys
             .add(ecdsa: ES256PrivateKey(pem: key), kid: self.jwkIdentifier)
             .add(jwks: jwks)
         self.httpClient = httpClient
     }
 
+    /// Verify ID token received from Apple
     public func verify(
         _ message: String
     ) async throws -> AppleIdentityToken {
         let messageBytes = [UInt8](message.utf8)
-        let token = try await keys.verify(messageBytes, as: AppleIdentityToken.self)
+        let token = try await jwtKeys.verify(messageBytes, as: AppleIdentityToken.self)
         try token.audience.verifyIntendedAudience(includes: siwaId)
         return token
     }
@@ -99,7 +111,7 @@ struct SignInWithApple {
     /// that lives for much longer
     func requestAccessToken(code: String) async throws -> String {
         let secret = SignInWithApple.AppleAuthToken(clientId: self.siwaId, teamId: self.teamId)
-        let secretJWTToken = try await self.keys.sign(secret, kid: self.jwkIdentifier)
+        let secretJWTToken = try await self.jwtKeys.sign(secret, kid: self.jwkIdentifier)
         let appleTokenRequest = SignInWithApple.AppleTokenRequestBody(
             clientId: self.siwaId,
             clientSecret: secretJWTToken,
