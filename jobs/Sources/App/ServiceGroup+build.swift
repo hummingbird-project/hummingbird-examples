@@ -13,86 +13,122 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import Jobs
-import JobsRedis
 import HummingbirdRedis
+import Jobs
+import JobsPostgres
+import JobsRedis
 import Logging
+import PostgresMigrations
+import PostgresNIO
 import ServiceLifecycle
 
+public enum JobQueueDriverEnum: String, Codable {
+    case postgres
+    case redis
+}
 public protocol AppArguments {
     var hostname: String { get }
     var port: Int { get }
     var processJobs: Bool { get }
+    var driver: JobQueueDriverEnum { get }
 }
 
-func buildServiceGroup(_ args: AppArguments) throws -> ServiceGroup {
+struct MigrationService: Service {
+    let migrations: DatabaseMigrations
+    let postgresClient: PostgresClient
+    let logger: Logger
+    let dryRun: Bool
+
+    func run() async throws {
+        try await migrations.apply(client: postgresClient, logger: logger, dryRun: dryRun)
+        try? await gracefulShutdown()
+    }
+}
+
+func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
     let env = Environment()
     let redisHost = env.get("REDIS_HOST") ?? "localhost"
     let logger = {
         var logger = Logger(label: "JobsExample")
-        logger.logLevel = .info
+        logger.logLevel = .debug
         return logger
     }()
 
-    let redisService = try RedisConnectionPoolService(
-        .init(hostname: redisHost, port: 6379),
-        logger: logger
-    )
-    let jobQueue = JobQueue(
-        .redis(redisService.pool),
-        numWorkers: 4,
-        logger: logger
-    )
-    let jobController = JobController(queue: jobQueue, emailService: .init(logger: logger))
+    let jobQueue: any JobQueueProtocol
+    let servicesUsedByJobQueue: [any Service]
+    switch args.driver {
+    case .redis:
+        let redisService = try RedisConnectionPoolService(
+            .init(
+                hostname: redisHost,
+                port: 6379,
+                pool: .init(maximumConnectionCount: .maximumPreservedConnections(32), connectionRetryTimeout: .seconds(60))
+            ),
+            logger: logger
+        )
+        jobQueue = JobQueue(
+            .redis(redisService.pool),
+            numWorkers: 4,
+            logger: logger
+        ) {
+            MetricsJobMiddleware()
+        }
+        servicesUsedByJobQueue = [redisService]
+    case .postgres:
+        let postgresClient = PostgresClient(
+            configuration: .init(host: "127.0.0.1", port: 5432, username: "test_user", password: "test_password", database: "test_db", tls: .disable),
+            backgroundLogger: logger
+        )
+        let postgresMigrations = DatabaseMigrations()
+        jobQueue = await JobQueue(
+            .postgres(client: postgresClient, migrations: postgresMigrations, logger: logger),
+            numWorkers: 4,
+            logger: logger
+        ) {
+            MetricsJobMiddleware()
+        }
+        servicesUsedByJobQueue = [
+            postgresClient,
+            MigrationService(migrations: postgresMigrations, postgresClient: postgresClient, logger: logger, dryRun: args.processJobs),
+        ]
+    }
+    JobController(emailService: .init(logger: logger)).registerJobs(on: jobQueue)
 
     if !args.processJobs {
         let router = Router()
-        router.post("/send") { request, context -> HTTPResponse.Status in
+        router.get("/send") { request, context -> HTTPResponse.Status in
             let message = try await request.body.collect(upTo: 2048)
-            try await jobQueue.push(
-                JobController.EmailParameters(
-                    to: ["john@email.com"],
-                    from: "jane@email.com",
-                    subject: "HI!",
-                    message: """
-                    Hi John,
+            do {
+                try await jobQueue.push(
+                    JobController.EmailParameters(
+                        to: ["john@email.com"],
+                        from: "jane@email.com",
+                        subject: "HI!",
+                        message: """
+                            Hi John,
 
-                    \(String(buffer: message))
+                            \(String(buffer: message))
 
-                    From
-                    Jane
-                    """
+                            From
+                            Jane
+                            """
+                    ),
+                    options: .init()
                 )
-            )
-            return .ok
-        }
-        router.post("/send2") { request, context -> HTTPResponse.Status in
-            let message = try await request.body.collect(upTo: 2048)
-            try await jobQueue.push(
-                id: jobController.emailJobId,
-                parameters: .init(
-                    to: ["jane@email.com"],
-                    from: "john@email.com",
-                    subject: "HI!",
-                    message: """
-                    Hi Jane,
-
-                    \(String(buffer: message))
-
-                    From
-                    John
-                    """
-                )
-            )
+            } catch {
+                print("\(error)")
+                throw error
+            }
             return .ok
         }
         let app = Application(
             router: router,
-            configuration: .init(address: .hostname(args.hostname, port: args.port))
+            configuration: .init(address: .hostname(args.hostname, port: args.port)),
+            logger: logger
         )
         return ServiceGroup(
             configuration: .init(
-                services: [redisService, app],
+                services: servicesUsedByJobQueue + [app],
                 gracefulShutdownSignals: [.sigterm, .sigint],
                 logger: logger
             )
@@ -100,7 +136,7 @@ func buildServiceGroup(_ args: AppArguments) throws -> ServiceGroup {
     } else {
         return ServiceGroup(
             configuration: .init(
-                services: [redisService, jobQueue],
+                services: servicesUsedByJobQueue + [jobQueue],
                 gracefulShutdownSignals: [.sigterm, .sigint],
                 logger: logger
             )

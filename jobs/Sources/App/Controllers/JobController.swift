@@ -10,9 +10,12 @@ struct JobController {
         let message: String
     }
 
-    init(queue: borrowing JobQueue<some JobQueueDriver>, emailService: FakeEmailService) {
-        // This function demonstrates two different ways to register a job
-        // Register Job with predefined job identifier
+    let emailService: FakeEmailService
+    init(emailService: FakeEmailService) {
+        self.emailService = emailService
+    }
+
+    func registerJobs(on queue: some JobQueueProtocol) {
         queue.registerJob(parameters: EmailParameters.self) { parameters, context in
             try await emailService.sendEmail(
                 to: parameters.to,
@@ -21,19 +24,5 @@ struct JobController {
                 message: parameters.message
             )
         }
-
-        // Create job definition and extract job id from it
-        let emailJob = JobDefinition(id: "send_email_2") { (parameters: EmailParameters, context) in
-            try await emailService.sendEmail(
-                to: parameters.to,
-                from: parameters.from,
-                subject: parameters.subject,
-                message: parameters.message
-            )
-        }
-        queue.registerJob(emailJob)
-        self.emailJobId = emailJob.id
     }
-
-    let emailJobId: JobIdentifier<EmailParameters>
 }

@@ -22,6 +22,7 @@ final class AppTests: XCTestCase {
         var hostname: String { "127.0.0.1" }
         var port: Int { 0 }
         let processJobs: Bool
+        let driver: JobQueueDriverEnum = .redis
     }
 
     func testApp() throws {}
