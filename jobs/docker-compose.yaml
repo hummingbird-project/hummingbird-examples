@@ -1,0 +1,24 @@
+services:
+  postgres:
+    image: postgres:16.3-alpine
+    ports:
+      - 5432:5432
+    volumes:
+      - db:/var/lib/postgresql/hummingbird
+    environment:
+      - POSTGRES_PASSWORD=test_password
+      - POSTGRES_USER=test_user
+      - POSTGRES_DB=test_db
+  redis:
+    image: redis:8.0-M03-alpine
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:
+  db:
+    driver: local

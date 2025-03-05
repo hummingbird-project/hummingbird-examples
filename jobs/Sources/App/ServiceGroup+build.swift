@@ -58,13 +58,15 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
     let servicesUsedByJobQueue: [any Service]
     switch args.driver {
     case .redis:
+        var redisLogger = logger
+        redisLogger.logLevel = .info
         let redisService = try RedisConnectionPoolService(
             .init(
                 hostname: redisHost,
                 port: 6379,
                 pool: .init(maximumConnectionCount: .maximumPreservedConnections(32), connectionRetryTimeout: .seconds(60))
             ),
-            logger: logger
+            logger: redisLogger
         )
         jobQueue = JobQueue(
             .redis(redisService.pool),
@@ -128,7 +130,7 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
         )
         return ServiceGroup(
             configuration: .init(
-                services: servicesUsedByJobQueue + [app],
+                services: servicesUsedByJobQueue + [app, jobQueue],
                 gracefulShutdownSignals: [.sigterm, .sigint],
                 logger: logger
             )
