@@ -62,5 +62,5 @@ actor Publisher<Value: Sendable>: Service {
         self.subscriptions[id] = nil
     }
 
-    var subscriptions: [UUID: AsyncStream<Value>.Continuation]
+    var subscriptions: [SubscriptionID: AsyncStream<Value>.Continuation]
 }
