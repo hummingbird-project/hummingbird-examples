@@ -24,11 +24,13 @@ struct JWTPayloadData: JWTPayload, Equatable {
     enum CodingKeys: String, CodingKey {
         case subject = "sub"
         case expiration = "exp"
+        case userName = "name"
     }
 
     var subject: SubjectClaim
     var expiration: ExpirationClaim
     // Define additional JWT Attributes here
+    var userName: String
 
     func verify(using algorithm: some JWTAlgorithm) async throws {
         try self.expiration.verifyNotExpired()
@@ -40,26 +42,16 @@ struct JWTAuthenticator: AuthenticatorMiddleware, @unchecked Sendable {
     let jwtKeyCollection: JWTKeyCollection
     let fluent: Fluent
 
-    init(fluent: Fluent) {
-        self.jwtKeyCollection = JWTKeyCollection()
+    init(jwtKeyCollection: JWTKeyCollection, fluent: Fluent) {
+        self.jwtKeyCollection = jwtKeyCollection
         self.fluent = fluent
-    }
-
-    init(jwksData: ByteBuffer, fluent: Fluent) async throws {
-        let jwks = try JSONDecoder().decode(JWKS.self, from: jwksData)
-        self.jwtKeyCollection = JWTKeyCollection()
-        try await self.jwtKeyCollection.add(jwks: jwks)
-        self.fluent = fluent
-    }
-
-    func useSigner(hmac: HMACKey, digestAlgorithm: DigestAlgorithm, kid: JWKIdentifier? = nil) async {
-        await self.jwtKeyCollection.add(hmac: hmac, digestAlgorithm: digestAlgorithm, kid: kid)
     }
 
     func authenticate(request: Request, context: Context) async throws -> User? {
         // get JWT from bearer authorisation
         guard let jwtToken = request.headers.bearer?.token else { throw HTTPError(.unauthorized) }
 
+        // get payload and verify its contents
         let payload: JWTPayloadData
         do {
             payload = try await self.jwtKeyCollection.verify(jwtToken, as: JWTPayloadData.self)
@@ -67,20 +59,11 @@ struct JWTAuthenticator: AuthenticatorMiddleware, @unchecked Sendable {
             context.logger.debug("couldn't verify token")
             throw HTTPError(.unauthorized)
         }
-        let db = self.fluent.db()
-        // check if user exists and return if it exists
-        if let existingUser = try await User.query(on: db)
-            .filter(\.$name == payload.subject.value)
-            .first()
-        {
-            return existingUser
+        // get user id and name from payload
+        guard let userUUID = UUID(uuidString: payload.subject.value) else {
+            context.logger.debug("Invalid JWT subject \(payload.subject.value)")
+            throw HTTPError(.unauthorized)
         }
-
-        // if user doesn't exist then JWT was created by a another service and we should create a user
-        // for it, with no associated password
-        let user = User(id: nil, name: payload.subject.value, passwordHash: nil)
-        try await user.save(on: db)
-
-        return user
+        return User(id: userUUID, name: payload.userName, passwordHash: nil)
     }
 }
