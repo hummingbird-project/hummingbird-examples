@@ -1,4 +1,3 @@
-import AsyncHTTPClient
 import FluentKit
 import FluentSQLiteDriver
 import Hummingbird
@@ -17,13 +16,11 @@ protocol AppArguments {
 typealias AppRequestContext = BasicAuthRequestContext<User>
 
 func buildApplication(_ args: AppArguments) async throws -> some ApplicationProtocol {
-    let env = try await Environment().merging(with: .dotEnv())
     let logger = {
         var logger = Logger(label: "auth-jwt")
         logger.logLevel = .debug
         return logger
     }()
-    let httpClient = HTTPClient.shared
     let fluent = Fluent(logger: logger)
     // add sqlite database
     if args.inMemoryDatabase {
@@ -38,45 +35,35 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
         try await fluent.migrate()
     }
 
-    let jwtAuthenticator: JWTAuthenticator
-    let jwtLocalSignerKid = JWKIdentifier("_hb_local_")
-    if let jwksUrl = env.get("JWKS_URL") {
-        do {
-            let request = HTTPClientRequest(url: jwksUrl)
-            let jwksResponse: HTTPClientResponse = try await httpClient.execute(request, timeout: .seconds(20))
-            let jwksData = try await jwksResponse.body.collect(upTo: 1_000_000)
-            jwtAuthenticator = try await JWTAuthenticator(jwksData: jwksData, fluent: fluent)
-        } catch {
-            logger.error("JWTAuthenticator initialization failed")
-            throw error
-        }
-    } else {
-        jwtAuthenticator = JWTAuthenticator(fluent: fluent)
-    }
-    await jwtAuthenticator.useSigner(hmac: "my-secret-key", digestAlgorithm: .sha256, kid: jwtLocalSignerKid)
+    // Create JWT Key collection and add key for signing JWTs
+    let jwtKeyCollection = JWTKeyCollection()
+    await jwtKeyCollection.add(hmac: "my-secret-key", digestAlgorithm: .sha256, kid: JWKIdentifier("auth-jwt"))
 
+    // Create router and add logging and CORS middleware
     let router = Router(context: AppRequestContext.self)
     router.add(middleware: LogRequestsMiddleware(.debug))
-    router.add(middleware:
-        CORSMiddleware(
-            allowOrigin: .originBased,
-            allowHeaders: [.accept, .authorization, .contentType, .origin],
-            allowMethods: [.get, .options]
-        )
+    router.add(
+        middleware:
+            CORSMiddleware(
+                allowOrigin: .originBased,
+                allowHeaders: [.accept, .authorization, .contentType, .origin],
+                allowMethods: [.get, .options]
+            )
     )
-    router.get("/") { _, _ in
-        return "Hello"
-    }
+
+    // Add routes for creating and authenticating users using username/password
     UserController(
-        jwtKeyCollection: jwtAuthenticator.jwtKeyCollection,
-        kid: jwtLocalSignerKid,
+        jwtKeyCollection: jwtKeyCollection,
+        kid: JWKIdentifier("auth-jwt"),
         fluent: fluent
     ).addRoutes(to: router.group("user"))
+
+    // Add route that authenticates request using JWT included in Authentication token.
     router.group("auth")
-        .add(middleware: jwtAuthenticator)
+        .add(middleware: JWTAuthenticator(jwtKeyCollection: jwtKeyCollection, fluent: fluent))
         .get("/") { request, context in
             guard let user = context.identity else { throw HTTPError(.unauthorized) }
-            return "Authenticated (Subject: \(user.name))"
+            return "Authenticated (username: \(user.name))"
         }
 
     var app = Application(
