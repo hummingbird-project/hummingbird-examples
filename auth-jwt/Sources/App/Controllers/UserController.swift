@@ -68,11 +68,12 @@ struct UserController {
         // get authenticated user and return
         guard let user = context.identity else { throw HTTPError(.unauthorized) }
         let payload = JWTPayloadData(
-            subject: .init(value: user.name),
-            expiration: .init(value: Date(timeIntervalSinceNow: 12 * 60 * 60))
+            subject: .init(value: try user.requireID().uuidString),
+            expiration: .init(value: Date(timeIntervalSinceNow: 12 * 60 * 60)),
+            userName: user.name
         )
         return try await [
-            "token": self.jwtKeyCollection.sign(payload, kid: self.kid),
+            "token": self.jwtKeyCollection.sign(payload, kid: self.kid)
         ]
     }
 }

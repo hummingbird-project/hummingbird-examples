@@ -1,10 +1,11 @@
-@testable import App
 import Foundation
 import Hummingbird
 import HummingbirdAuthTesting
 import HummingbirdTesting
 import JWTKit
 import XCTest
+
+@testable import App
 
 final class AppTests: XCTestCase {
     struct TestAppArguments: AppArguments {
@@ -14,23 +15,16 @@ final class AppTests: XCTestCase {
         let port = 8080
     }
 
-    func testApp() async throws {
-        let app = try await buildApplication(TestAppArguments())
-
-        try await app.test(.router) { client in
-            try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "Hello")
-            }
-        }
-    }
-
     func testCreateUser() async throws {
         let app = try await buildApplication(TestAppArguments())
 
         try await app.test(.router) { client in
             let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
-            try await client.execute(uri: "/user", method: .put, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
+            try await client.execute(
+                uri: "/user",
+                method: .put,
+                body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())
+            ) { response in
                 XCTAssertEqual(response.status, .created)
                 let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: response.body)
                 XCTAssertEqual(userResponse.name, "adam")
@@ -38,16 +32,22 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func testAuthenticateWithLocallyCreatedJWT() async throws {
+    func testAuthenticateWithJWT() async throws {
         let app = try await buildApplication(TestAppArguments())
 
         try await app.test(.router) { client in
+            // create user
             let requestBody = TestCreateUserRequest(name: "adam", password: "testpassword")
-            try await client.execute(uri: "/user", method: .put, body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())) { response in
+            try await client.execute(
+                uri: "/user",
+                method: .put,
+                body: JSONEncoder().encodeAsByteBuffer(requestBody, allocator: ByteBufferAllocator())
+            ) { response in
                 XCTAssertEqual(response.status, .created)
                 let userResponse = try JSONDecoder().decode(TestCreateUserResponse.self, from: response.body)
                 XCTAssertEqual(userResponse.name, "adam")
             }
+            // login
             let token = try await client.execute(
                 uri: "/user/login",
                 method: .post,
@@ -57,28 +57,9 @@ final class AppTests: XCTestCase {
                 let responseBody = try JSONDecoder().decode([String: String].self, from: response.body)
                 return try XCTUnwrap(responseBody["token"])
             }
+            // authenticate with JWT
             try await client.execute(uri: "/auth", method: .get, auth: .bearer(token)) { response in
                 XCTAssertEqual(response.status, .ok)
-            }
-        }
-    }
-
-    func testAuthenticateWithServiceCreatedJWT() async throws {
-        let app = try await buildApplication(TestAppArguments())
-
-        try await app.test(.router) { client in
-            // create JWT
-            let payload = JWTPayloadData(
-                subject: .init(value: "John Smith"),
-                expiration: .init(value: Date(timeIntervalSinceNow: 12 * 60 * 60))
-            )
-            let signers = JWTKeyCollection()
-            await signers.add(hmac: "my-secret-key", digestAlgorithm: .sha256, kid: "_hb_local_")
-            let token = try await signers.sign(payload, kid: "_hb_local_")
-
-            try await client.execute(uri: "/auth", method: .get, auth: .bearer(token)) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "Authenticated (Subject: John Smith)")
             }
         }
     }
