@@ -1,4 +1,5 @@
 import Hummingbird
+import Jobs
 import Logging
 import Metrics
 import NIOCore
@@ -49,8 +50,12 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
     let logger = Logger(label: "open-telemetry")
 
     let otel = try await setupOTel()
+    let jobQueue = JobQueue(.memory, logger: logger) {
+        MetricsJobMiddleware()
+        TracingJobMiddleware()
+    }
 
-    let router = buildRouter()
+    let router = buildRouter(jobQueue: jobQueue)
     var app = Application(
         router: router,
         configuration: .init(
@@ -59,7 +64,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
         ),
         logger: logger
     )
-    app.addServices(otel.metrics, otel.tracer)
+    app.addServices(otel.metrics, otel.tracer, jobQueue)
     return app
 }
 
@@ -102,8 +107,15 @@ func setupOTel() async throws -> (metrics: Service, tracer: Service) {
     return (metrics: metrics, tracer: tracer)
 }
 
+struct WaitJob: JobParameters {
+    static let jobName = "wait"
+    let time: Duration
+}
 /// Build router
-func buildRouter() -> Router<AppRequestContext> {
+func buildRouter(jobQueue: JobQueue<some JobQueueDriver>) -> Router<AppRequestContext> {
+    jobQueue.registerJob(parameters: WaitJob.self) { parameters, _ in
+        try await Task.sleep(for: parameters.time)
+    }
     let router = Router(context: AppRequestContext.self)
     // Add middleware
     router.addMiddleware {
@@ -131,6 +143,12 @@ func buildRouter() -> Router<AppRequestContext> {
             span.attributes["wait.time"] = time
             try await Task.sleep(for: .seconds(time))
         }
+        return HTTPResponse.Status.ok
+    }
+    // Add test parameter endpoint
+    router.get("/job") { request, context in
+        let time = try request.uri.queryParameters.require("time", as: Double.self)
+        try await jobQueue.push(WaitJob(time: .seconds(time)))
         return HTTPResponse.Status.ok
     }
     return router
