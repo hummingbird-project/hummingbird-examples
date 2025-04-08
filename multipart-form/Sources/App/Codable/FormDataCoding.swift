@@ -15,7 +15,6 @@
 import ExtrasBase64
 import Hummingbird
 import MultipartKit
-import NIOFoundationCompat
 
 extension FormDataEncoder {
     /// Extend JSONEncoder to support encoding `HBResponse`'s. Sets body and header values
@@ -42,9 +41,9 @@ extension FormDataDecoder {
     ///   - request: Request to decode from
     public func decode<T: Decodable>(_ type: T.Type, from request: Request, context: some RequestContext) async throws -> T {
         guard let contentType = request.headers[.contentType],
-              let mediaType = MediaType(from: contentType),
-              let parameter = mediaType.parameter,
-              parameter.name == "boundary"
+            let mediaType = MediaType(from: contentType),
+            let parameter = mediaType.parameter,
+            parameter.name == "boundary"
         else {
             throw HTTPError(.unsupportedMediaType)
         }
