@@ -12,7 +12,7 @@ The example has three routes to test
 
 ## Docker compose
 
-The example also comes with a docker-compose file that starts up an OTel collector to collect metrics and traces from the application. This is then forwarded onto Prometheus and Jager instances. You can view the metrics from the Prometheus endpoint `http://localhost:9090`. You can view the traces from the Jaeger endpoint `http://loaclhost:16686`. You can start all of these using
+The example also comes with a docker-compose file that starts up an OTel collector to collect metrics and traces from the application. This is then forwarded onto Prometheus and Jager instances. You can view the metrics from the Prometheus endpoint `http://localhost:9090`. You can view the traces from the Jaeger endpoint `http://localhost:16686`. You can start all of these using
 
 ```
 docker compose up
