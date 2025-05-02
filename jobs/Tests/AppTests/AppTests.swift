@@ -15,6 +15,7 @@
 import App
 import Hummingbird
 import HummingbirdTesting
+import Logging
 import XCTest
 
 final class AppTests: XCTestCase {
@@ -22,6 +23,7 @@ final class AppTests: XCTestCase {
         var hostname: String { "127.0.0.1" }
         var port: Int { 0 }
         let processJobs: Bool
+        var logLevel: Logger.Level? { .debug }
     }
 
     func testApp() throws {}
