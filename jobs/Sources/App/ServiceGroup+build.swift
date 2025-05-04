@@ -13,9 +13,9 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
+import HummingbirdRedis
 import Jobs
 import JobsRedis
-import HummingbirdRedis
 import Logging
 import ServiceLifecycle
 
@@ -23,27 +23,29 @@ public protocol AppArguments {
     var hostname: String { get }
     var port: Int { get }
     var processJobs: Bool { get }
+    var logLevel: Logger.Level? { get }
 }
 
-func buildServiceGroup(_ args: AppArguments) throws -> ServiceGroup {
+func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
     let env = Environment()
     let redisHost = env.get("REDIS_HOST") ?? "localhost"
     let logger = {
-        var logger = Logger(label: "JobsExample")
-        logger.logLevel = .info
+        var logger = Logger(label: "Jobs")
+        logger.logLevel =
+            args.logLevel ?? env.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .info
         return logger
     }()
-
+    let redisLogger = Logger(label: "Redis")
     let redisService = try RedisConnectionPoolService(
         .init(hostname: redisHost, port: 6379),
+        logger: redisLogger
+    )
+    let jobQueue = try await JobQueue(
+        .redis(redisService.pool, logger: logger),
+        numWorkers: 0,
         logger: logger
     )
-    let jobQueue = JobQueue(
-        .redis(redisService.pool),
-        numWorkers: 4,
-        logger: logger
-    )
-    let jobController = JobController(queue: jobQueue, emailService: .init(logger: logger))
+    _ = JobController(queue: jobQueue, emailService: .init(logger: logger))
 
     if !args.processJobs {
         let router = Router()
@@ -55,33 +57,11 @@ func buildServiceGroup(_ args: AppArguments) throws -> ServiceGroup {
                     from: "jane@email.com",
                     subject: "HI!",
                     message: """
-                    Hi John,
-
-                    \(String(buffer: message))
-
-                    From
-                    Jane
-                    """
-                )
-            )
-            return .ok
-        }
-        router.post("/send2") { request, context -> HTTPResponse.Status in
-            let message = try await request.body.collect(upTo: 2048)
-            try await jobQueue.push(
-                id: jobController.emailJobId,
-                parameters: .init(
-                    to: ["jane@email.com"],
-                    from: "john@email.com",
-                    subject: "HI!",
-                    message: """
-                    Hi Jane,
-
-                    \(String(buffer: message))
-
-                    From
-                    John
-                    """
+                        Hi John,
+                        \(String(buffer: message))
+                        From
+                        Jane
+                        """
                 )
             )
             return .ok
@@ -98,10 +78,12 @@ func buildServiceGroup(_ args: AppArguments) throws -> ServiceGroup {
             )
         )
     } else {
+        try await jobQueue.queue.cleanup(failedJobs: .rerun, processingJobs: .rerun)
         return ServiceGroup(
             configuration: .init(
                 services: [redisService, jobQueue],
-                gracefulShutdownSignals: [.sigterm, .sigint],
+                gracefulShutdownSignals: [.sigterm],
+                cancellationSignals: [.sigint],
                 logger: logger
             )
         )
