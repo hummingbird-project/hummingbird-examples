@@ -24,6 +24,7 @@ import NIOPosix
 final class User: Model, PasswordAuthenticatable, @unchecked Sendable {
     static let schema = "user"
 
+    // The ID is a UUID that is automatically generated
     @ID(key: .id)
     var id: UUID?
 

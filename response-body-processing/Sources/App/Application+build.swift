@@ -24,7 +24,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
     let router = Router()
     // Add logging
     router.add(middleware: LogRequestsMiddleware(.info))
-    // Add logging
+    // Adds the custom middleware to add the SHA256 digest to the response
     router.add(middleware: AddSHA256DigestMiddleware())
     // Add echo route
     router.post("/echo") { request, context -> Response in
