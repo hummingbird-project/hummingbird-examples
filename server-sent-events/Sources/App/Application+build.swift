@@ -19,7 +19,7 @@ public protocol AppArguments {
 /// This could include things like the authenticated user, a JWT token, or other information derived
 /// from the request such as their IP address, or user agent.
 /// 
-/// The Request Context can be accessed and modified by any middleware or route handler that has access to the request.
+/// The Request Context can be accessed and modified by any middleware or route handler.
 /// This allows middleware to pass information forward to the next middleware or route handler in the chain.
 struct AppRequestContext: RequestContext {
     /// The Core Context Storage is used to store any data that _hummingbird_ needs to know about the request
