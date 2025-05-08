@@ -44,7 +44,7 @@ struct AppLambda: APIGatewayLambdaFunction {
         self.logger = context.logger
     }
 
-    /// Builds a Responer, which is responsible for handling requests.
+    /// Builds a Responder, which is responsible for handling requests.
     /// A Hummingbird Router is the most common responder, and is used in this example.
     /// 
     /// If you want your Hummingbird application to be flexibly deployed as either a Lambda or a normal HTTP server,

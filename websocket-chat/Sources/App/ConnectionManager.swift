@@ -108,7 +108,7 @@ struct ConnectionManager: Service {
                         }
 
                         do {
-                            // We handle the stream is incoming messages emitted by this client
+                            // We handle the stream as incoming messages emitted by this client
                             // The `for try await` loop will suspend until a new message is available
                             // Once a message is available, the message is handled before awaiting the next one
                             // This implicitly applies "backpressure" to the client, to prevent it from sending too many messages
