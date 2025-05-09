@@ -8,6 +8,7 @@ actor Publisher<Value: Sendable>: Service {
         case add(SubscriptionID, AsyncStream<Value>.Continuation)
         case remove(SubscriptionID)
     }
+
     nonisolated let (subStream, subSource) = AsyncStream<SubscriptionCommand>.makeStream()
 
     init() {
@@ -26,6 +27,12 @@ actor Publisher<Value: Sendable>: Service {
     /// - Returns: AsyncStream of values, and subscription identifier
     nonisolated func subscribe() -> (AsyncStream<Value>, SubscriptionID) {
         let id = SubscriptionID()
+
+        // Each subscription gets an AsyncStream and a SubscriptionID
+        // The AsyncStream is unbounded by default. This means that no messages are lost, but
+        // any backpressure applied to the AsyncStream will cause the stream to buffer messages
+        // in memory. If the client is unable to keep up with the rate of data production, the
+        // data will stack up in the server's memory.
         let (stream, source) = AsyncStream<Value>.makeStream()
         subSource.yield(.add(id, source))
         return (stream, id)

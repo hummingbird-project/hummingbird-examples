@@ -15,7 +15,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     logger.logLevel = .trace
     let connectionManager = ConnectionManager(logger: logger)
 
-    // Router
+    // Create a router for the HTTP server
     let router = Router()
     router.add(middleware: LogRequestsMiddleware(.debug))
     router.add(middleware: FileMiddleware(logger: logger))
@@ -32,7 +32,7 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     } onUpgrade: { inbound, outbound, context in
         // only allow upgrade if username query parameter exists
         guard let name = context.request.uri.queryParameters["username"] else {
-            try await outbound.close(.unexpectedServerError, reason: "User connected already")
+            try await outbound.close(.unexpectedServerError, reason: "User is not authenticated")
             return
         }
         let outputStream = connectionManager.addUser(name: String(name), inbound: inbound, outbound: outbound)
