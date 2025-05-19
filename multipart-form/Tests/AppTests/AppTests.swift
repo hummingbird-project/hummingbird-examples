@@ -21,6 +21,11 @@ final class AppTests: XCTestCase {
             Content-Disposition: form-data; name="age"\r
             \r
             50\r
+            ------HBTestFormBoundaryXD6BXJI\r
+            Content-Disposition: form-data; name="pfp"; filename="example.txt"\r
+            Content-Type: text/plain\r
+            \r
+            Hummingbird\r
             ------HBTestFormBoundaryXD6BXJI--\r
             """
             let contentType = "multipart/form-data; boundary=----HBTestFormBoundaryXD6BXJI"
