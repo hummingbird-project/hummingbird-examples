@@ -1,21 +1,32 @@
 import Hummingbird
 import MultipartKit
+import NIOFileSystem
 import StructuredFieldValues
 
-struct File: MultipartPartConvertible, Decodable {
-    let data: ByteBuffer
-    let filename: String
-    let contentType: String
+public struct File: MultipartPartConvertible, Decodable {
+    public let data: ByteBuffer
+    public let filename: String
+    public let contentType: String
 
-    var multipart: MultipartPart? { nil }
+    public var multipart: MultipartPart? { nil }
 
-    init?(multipart: MultipartPart) {
+    public init?(multipart: MultipartPart) {
         self.data = multipart.body
         guard let contentType = multipart.headers["content-type"].first else { return nil }
         guard let contentDispositionHeader = multipart.headers["content-disposition"].first else { return nil }
         guard let contentDisposition = try? StructuredFieldValueDecoder().decode(MultipartContentDispostion.self, from: contentDispositionHeader)
         else { return nil }
         guard let filename = contentDisposition.parameters.filename else { return nil }
+        self.filename = filename
+        self.contentType = contentType
+    }
+
+    public init(
+        data: ByteBuffer,
+        filename: String,
+        contentType: String
+    ) {
+        self.data = data
         self.filename = filename
         self.contentType = contentType
     }

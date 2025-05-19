@@ -47,7 +47,14 @@ struct WebController {
 
     @Sendable func post(request: Request, context: some RequestContext) async throws -> HTML {
         let user = try await request.decode(as: User.self, context: context)
-        let html = self.enteredTemplate.render(user, library: self.library)
+        let imageURL = try await user.profilePicture.saveDataToDisk()
+        let context: [String: Any] = [
+            "name": user.name,
+            "age": user.age,
+            "profilePictureURL": imageURL,
+            "profilePictureFilename": imageURL.lastComponent ?? "nil",
+        ]
+        let html = self.enteredTemplate.render(context, library: self.library)
         return HTML(html: html)
     }
 }

@@ -17,5 +17,5 @@ import Hummingbird
 struct User: Decodable {
     let name: String
     let age: Int
-    let pfp: File
+    let profilePicture: File
 }
