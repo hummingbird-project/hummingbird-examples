@@ -20,7 +20,7 @@ final class FileHelperTests: XCTestCase {
     }
 
     func testGetUniqueFilePath() async throws {
-        let byteBuffer = ByteBuffer(data: "this is a test".data(using: .utf8) ?? Data())
+        let byteBuffer = ByteBuffer(bytes: "this is a test".data(using: .utf8) ?? Data())
         let testFile = File(
             data: byteBuffer,
             filename: "test-file.txt",
