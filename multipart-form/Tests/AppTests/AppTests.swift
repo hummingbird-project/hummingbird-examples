@@ -1,7 +1,6 @@
 @testable import App
 import Hummingbird
 import HummingbirdTesting
-import NIOFileSystem
 import XCTest
 
 final class AppTests: XCTestCase {

@@ -16,7 +16,6 @@ let package = Package(
         .package(url: "https://github.com/swift-extras/swift-extras-base64.git", .upToNextMinor(from: "0.7.0")),
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.0.0"),
         .package(url: "https://github.com/apple/swift-http-structured-headers", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
     ],
     targets: [
         .executableTarget(
@@ -28,7 +27,6 @@ let package = Package(
                 .product(name: "ExtrasBase64", package: "swift-extras-base64"),
                 .product(name: "MultipartKit", package: "multipart-kit"),
                 .product(name: "StructuredFieldValues", package: "swift-http-structured-headers"),
-                .product(name: "_NIOFileSystem", package: "swift-nio"),
             ],
             resources: [.process("Resources")],
             swiftSettings: [

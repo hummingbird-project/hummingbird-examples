@@ -1,6 +1,5 @@
 import Hummingbird
 import MultipartKit
-import NIOFileSystem
 import StructuredFieldValues
 
 public struct File: MultipartPartConvertible, Decodable {
