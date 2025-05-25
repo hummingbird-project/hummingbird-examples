@@ -32,6 +32,14 @@ public struct File: MultipartPartConvertible, Decodable {
     }
 }
 
+extension File {
+    var urlSafeFilename: String {
+        var urlSafeFileName = filename.replacingOccurrences(of: " ", with: "-").trimmingCharacters(in: .whitespacesAndNewlines)
+        urlSafeFileName = urlSafeFileName.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed) ?? urlSafeFileName
+        return urlSafeFileName
+    }
+}
+
 struct MultipartContentDispostion: StructuredFieldValue {
     struct Parameters: StructuredFieldValue {
         static let structuredFieldType: StructuredFieldType = .dictionary

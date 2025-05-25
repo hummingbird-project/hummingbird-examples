@@ -6,13 +6,6 @@ import XCTest
 
 final class AppTests: XCTestCase {
 
-    override func tearDown() async throws {
-        // Clean up any created directories or files
-        let contentDirectory = try await File.getContentDirectory()
-        try await FileSystem.shared.removeItem(at: contentDirectory)
-        try await super.tearDown()
-    }
-
     struct TestArguments: AppArguments {
         let hostname = "127.0.0.1"
         let port = 8080
