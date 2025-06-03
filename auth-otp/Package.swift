@@ -28,7 +28,6 @@ let package = Package(
                 .product(name: "HummingbirdOTP", package: "hummingbird-auth"),
                 .product(name: "Mustache", package: "swift-mustache"),
                 .product(name: "HummingbirdPostgres", package: "hummingbird-postgres"),
-                .product(name: "PostgresMigrations", package: "hummingbird-postgres"),
             ],
             path: "Sources/App",
             resources: [.process("Resources")]
