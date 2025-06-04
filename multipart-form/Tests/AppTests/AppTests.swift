@@ -4,6 +4,7 @@ import HummingbirdTesting
 import XCTest
 
 final class AppTests: XCTestCase {
+
     struct TestArguments: AppArguments {
         let hostname = "127.0.0.1"
         let port = 8080
@@ -21,6 +22,11 @@ final class AppTests: XCTestCase {
             Content-Disposition: form-data; name="age"\r
             \r
             50\r
+            ------HBTestFormBoundaryXD6BXJI\r
+            Content-Disposition: form-data; name="profilePicture"; filename="example.txt"\r
+            Content-Type: text/plain\r
+            \r
+            Hummingbird\r
             ------HBTestFormBoundaryXD6BXJI--\r
             """
             let contentType = "multipart/form-data; boundary=----HBTestFormBoundaryXD6BXJI"
