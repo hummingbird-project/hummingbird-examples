@@ -14,8 +14,14 @@
 
 import Hummingbird
 
+/// A structure representing a user in the App.
 struct User: Decodable {
+    /// The name of the user.
     let name: String
+
+    /// The age of the user.
     let age: Int
+
+    /// The profile picture of the user, represented as a `File`.
     let profilePicture: File
 }
