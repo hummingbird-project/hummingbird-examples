@@ -41,8 +41,11 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
         logger: redisLogger
     )
     let jobQueue = try await JobQueue(
-        .redis(redisService.pool, logger: logger),
-        numWorkers: 0,
+        .redis(
+            redisService.pool,
+            configuration: .init(queueName: "HBExample", retentionPolicy: .init(completedJobs: .retain)),
+            logger: logger
+        ),
         logger: logger
     )
     _ = JobController(queue: jobQueue, emailService: .init(logger: logger))
@@ -78,12 +81,20 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
             )
         )
     } else {
-        try await jobQueue.queue.cleanup(failedJobs: .rerun, processingJobs: .rerun)
-        return ServiceGroup(
+        var jobSchedule = JobSchedule()
+        jobSchedule.addJob(
+            jobQueue.queue.cleanupJob,
+            parameters: .init(completedJobs: .remove(maxAge: .seconds(24 * 60 * 60))),
+            schedule: .hourly(minute: 52)
+        )
+        return await ServiceGroup(
             configuration: .init(
-                services: [redisService, jobQueue],
-                gracefulShutdownSignals: [.sigterm],
-                cancellationSignals: [.sigint],
+                services: [
+                    redisService,
+                    jobQueue.processor(options: .init(numWorkers: 4, gracefulShutdownTimeout: .seconds(10))),
+                    jobSchedule.scheduler(on: jobQueue, named: "HBExample"),
+                ],
+                gracefulShutdownSignals: [.sigterm, .sigint],
                 logger: logger
             )
         )
