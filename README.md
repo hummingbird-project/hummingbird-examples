@@ -34,7 +34,7 @@ Examples converted to Hummingbird 2.0
 - [server-sent-events](https://github.com/hummingbird-project/hummingbird-examples/tree/main/server-sent-events) - Server sent events.
 - [sessions](https://github.com/hummingbird-project/hummingbird-examples/tree/main/sessions) - Username/password and session authentication.
 - [todos-dynamodb](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-dynamodb) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB.
-- [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/1.x.x/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
+- [todos-fluent](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-fluent) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using Fluent
 - [todos-lambda](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-lambda) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using DynamoDB and running on AWS Lambda.
 - [todos-mongokitten-openapi](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-mongokitten-openapi) - Todos application, using MongoDB driver [MongoKitten](https://github.com/orlandos-nl/MongoKitten) and the [OpenAPI runtime](https://github.com/apple/swift-openapi-runtime).
 - [todos-postgres-tutorial](https://github.com/hummingbird-project/hummingbird-examples/tree/main/todos-postgres-tutorial) - Todos application, based off [TodoBackend](http://todobackend.com) spec, using PostgresNIO. Sample code that goes along with the [Todos tutorial](https://hummingbird-project.github.io/hummingbird-docs/2.0/tutorials/todos).
