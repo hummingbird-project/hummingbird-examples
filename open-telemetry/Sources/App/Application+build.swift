@@ -2,7 +2,6 @@ import Hummingbird
 import Logging
 import Metrics
 import NIOCore
-import OTLPGRPC
 import OTel
 import ServiceLifecycle
 import Tracing
@@ -38,68 +37,34 @@ extension AppRequestContext: RemoteAddressRequestContext {
 /// - Parameter arguments: application arguments
 public func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
     let environment = Environment()
-    // Bootstrap the logging backend with the OTel metadata provider which includes span IDs in logging messages.
     let logLevel = arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .debug
     LoggingSystem.bootstrap { label in
-        var handler = StreamLogHandler.standardError(label: label, metadataProvider: .otel)
+        var handler = StreamLogHandler.standardOutput(label: label, metadataProvider: OTel.makeLoggingMetadataProvider())
         handler.logLevel = logLevel
         return handler
     }
 
-    let logger = Logger(label: "open-telemetry")
+    var otelConfig = OTel.Configuration.default
+    otelConfig.serviceName = "Hummingbird"
+    otelConfig.logs.enabled = false
+    otelConfig.metrics.otlpExporter.protocol = .grpc
+    otelConfig.traces.otlpExporter.protocol = .grpc
+    let observability = try OTel.bootstrap(configuration: otelConfig)
 
-    let otel = try await setupOTel()
+    var logger = Logger(label: "open-telemetry")
+    logger.logLevel = arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .debug
 
     let router = buildRouter()
-    var app = Application(
+    let app = Application(
         router: router,
         configuration: .init(
             address: .hostname(arguments.hostname, port: arguments.port),
             serverName: "open-telemetry-server"
         ),
+        services: [observability],
         logger: logger
     )
-    app.addServices(otel.metrics, otel.tracer)
     return app
-}
-
-func setupOTel() async throws -> (metrics: Service, tracer: Service) {
-    // Configure OTel resource detection to automatically apply helpful attributes to events.
-    let environment = OTelEnvironment.detected()
-    let resourceDetection = OTelResourceDetection(detectors: [
-        OTelProcessResourceDetector(),
-        OTelEnvironmentResourceDetector(environment: environment),
-        .manual(OTelResource(attributes: ["service.name": "hummingbird_server"])),
-    ])
-    let resource = await resourceDetection.resource(environment: environment, logLevel: .trace)
-
-    // Bootstrap the metrics backend to export metrics periodically in OTLP/gRPC.
-    let registry = OTelMetricRegistry()
-    let metricsExporter = try OTLPGRPCMetricExporter(configuration: .init(environment: environment))
-    let metrics = OTelPeriodicExportingMetricsReader(
-        resource: resource,
-        producer: registry,
-        exporter: metricsExporter,
-        configuration: .init(
-            environment: environment,
-            exportInterval: .seconds(5)  // NOTE: This is overridden for the example; the default is 60 seconds.
-        )
-    )
-    MetricsSystem.bootstrap(OTLPMetricsFactory(registry: registry))
-
-    // Bootstrap the tracing backend to export traces periodically in OTLP/gRPC.
-    let exporter = try OTLPGRPCSpanExporter(configuration: .init(environment: environment))
-    let processor = OTelBatchSpanProcessor(exporter: exporter, configuration: .init(environment: environment))
-    let tracer = OTelTracer(
-        idGenerator: OTelRandomIDGenerator(),
-        sampler: OTelConstantSampler(isOn: true),
-        propagator: OTelW3CPropagator(),
-        processor: processor,
-        environment: environment,
-        resource: resource
-    )
-    InstrumentationSystem.bootstrap(tracer)
-    return (metrics: metrics, tracer: tracer)
 }
 
 /// Build router
