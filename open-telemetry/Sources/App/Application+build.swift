@@ -47,8 +47,9 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
     var otelConfig = OTel.Configuration.default
     otelConfig.serviceName = "Hummingbird"
     otelConfig.logs.enabled = false
-    otelConfig.metrics.otlpExporter.protocol = .grpc
-    otelConfig.traces.otlpExporter.protocol = .grpc
+    // To use GRPC you can set the otlpExporter protocol for each exporter
+    //otelConfig.metrics.otlpExporter.protocol = .grpc
+    //otelConfig.traces.otlpExporter.protocol = .grpc
     let observability = try OTel.bootstrap(configuration: otelConfig)
 
     var logger = Logger(label: "open-telemetry")
