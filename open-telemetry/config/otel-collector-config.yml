@@ -4,6 +4,8 @@ receivers:
     protocols:
       grpc:
         endpoint: otel-collector:4317
+      http:
+        endpoint: otel-collector:4318
 
 exporters:
   prometheus:
