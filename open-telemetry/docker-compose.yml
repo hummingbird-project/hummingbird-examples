@@ -9,6 +9,7 @@ services:
     ports:
       - "7070:7070"
       - "4317:4317"
+      - "4318:4318"
     volumes:
       - "./config/otel-collector-config.yml:/etc/otel-collector-config.yml"
     
@@ -37,7 +38,7 @@ services:
       - BADGER_EPHEMERAL=false  # Don't use ephemeral storage
       - BADGER_DIRECTORY_VALUE=/badger/data
       - BADGER_DIRECTORY_KEY=/badger/key
-  
+
   grafana:
     image: grafana/grafana
     depends_on:
