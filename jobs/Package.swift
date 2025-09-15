@@ -8,9 +8,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-redis.git", from: "2.0.0-beta.2"),
-        .package(url: "https://github.com/hummingbird-project/swift-jobs.git", from: "1.0.0-rc"),
-        .package(url: "https://github.com/hummingbird-project/swift-jobs-redis.git", from: "1.0.0-rc"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-valkey.git", from: "0.1.0"),
+        .package(url: "https://github.com/hummingbird-project/swift-jobs.git", from: "1.0.0"),
+        .package(url: "https://github.com/hummingbird-project/swift-jobs-valkey.git", from: "1.0.0-rc.2"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
     ],
     targets: [
@@ -19,9 +19,9 @@ let package = Package(
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Hummingbird", package: "hummingbird"),
-                .product(name: "HummingbirdRedis", package: "hummingbird-redis"),
+                .product(name: "HummingbirdValkey", package: "hummingbird-valkey"),
                 .product(name: "Jobs", package: "swift-jobs"),
-                .product(name: "JobsRedis", package: "swift-jobs-redis"),
+                .product(name: "JobsValkey", package: "swift-jobs-valkey"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
