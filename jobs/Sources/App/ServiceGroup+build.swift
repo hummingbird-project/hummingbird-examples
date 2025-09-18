@@ -13,11 +13,12 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdRedis
+import HummingbirdValkey
 import Jobs
-import JobsRedis
+import JobsValkey
 import Logging
 import ServiceLifecycle
+import Valkey
 
 public protocol AppArguments {
     var hostname: String { get }
@@ -28,21 +29,18 @@ public protocol AppArguments {
 
 func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
     let env = Environment()
-    let redisHost = env.get("REDIS_HOST") ?? "localhost"
+    let valkeyHost = env.get("VALKEY_HOST") ?? "localhost"
     let logger = {
         var logger = Logger(label: "Jobs")
         logger.logLevel =
             args.logLevel ?? env.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .info
         return logger
     }()
-    let redisLogger = Logger(label: "Redis")
-    let redisService = try RedisConnectionPoolService(
-        .init(hostname: redisHost, port: 6379),
-        logger: redisLogger
-    )
+    let valkeyLogger = Logger(label: "Valkey")
+    let valkeyClient = ValkeyClient(.hostname(valkeyHost, port: 6379), logger: valkeyLogger)
     let jobQueue = try await JobQueue(
-        .redis(
-            redisService.pool,
+        .valkey(
+            valkeyClient,
             configuration: .init(queueName: "HBExample", retentionPolicy: .init(completedJobs: .retain)),
             logger: logger
         ),
@@ -75,7 +73,7 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
         )
         return ServiceGroup(
             configuration: .init(
-                services: [redisService, app],
+                services: [valkeyClient, app],
                 gracefulShutdownSignals: [.sigterm, .sigint],
                 logger: logger
             )
@@ -90,7 +88,7 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
         return await ServiceGroup(
             configuration: .init(
                 services: [
-                    redisService,
+                    valkeyClient,
                     jobQueue.processor(options: .init(numWorkers: 4, gracefulShutdownTimeout: .seconds(10))),
                     jobSchedule.scheduler(on: jobQueue, named: "HBExample"),
                 ],
