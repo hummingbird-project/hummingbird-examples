@@ -1,4 +1,4 @@
-// swift-tools-version:6.0
+// swift-tools-version:6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -12,7 +12,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.6.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
-        .package(url: "https://github.com/swift-otel/swift-otel.git", from: "1.0.0-alpha.2"),
+        .package(url: "https://github.com/swift-otel/swift-otel.git", from: "1.0.0"),
     ],
     targets: [
         .executableTarget(
