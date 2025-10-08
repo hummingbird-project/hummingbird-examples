@@ -8,6 +8,7 @@ struct TOTPVerificationSession: Codable {
     var verified: Bool
 }
 
+/// Controller for creating, verifying and deleting TOTP associated with a user
 struct TOTPController<Users: UserRepository, Storage: PersistDriver> {
     let users: Users
     let storage: Storage
@@ -23,7 +24,11 @@ struct TOTPController<Users: UserRepository, Storage: PersistDriver> {
             .post("start") { request, context -> EditedResponse<String> in
                 let otpSecret = UUID().uuidString
                 let otpSetupSession = UUID().uuidString
-                try await self.storage.create(key: otpSetupSession, value: TOTPVerificationSession(secret: otpSecret, verified: false), expires: .seconds(60 * 10))
+                try await self.storage.create(
+                    key: otpSetupSession,
+                    value: TOTPVerificationSession(secret: otpSecret, verified: false),
+                    expires: .seconds(60 * 10)
+                )
                 return .init(
                     headers: [.otpSession: otpSetupSession],
                     response: TOTP(secret: otpSecret).createAuthenticatorURL(label: "auth-otp")
@@ -32,7 +37,9 @@ struct TOTPController<Users: UserRepository, Storage: PersistDriver> {
             .post("verify/{code}") { request, context -> HTTPResponse.Status in
                 let code = try context.parameters.require("code", as: Int.self)
                 guard let otpSession = request.headers[.otpSession] else { return .badRequest }
-                guard var otpVerificationSession = try await self.storage.get(key: otpSession, as: TOTPVerificationSession.self) else { return .notFound }
+                guard var otpVerificationSession = try await self.storage.get(key: otpSession, as: TOTPVerificationSession.self) else {
+                    return .notFound
+                }
                 let now = Date.now
                 let computedTOTP = TOTP(secret: otpVerificationSession.secret).compute(date: now - 15.0)
                 let computedTOTP2 = TOTP(secret: otpVerificationSession.secret).compute(date: now + 15.0)
