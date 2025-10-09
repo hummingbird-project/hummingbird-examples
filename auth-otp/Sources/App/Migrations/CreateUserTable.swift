@@ -9,8 +9,7 @@ struct CreateUserTable: DatabaseMigration {
                 "id" uuid PRIMARY KEY,
                 "name" text NOT NULL,
                 "email" text NOT NULL,
-                "password_hash" text,
-                "flags" integer NOT NULL DEFAULT 0 
+                "password_hash" text 
             )
             """,
             logger: logger

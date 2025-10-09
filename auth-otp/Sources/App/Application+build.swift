@@ -25,9 +25,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
     let logger = {
         var logger = Logger(label: "auth_otp")
         logger.logLevel =
-            arguments.logLevel ??
-            environment.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ??
-            .info
+            arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .info
         return logger
     }()
     let postgresClient = PostgresClient(
@@ -48,7 +46,6 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
         logger: logger
     )
     app.beforeServerStarts {
-        // try await migrations.revert(client: postgresClient, logger: logger, dryRun: !arguments.migrate)
         try await migrations.apply(client: postgresClient, logger: logger, dryRun: !arguments.migrate)
     }
     return app
@@ -61,7 +58,10 @@ func buildRouter(
     postgresClient: PostgresClient
 ) async throws -> Router<AppRequestContext> {
     // Verify the working directory is correct
-    assert(FileManager.default.fileExists(atPath: "public/images/hummingbird.png"), "Set your working directory to the root folder of this example to get it to work")
+    assert(
+        FileManager.default.fileExists(atPath: "public/images/hummingbird.png"),
+        "Set your working directory to the root folder of this example to get it to work"
+    )
     // load mustache template library
     let mustacheLibrary = try await MustacheLibrary(directory: Bundle.module.resourcePath!)
 

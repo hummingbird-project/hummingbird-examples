@@ -16,6 +16,7 @@ struct UserController<Users: UserRepository, Storage: PersistDriver>: Sendable {
                 BasicAuthenticator(users: self.users)
                 TOTPAuthenticator(users: self.users)
             }
+            // login endpoint
             .post { _, context in
                 guard let user = context.identity else { throw HTTPError(.unauthorized) }
                 let session = context.sessions.session
