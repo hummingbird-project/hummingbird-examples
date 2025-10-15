@@ -19,53 +19,72 @@ import HummingbirdLambda
 import Logging
 import SotoDynamoDB
 
-/// The main entry point for the lambda function.
-/// The conformance to `APIGatewayLambdaFunction` sets up the AWS Lambda runtime and Hummingbird Application for you.
-/// You just need to implement the `buildResponder` function to handle requests.
-/// Alternatively, you can use the `APIGatewayV2LambdaFunction` conformance to build a Lambda function for APIGatewayV2.
+/// The main entry point for this app. In the main function, create a Hummingbird router
+/// using a context, and provide it to the `APIGatewayLambdaFunction`.
+///
+/// Note: This sample project uses the `@main` attribute and a dedicated type, `App`,
+/// to organize the code in a cleaner way. Alternatively, if you want a smaller approach, add the snippet in
+/// the [Hummingbird-Lambda package's
+/// readme](https://github.com/hummingbird-project/hummingbird-lambda) to the
+/// target's main.swift file instead.
 @main
-struct AppLambda: APIGatewayLambdaFunction {
-    /// The Context for your application. All Lambda functions needa LambdaRequestContext conforming type.
-    /// The default type for a Lambda function is `BasicLambdaRequestContext<APIGatewayRequest>`.
-    /// or `BasicLambdaRequestContext<APIGatewayV2Request>` for APIGatewayV2 services.
+struct App {
+    /// The Context for your application. All Lambda functions need a LambdaRequestContext conforming type.
     /// 
-    /// It's common to define a typealias for your preferred Context type. That way you can change the Context type
-    /// if you need to, and only have to change one line of code.
+    /// It's common to define a typealias for your preferred Context type. That way you can change the
+    /// Context type if you need to, and only have to change one line of code.
+    ///
+    /// **Important:** this sample project uses API Gateway to expose the function to the web, and
+    ///  and therefore the request context uses `APIGatewayRequest`. In case you use the
+    ///  simpler function URL instead, change the APIGatewayRequest in your context to
+    ///  a `FunctionURLRequest`, and the lambda to `FunctionURLLambdaFunction`.
+    ///  The same applies to API Gateway V2.
     typealias Context = BasicLambdaRequestContext<APIGatewayRequest>
-    
-    let awsClient: AWSClient
-    let logger: Logger
 
-    /// Initialized the Lambda function. This is called when the lambda function is first spun up.
-    /// We initialize the AWS client and logger here. You can also initialize any other services here.
-    /// For example, Logging, Metrics and Tracing should be set up here.
-    init(context: LambdaInitializationContext) {
-        self.awsClient = AWSClient(httpClient: HTTPClient.shared)
-        self.logger = context.logger
+    private let awsClient: AWSClient
+    private let logger: Logger
+
+    /// Initializes the App struct, builds the router, and run the lambda using the router.
+    static func main() async throws {
+        let app = App()
+        let router = app.buildRouter()
+        let lambda = APIGatewayLambdaFunction(router: router)
+        try await lambda.runService()
+
+        // Shut down the AWS client and other services after the lambda
+        // is done
+        try await app.shutdown()
     }
 
-    /// Builds a Responder, which is responsible for handling requests.
-    /// A Hummingbird Router is the most common responder, and is used in this example.
-    /// 
+    init() {
+        self.awsClient = AWSClient(httpClient: HTTPClient.shared)
+        self.logger = Logger(label: "Todos Lambda")
+    }
+
+    /// Builds a Router, which is responsible for handling requests.
+    /// A Hummingbird Router is the most common responder, and is used in this example,
+    /// as it is required to initialize a .
+    ///
     /// If you want your Hummingbird application to be flexibly deployed as either a Lambda or a normal HTTP server,
-    /// you should extract your Responder, business logic and dependencies into a separate module.
+    /// you should extract your Router creation, business logic and dependencies into a separate target.
     /// Then you can use that module in your lambda function and "normal" HTTP Server-based Application.
-    func buildResponder() -> some HTTPResponder<Context> {
+    func buildRouter() -> Router<Context> {
         // Reads the Environment variables for the table name
         let env = Environment()
         let tableName = env.get("TODOS_TABLE_NAME") ?? "hummingbird-todos"
-        self.logger.info("Using table \(tableName)")
+        logger.info("Using table \(tableName)")
 
         // Creates a DynamoDB client
         let dynamoDB = DynamoDB(client: awsClient, region: .euwest1)
 
-        // Creates a Router. Thsis uses our preferred context.
+        // Creates a Router, using our context (defined as a typealias above)
         let router = Router(context: Context.self)
-        // middleware
+
+        // Middleware
         router.add(middleware: ErrorMiddleware())
         router.add(middleware: LogRequestsMiddleware(.debug))
         router.get("/") { _, _ in
-            return "Hello"
+            "Hello from Lambda + Hummingbird"
         }
 
         // When enabling Lambda function URLs, CORS can be configured at the AWS level, and there's
@@ -78,16 +97,19 @@ struct AppLambda: APIGatewayLambdaFunction {
         ))
 
         // Adds the TodoController to the router
-        TodoController(dynamoDB: dynamoDB, tableName: tableName).addRoutes(to: router.group("todos"))
+        TodoController(
+            dynamoDB: dynamoDB,
+            tableName: tableName
+        ).addRoutes(to: router.group("todos"))
 
-        return router.buildResponder()
+        return router
     }
 
     /// Shuts down the AWS Lambda runtime.
-    /// This is called when the lambda function is being terminated.
-    /// Any resources that need to be cleaned up should be cleaned up here.
+    /// Call this function after the lambda function is being terminated.
+    /// You can add here any other resources that need to be cleaned up.
     func shutdown() async throws {
-        try await self.awsClient.shutdown()
+        try await awsClient.shutdown()
     }
 }
 
