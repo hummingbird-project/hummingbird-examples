@@ -35,7 +35,7 @@ public func buildApplication(_ arguments: some AppArguments, environment: Enviro
                 address: .hostname(arguments.hostname, port: arguments.port),
                 serverName: "s3_file_provider"
             ),
-            services: [AWSClientService(client: awsClient)],
+            services: [awsClient],
             logger: logger
         )
         return app

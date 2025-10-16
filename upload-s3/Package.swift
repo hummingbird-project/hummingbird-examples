@@ -10,8 +10,9 @@ let package = Package(
         .executable(name: "App", targets: ["App"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.9.0"),
         .package(url: "https://github.com/soto-project/soto.git", from: "7.0.0"),
+        .package(url: "https://github.com/soto-project/soto-core.git", from: "7.9.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
     ],
     targets: [
