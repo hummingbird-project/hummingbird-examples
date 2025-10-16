@@ -14,16 +14,6 @@ public protocol AppArguments {
     var logLevel: Logger.Level? { get }
 }
 
-struct AWSClientService: Service {
-    let client: AWSClient
-
-    func run() async throws {
-        // Ignore cancellation error
-        try? await gracefulShutdown()
-        try await self.client.shutdown()
-    }
-}
-
 func buildApplication(_ args: some AppArguments) -> some ApplicationProtocol {
     let logger = {
         var logger = Logger(label: "upload-s3")
@@ -50,13 +40,13 @@ func buildApplication(_ args: some AppArguments) -> some ApplicationProtocol {
         atPath: "files"
     )
     router.get("/health") { request, context in
-        return HTTPResponse.Status.ok
+        HTTPResponse.Status.ok
     }
     var app = Application(
         router: router,
         configuration: .init(address: .hostname(args.hostname, port: args.port)),
         logger: logger
     )
-    app.addServices(AWSClientService(client: awsClient))
+    app.addServices(awsClient)
     return app
 }

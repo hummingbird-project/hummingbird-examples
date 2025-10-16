@@ -5,16 +5,6 @@ import HummingbirdRouter
 import ServiceLifecycle
 import SotoCognitoAuthenticationKit
 
-struct AWSClientService: Service {
-    let client: AWSClient
-
-    func run() async throws {
-        // Ignore cancellation error
-        try? await gracefulShutdown()
-        try await self.client.shutdown()
-    }
-}
-
 func buildApplication(
     configuration: ApplicationConfiguration
 ) async throws -> some ApplicationProtocol {
@@ -24,7 +14,7 @@ func buildApplication(
     // setup SotoCognitoAuthentication
     let env = try await Environment().merging(with: .dotEnv())
     guard let userPoolId = env.get("cognito_user_pool_id"),
-          let clientId = env.get("cognito_client_id")
+        let clientId = env.get("cognito_client_id")
     else {
         preconditionFailure("Requires \"cognito_user_pool_id\" and \"cognito_client_id\" environment variables")
     }
@@ -46,6 +36,6 @@ func buildApplication(
     }
 
     var app = Application(router: router)
-    app.addServices(AWSClientService(client: awsClient))
+    app.addServices(awsClient)
     return app
 }

@@ -4,12 +4,13 @@ import PackageDescription
 let package = Package(
     name: "auth-cognito",
     platforms: [
-        .macOS(.v14),
+        .macOS(.v14)
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.2.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.0.0-rc.5"),
-        .package(url: "https://github.com/adam-fowler/soto-cognito-authentication-kit.git", from: "5.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", from: "2.1.0"),
+        .package(url: "https://github.com/soto-project/soto-cognito-authentication-kit.git", from: "5.0.0"),
+        .package(url: "https://github.com/soto-project/soto-core.git", from: "7.9.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
     ],
     targets: [
