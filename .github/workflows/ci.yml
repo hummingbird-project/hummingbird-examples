@@ -4,7 +4,6 @@ on:
   pull_request:
     branches:
     - main
-    - 2.x.x
   workflow_dispatch:
 
 jobs:
@@ -13,12 +12,12 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'swift:6.1'
+          - 'swift:latest'
     container:
       image: ${{ matrix.image }}
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0
     # https://github.com/actions/checkout/issues/766
