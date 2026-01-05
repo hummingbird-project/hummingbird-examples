@@ -1,20 +1,21 @@
-import ArgumentParser
+import Configuration
+import Hummingbird
+import Logging
 
 @main
-struct HummingbirdArguments: AsyncParsableCommand {
-    @Option(name: .shortAndLong)
-    var hostname: String = "127.0.0.1"
-
-    @Option(name: .shortAndLong)
-    var port: Int = 8080
-
-    func run() async throws {
-        let app = buildApplication(
-            configuration: .init(
-                address: .hostname(self.hostname, port: self.port),
-                serverName: "Hummingbird"
-            )
-        )
+struct App {
+    static func main() async throws {
+        // Application will read configuration from the following in the order listed
+        // Command line, Environment variables, dotEnv file, defaults provided in memory 
+        let reader = try await ConfigReader(providers: [
+            CommandLineArgumentsProvider(),
+            EnvironmentVariablesProvider(),
+            EnvironmentVariablesProvider(environmentFilePath: ".env", allowMissing: true),
+            InMemoryProvider(values: [
+                "http.serverName": "hello"
+            ])
+        ])
+        let app = try await buildApplication(reader: reader)
         try await app.runService()
     }
 }

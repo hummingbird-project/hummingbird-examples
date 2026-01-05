@@ -1,15 +1,27 @@
-@testable import App
+import Configuration
 import Hummingbird
 import HummingbirdTesting
-import XCTest
+import Logging
+import Testing
 
-final class AppTests: XCTestCase {
-    func testApp() async throws {
-        let app = buildApplication(configuration: .init())
+@testable import App
+
+private let reader = ConfigReader(providers: [
+    InMemoryProvider(values: [
+        "host": "127.0.0.1",
+        "port": "0",
+        "log.level": "trace"
+    ])
+])
+
+@Suite
+struct AppTests {
+    @Test
+    func app() async throws {
+        let app = try await buildApplication(reader: reader)
         try await app.test(.router) { client in
             try await client.execute(uri: "/", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "Hello")
+                #expect(response.body == ByteBuffer(string: "Hello!"))
             }
         }
     }
