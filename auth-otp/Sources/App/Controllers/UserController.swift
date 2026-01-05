@@ -53,7 +53,7 @@ struct UserController<Users: UserRepository, Storage: PersistDriver>: Sendable {
         let password: String
     }
 
-    @Sendable func createUser(request: Request, context: some RequestContext) async throws -> HTTPResponse.Status {
+    func createUser(request: Request, context: some RequestContext) async throws -> HTTPResponse.Status {
         let createUser = try await request.decode(as: CreateUserRequest.self, context: context)
         _ = try await self.users.createUser(
             name: createUser.name,

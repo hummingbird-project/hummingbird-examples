@@ -57,7 +57,7 @@ struct UserController: RouterController {
     }
 
     /// create a user
-    @Sendable func create(
+    func create(
         _ request: Request,
         context: Context
     ) async throws -> CognitoCreateUserResponse {
@@ -76,7 +76,7 @@ struct UserController: RouterController {
     }
 
     /// resend create user email
-    @Sendable func resend(
+    func resend(
         _ request: Request,
         context: Context
     ) async throws -> CognitoCreateUserResponse {
@@ -102,7 +102,7 @@ struct UserController: RouterController {
     }
 
     /// sign up instead of create user
-    @Sendable func signUp(
+    func signUp(
         _ request: Request,
         context: Context
     ) async throws -> SignUpResponse {
@@ -124,7 +124,7 @@ struct UserController: RouterController {
     }
 
     /// confirm sign up with confirmation code
-    @Sendable func confirmSignUp(
+    func confirmSignUp(
         _ request: Request,
         context: Context
     ) async throws -> HTTPResponse.Status {
@@ -144,7 +144,7 @@ struct UserController: RouterController {
     }
 
     /// Logs a user in, returning a token for accessing protected endpoints.
-    @Sendable func login(
+    func login(
         _ request: Request,
         context: Context
     ) throws -> CognitoAuthenticateResponse {
@@ -155,7 +155,7 @@ struct UserController: RouterController {
     }
 
     /// Logs a user in using Secure Remote Password, returning a token for accessing protected endpoints.
-    @Sendable func loginSRP(
+    func loginSRP(
         _ request: Request,
         context: Context
     ) throws -> CognitoAuthenticateResponse {
@@ -166,7 +166,7 @@ struct UserController: RouterController {
     }
 
     /// respond to authentication challenge
-    @Sendable func respond(
+    func respond(
         _ request: Request,
         context: Context
     ) async throws -> CognitoAuthenticateResponse {
@@ -189,7 +189,7 @@ struct UserController: RouterController {
     }
 
     /// respond to new password authentication challenge
-    @Sendable func respondNewPassword(
+    func respondNewPassword(
         _ request: Request,
         context: Context
     ) async throws -> CognitoAuthenticateResponse {
@@ -210,7 +210,7 @@ struct UserController: RouterController {
     }
 
     /// authenticate access token
-    @Sendable func authenticateAccess(
+    func authenticateAccess(
         _ request: Request,
         context: Context
     ) throws -> CognitoAccessToken {
@@ -221,7 +221,7 @@ struct UserController: RouterController {
     }
 
     /// get user attributes
-    @Sendable func attributes(
+    func attributes(
         _ request: Request,
         context: Context
     ) async throws -> String {
@@ -240,7 +240,7 @@ struct UserController: RouterController {
     }
 
     /// authenticate id token
-    @Sendable func authenticateId(
+    func authenticateId(
         _ request: Request,
         context: Context
     ) throws -> User {
@@ -251,7 +251,7 @@ struct UserController: RouterController {
     }
 
     /// refresh tokens
-    @Sendable func refresh(
+    func refresh(
         _ request: Request,
         context: Context
     ) async throws -> CognitoAuthenticateResponse {
@@ -279,7 +279,7 @@ struct UserController: RouterController {
     }
 
     /// Get MFA secret code
-    @Sendable func mfaGetSecretCode(
+    func mfaGetSecretCode(
         _ request: Request,
         context: Context
     ) async throws -> MfaGetTokenResponse {
@@ -303,7 +303,7 @@ struct UserController: RouterController {
     }
 
     /// Verify MFA secret code
-    @Sendable func mfaVerifyToken(
+    func mfaVerifyToken(
         _ request: Request,
         context: Context
     ) async throws -> HTTPResponse.Status {
@@ -337,7 +337,7 @@ struct UserController: RouterController {
     }
 
     /// respond to software MFA authentication challenge
-    @Sendable func respondSoftwareMfa(
+    func respondSoftwareMfa(
         _ request: Request,
         context: Context
     ) async throws -> CognitoAuthenticateResponse {
@@ -359,7 +359,7 @@ struct UserController: RouterController {
     }
 
     /// Enable MFA support
-    @Sendable func enableMfa(
+    func enableMfa(
         _ request: Request,
         context: Context
     ) async throws -> HTTPResponse.Status {
@@ -381,7 +381,7 @@ struct UserController: RouterController {
     }
 
     /// Disable MFA support
-    @Sendable func disableMfa(
+    func disableMfa(
         _ request: Request,
         context: Context
     ) async throws -> HTTPResponse.Status {

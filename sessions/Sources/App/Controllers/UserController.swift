@@ -51,7 +51,7 @@ struct UserController {
     }
 
     /// Create new user
-    @Sendable func create(_ request: Request, context: Context) async throws -> UserResponse {
+    func create(_ request: Request, context: Context) async throws -> UserResponse {
         let createUser = try await request.decode(as: CreateUserRequest.self, context: context)
         // check if user exists and if they don't then add new user
         let existingUser = try await User.query(on: self.fluent.db())
@@ -67,7 +67,7 @@ struct UserController {
     }
 
     /// Login user and create session
-    @Sendable func login(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+    func login(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         // get authenticated user and return
         guard let user = context.identity else { throw HTTPError(.unauthorized) }
         // create session
@@ -76,7 +76,7 @@ struct UserController {
     }
 
     /// Get current logged in user
-    @Sendable func current(_ request: Request, context: Context) throws -> UserResponse {
+    func current(_ request: Request, context: Context) throws -> UserResponse {
         // get authenticated user and return
         let user = try context.requireIdentity()
         return try UserResponse(id: user.requireID(), name: user.name)

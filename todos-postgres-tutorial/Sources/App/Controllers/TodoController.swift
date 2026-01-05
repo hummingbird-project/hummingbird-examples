@@ -17,13 +17,13 @@ struct TodoController<Repository: TodoRepository> {
     }
 
     /// Delete all todos entrypoint
-    @Sendable func deleteAll(request: Request, context: some RequestContext) async throws -> HTTPResponse.Status {
+    func deleteAll(request: Request, context: some RequestContext) async throws -> HTTPResponse.Status {
         try await self.repository.deleteAll()
         return .ok
     }
 
     /// Delete todo entrypoint
-    @Sendable func delete(request: Request, context: some RequestContext) async throws -> HTTPResponse.Status {
+    func delete(request: Request, context: some RequestContext) async throws -> HTTPResponse.Status {
         let id = try context.parameters.require("id", as: UUID.self)
         if try await self.repository.delete(id: id) {
             return .ok
@@ -39,7 +39,7 @@ struct TodoController<Repository: TodoRepository> {
     }
 
     /// Update todo entrypoint
-    @Sendable func update(request: Request, context: some RequestContext) async throws -> Todo? {
+    func update(request: Request, context: some RequestContext) async throws -> Todo? {
         let id = try context.parameters.require("id", as: UUID.self)
         let request = try await request.decode(as: UpdateRequest.self, context: context)
         guard let todo = try await self.repository.update(
@@ -54,13 +54,13 @@ struct TodoController<Repository: TodoRepository> {
     }
 
     /// Get todo entrypoint
-    @Sendable func get(request: Request, context: some RequestContext) async throws -> Todo? {
+    func get(request: Request, context: some RequestContext) async throws -> Todo? {
         let id = try context.parameters.require("id", as: UUID.self)
         return try await self.repository.get(id: id)
     }
 
     /// Get list of todos entrypoint
-    @Sendable func list(request: Request, context: some RequestContext) async throws -> [Todo] {
+    func list(request: Request, context: some RequestContext) async throws -> [Todo] {
         return try await self.repository.list()
     }
 
@@ -70,7 +70,7 @@ struct TodoController<Repository: TodoRepository> {
     }
 
     /// Create todo entrypoint
-    @Sendable func create(request: Request, context: some RequestContext) async throws -> EditedResponse<Todo> {
+    func create(request: Request, context: some RequestContext) async throws -> EditedResponse<Todo> {
         let request = try await request.decode(as: CreateRequest.self, context: context)
         let todo = try await self.repository.create(title: request.title, order: request.order, urlPrefix: "http://localhost:8080/todos/")
         return EditedResponse(status: .created, response: todo)

@@ -1,9 +1,15 @@
-@testable import App
+import Foundation
 import Hummingbird
 import HummingbirdTesting
-import XCTest
+import Testing
 
-final class AppTests: XCTestCase {
+@testable import App
+
+@Suite(
+    "TODOs DynamoDB tests",
+    .disabled(if: ProcessInfo.processInfo.environment["CI"] != nil, "Tests disabled in CI")
+)
+struct AppTests {
     func createTodo(title: String, client: some TestClientProtocol) async throws -> UUID {
         let json = "{\"title\": \"\(title)\"}"
         let todo = try await client.execute(
@@ -11,28 +17,28 @@ final class AppTests: XCTestCase {
             method: .post,
             body: ByteBufferAllocator().buffer(string: json)
         ) { response in
-            XCTAssertEqual(response.status, .created)
+            #expect(response.status == .created)
             return try JSONDecoder().decode(Todo.self, from: response.body)
         }
-        return try XCTUnwrap(todo.id)
+        return try #require(todo.id)
     }
 
     func getTodo(id: UUID, client: some TestClientProtocol) async throws -> Todo {
-        return try await client.execute(
+        try await client.execute(
             uri: "/todos/\(id)",
             method: .get
         ) { response in
-            XCTAssertEqual(response.status, .ok)
+            #expect(response.status == .ok)
             return try JSONDecoder().decode(Todo.self, from: response.body)
         }
     }
 
     func listTodos(client: some TestClientProtocol) async throws -> [Todo] {
-        return try await client.execute(
+        try await client.execute(
             uri: "/todos/",
             method: .get
         ) { response in
-            XCTAssertEqual(response.status, .ok)
+            #expect(response.status == .ok)
             return try JSONDecoder().decode([Todo].self, from: response.body)
         }
     }
@@ -44,7 +50,7 @@ final class AppTests: XCTestCase {
             method: .patch,
             body: buffer
         ) { response in
-            XCTAssertEqual(response.status, .ok)
+            #expect(response.status == .ok)
             return try JSONDecoder().decode(Todo.self, from: response.body)
         }
     }
@@ -54,7 +60,7 @@ final class AppTests: XCTestCase {
             uri: "/todos/\(id)",
             method: .delete
         ) { response in
-            XCTAssertEqual(response.status, .ok)
+            #expect(response.status == .ok)
         }
     }
 
@@ -63,74 +69,64 @@ final class AppTests: XCTestCase {
             uri: "/todos/",
             method: .delete
         ) { response in
-            XCTAssertEqual(response.status, .ok)
+            #expect(response.status == .ok)
         }
     }
 
     // MARK: Tests
 
-    func testCreate() async throws {
-        try XCTSkipIf(Environment().get("CI") != nil)
-
+    @Test func testCreate() async throws {
         let app = TodosApp(configuration: .init())
         try await app.test(.live) { client in
             let todoId = try await self.createTodo(title: "Add more tests", client: client)
             let todo = try await self.getTodo(id: todoId, client: client)
-            XCTAssertEqual(todo.id, todoId)
-            XCTAssertEqual(todo.title, "Add more tests")
+            #expect(todo.id == todoId)
+            #expect(todo.title == "Add more tests")
         }
     }
 
-    func testList() async throws {
-        try XCTSkipIf(Environment().get("CI") != nil)
-
+    @Test func testList() async throws {
         let app = TodosApp(configuration: .init())
         try await app.test(.live) { client in
             let todoId = try await self.createTodo(title: "Test listing tests", client: client)
             let todos = try await self.listTodos(client: client)
-            let todo = try XCTUnwrap(todos.first { $0.id == todoId })
-            XCTAssertEqual(todo.id, todoId)
-            XCTAssertEqual(todo.title, "Test listing tests")
+            let todo = try #require(todos.first { $0.id == todoId })
+            #expect(todo.id == todoId)
+            #expect(todo.title == "Test listing tests")
         }
     }
 
-    func testUpdate() async throws {
-        try XCTSkipIf(Environment().get("CI") != nil)
-
+    @Test func testUpdate() async throws {
         let app = TodosApp(configuration: .init())
         try await app.test(.live) { client in
             let todoId = try await self.createTodo(title: "Update tests", client: client)
             let updatedTodo = try await self.updateTodo(editedTodo: .init(completed: true), id: todoId, client: client)
-            XCTAssertEqual(updatedTodo.id, todoId)
-            XCTAssertEqual(updatedTodo.completed, true)
+            #expect(updatedTodo.id == todoId)
+            #expect(updatedTodo.completed == true)
             let getTodo = try await self.getTodo(id: todoId, client: client)
-            XCTAssertEqual(getTodo.id, todoId)
-            XCTAssertEqual(getTodo.title, "Update tests")
-            XCTAssertEqual(getTodo.completed, true)
+            #expect(getTodo.id == todoId)
+            #expect(getTodo.title == "Update tests")
+            #expect(getTodo.completed == true)
         }
     }
 
-    func testDelete() async throws {
-        try XCTSkipIf(Environment().get("CI") != nil)
-
+    @Test func testDelete() async throws {
         let app = TodosApp(configuration: .init())
         try await app.test(.live) { client in
             let todoId = try await self.createTodo(title: "Delete tests", client: client)
             try await self.deleteTodo(id: todoId, client: client)
             let todos = try await self.listTodos(client: client)
-            XCTAssertNil(todos.first { $0.id == todoId })
+            #expect(todos.first { $0.id == todoId } == nil)
         }
     }
 
-    func testDeleteAll() async throws {
-        try XCTSkipIf(Environment().get("CI") != nil)
-
+    @Test func testDeleteAll() async throws {
         let app = TodosApp(configuration: .init())
         try await app.test(.live) { client in
             _ = try await self.createTodo(title: "Delete all tests", client: client)
             try await self.deleteAllTodos(client: client)
             let todos = try await self.listTodos(client: client)
-            XCTAssertEqual(todos.count, 0)
+            #expect(todos.count == 0)
         }
     }
 }

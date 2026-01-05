@@ -52,7 +52,7 @@ struct TodoController {
     }
 
     /// List all todos created by current user
-    @Sendable func list(_ request: Request, context: TodoContext) async throws -> [Todo] {
+    func list(_ request: Request, context: TodoContext) async throws -> [Todo] {
         return try await context.user.$todos.get(on: self.fluent.db())
     }
 
@@ -61,7 +61,7 @@ struct TodoController {
     }
 
     /// Create new todo
-    @Sendable func create(_ request: Request, context: TodoContext) async throws -> EditedResponse<Todo> {
+    func create(_ request: Request, context: TodoContext) async throws -> EditedResponse<Todo> {
         let todoRequest = try await request.decode(as: CreateTodoRequest.self, context: context)
         guard let host = request.head.authority else { throw HTTPError(.badRequest, message: "No host header") }
         let todo = try Todo(title: todoRequest.title, ownerID: context.user.requireID())
@@ -74,7 +74,7 @@ struct TodoController {
     }
 
     /// Get todo
-    @Sendable func get(_ request: Request, context: TodoContext) async throws -> Todo? {
+    func get(_ request: Request, context: TodoContext) async throws -> Todo? {
         let id = try context.parameters.require("id", as: UUID.self)
         return try await Todo.query(on: self.fluent.db())
             .filter(\.$id == id)
@@ -88,7 +88,7 @@ struct TodoController {
     }
 
     /// Edit todo
-    @Sendable func update(_ request: Request, context: TodoContext) async throws -> Todo {
+    func update(_ request: Request, context: TodoContext) async throws -> Todo {
         let id = try context.parameters.require("id", as: UUID.self)
         let editTodo = try await request.decode(as: EditTodoRequest.self, context: context)
         let db = self.fluent.db()
@@ -106,7 +106,7 @@ struct TodoController {
     }
 
     /// delete todo
-    @Sendable func deleteId(_ request: Request, context: TodoContext) async throws -> HTTPResponse.Status {
+    func deleteId(_ request: Request, context: TodoContext) async throws -> HTTPResponse.Status {
         let id = try context.parameters.require("id", as: UUID.self)
         let db = self.fluent.db()
         guard let todo = try await Todo.query(on: db)

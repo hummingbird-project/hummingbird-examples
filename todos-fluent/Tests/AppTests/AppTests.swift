@@ -1,9 +1,10 @@
 @testable import App
+import Foundation
 import Hummingbird
 import HummingbirdTesting
-import XCTest
+import Testing
 
-final class AppTests: XCTestCase {
+struct AppTests: Sendable {
     struct TestArguments: AppArguments {
         var hostname: String { "localhost" }
         var port: Int { 8080 }
@@ -24,8 +25,7 @@ final class AppTests: XCTestCase {
             body: JSONEncoder().encodeAsByteBuffer(todo, allocator: ByteBufferAllocator())
         ) { response in
             guard response.status == .created else { throw TestError.unexpectedStatus(response.status) }
-            let buffer = try XCTUnwrap(response.body)
-            return try JSONDecoder().decode(Todo.self, from: buffer)
+            return try JSONDecoder().decode(Todo.self, from: response.body)
         }
     }
 
@@ -62,24 +62,24 @@ final class AppTests: XCTestCase {
 
     // MARK: tests
 
-    func testCreateTodo() async throws {
+    @Test func testCreateTodo() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             let todo = try await self.createTodo(.init(title: "Write more tests"), client: client)
-            XCTAssertEqual(todo.title, "Write more tests")
+            #expect(todo.title == "Write more tests")
         }
     }
 
-    func testGetTodo() async throws {
+    @Test func testGetTodo() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             let todo = try await self.createTodo(.init(title: "Write more tests"), client: client)
             let getTodo = try await self.getTodo(todo.id, client: client)
-            XCTAssertEqual(getTodo?.title, "Write more tests")
+            #expect(getTodo?.title == "Write more tests")
         }
     }
 
-    func testDeleteTodo() async throws {
+    @Test func testDeleteTodo() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             let todo = try await self.createTodo(.init(title: "Write more tests"), client: client)
@@ -88,33 +88,33 @@ final class AppTests: XCTestCase {
             do {
                 _ = try await self.getTodo(todo.id, client: client)
             } catch TestError.unexpectedStatus(let status) {
-                XCTAssertEqual(status, .noContent)
+                #expect(status == .noContent)
             } catch {
-                XCTFail("Error: \(error)")
+                Issue.record("Error: \(error)")
             }
         }
     }
 
-    func testEditTodo() async throws {
+    @Test func testEditTodo() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             let todo = try await self.createTodo(.init(title: "Write more tests"), client: client)
             _ = try await self.editTodo(todo.id, .init(title: "Written tests", completed: true), client: client)
             let editedTodo = try await self.getTodo(todo.id, client: client)
 
-            XCTAssertEqual(editedTodo?.title, "Written tests")
-            XCTAssertEqual(editedTodo?.completed, true)
+            #expect(editedTodo?.title == "Written tests")
+            #expect(editedTodo?.completed == true)
         }
     }
 
-    func testUnauthorizedEditTodo() async throws {
+    @Test func testUnauthorizedEditTodo() async throws {
         let app = try await buildApplication(TestArguments())
         try await app.test(.router) { client in
             let todo = try await self.createTodo(.init(title: "Write more tests"), client: client)
             do {
                 _ = try await self.editTodo(todo.id, .init(title: "Written tests", completed: true), client: client)
             } catch TestError.unexpectedStatus(let status) {
-                XCTAssertEqual(status, .unauthorized)
+                #expect(status == .unauthorized)
             }
         }
     }

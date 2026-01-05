@@ -30,7 +30,7 @@ struct TodoController<Context: RequestContext> {
             .delete(":id", use: self.deleteId)
     }
 
-    @Sendable func list(_ request: Request, context: Context) async throws -> [Todo] {
+    func list(_ request: Request, context: Context) async throws -> [Todo] {
         try await Todo.query(on: self.fluent.db()).all()
     }
 
@@ -39,10 +39,10 @@ struct TodoController<Context: RequestContext> {
     }
 
     /// Create new todo
-    @Sendable func create(_ request: Request, context: Context) async throws -> EditedResponse<Todo> {
+    func create(_ request: Request, context: Context) async throws -> EditedResponse<Todo> {
         let todoRequest = try await request.decode(as: CreateTodoRequest.self, context: context)
         guard let host = request.head.authority else { throw HTTPError(.badRequest, message: "No host header") }
-        let todo = try Todo(title: todoRequest.title)
+        let todo = Todo(title: todoRequest.title)
         let db = self.fluent.db()
         _ = try await todo.save(on: db)
         todo.completed = false
@@ -52,7 +52,7 @@ struct TodoController<Context: RequestContext> {
     }
 
     /// Get todo
-    @Sendable func get(_ request: Request, context: Context) async throws -> Todo? {
+    func get(_ request: Request, context: Context) async throws -> Todo? {
         let id = try context.parameters.require("id", as: UUID.self)
         return try await Todo.query(on: self.fluent.db())
             .filter(\.$id == id)
@@ -65,13 +65,14 @@ struct TodoController<Context: RequestContext> {
     }
 
     /// Edit todo
-    @Sendable func update(_ request: Request, context: Context) async throws -> Todo {
+    func update(_ request: Request, context: Context) async throws -> Todo {
         let id = try context.parameters.require("id", as: UUID.self)
         let editTodo = try await request.decode(as: EditTodoRequest.self, context: context)
         let db = self.fluent.db()
-        guard let todo = try await Todo.query(on: db)
-            .filter(\.$id == id)
-            .first()
+        guard
+            let todo = try await Todo.query(on: db)
+                .filter(\.$id == id)
+                .first()
         else {
             throw HTTPError(.notFound)
         }
@@ -81,12 +82,13 @@ struct TodoController<Context: RequestContext> {
     }
 
     /// delete todo
-    @Sendable func deleteId(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+    func deleteId(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         let id = try context.parameters.require("id", as: UUID.self)
         let db = self.fluent.db()
-        guard let todo = try await Todo.query(on: db)
-            .filter(\.$id == id)
-            .first()
+        guard
+            let todo = try await Todo.query(on: db)
+                .filter(\.$id == id)
+                .first()
         else {
             throw HTTPError(.notFound)
         }

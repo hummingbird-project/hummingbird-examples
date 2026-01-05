@@ -17,7 +17,7 @@ import Foundation
 import Hummingbird
 
 /// Database description of a Todo
-final class Todo: Model, ResponseCodable {
+final class Todo: Model, ResponseCodable, @unchecked Sendable {
     static let schema = "todos"
 
     @ID(key: .id)

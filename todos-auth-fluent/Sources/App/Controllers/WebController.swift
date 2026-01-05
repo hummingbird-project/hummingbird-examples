@@ -83,7 +83,7 @@ struct WebController {
     }
 
     /// Home page listing todos and with add todo UI
-    @Sendable func home(request: Request, context: Context) async throws -> HTML {
+    func home(request: Request, context: Context) async throws -> HTML {
         // get user and list of todos attached to user from database
         let user = try context.requireIdentity()
         let todos = try await user.$todos.get(on: self.fluent.db())
@@ -97,7 +97,7 @@ struct WebController {
     }
 
     /// Login page
-    @Sendable func login(request: Request, context: Context) async throws -> HTML {
+    func login(request: Request, context: Context) async throws -> HTML {
         let html = self.loginTemplate.render((), library: self.mustacheLibrary)
         return HTML(html: html)
     }
@@ -108,7 +108,7 @@ struct WebController {
     }
 
     /// Login POST page
-    @Sendable func loginDetails(request: Request, context: Context) async throws -> Response {
+    func loginDetails(request: Request, context: Context) async throws -> Response {
         let details = try await request.decode(as: LoginDetails.self, context: context)
         // check if user exists in the database and then verify the entered password
         // against the one stored in the database. If it is correct then login in user
@@ -137,13 +137,13 @@ struct WebController {
     }
 
     /// Signup page
-    @Sendable func signup(request: Request, context: Context) async throws -> HTML {
+    func signup(request: Request, context: Context) async throws -> HTML {
         let html = self.signupTemplate.render((), library: self.mustacheLibrary)
         return HTML(html: html)
     }
 
     /// Signup POST page
-    @Sendable func signupDetails(request: Request, context: Context) async throws -> Response {
+    func signupDetails(request: Request, context: Context) async throws -> Response {
         let details = try await request.decode(as: SignupDetails.self, context: context)
         do {
             // create new user
