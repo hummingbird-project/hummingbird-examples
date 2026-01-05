@@ -38,7 +38,7 @@ struct UserController {
 
     /// Create new user
     /// Used in tests, as user creation is done by ``WebController.signupDetails``
-    @Sendable func create(_ request: Request, context: Context) async throws -> EditedResponse<UserResponse> {
+    func create(_ request: Request, context: Context) async throws -> EditedResponse<UserResponse> {
         let createUser = try await request.decode(as: CreateUserRequest.self, context: context)
 
         let user = try await User.create(
@@ -53,20 +53,20 @@ struct UserController {
 
     /// Login user and create session
     /// Used in tests, as user creation is done by ``WebController.loginDetails``
-    @Sendable func login(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+    func login(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         guard let user = context.identity else { throw HTTPError(.unauthorized) }
         try context.sessions.setSession(user.requireID())
         return .ok
     }
 
     /// Login user and create session
-    @Sendable func logout(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
+    func logout(_ request: Request, context: Context) async throws -> HTTPResponse.Status {
         context.sessions.clearSession()
         return .ok
     }
 
     /// Get current logged in user
-    @Sendable func current(_ request: Request, context: Context) throws -> UserResponse {
+    func current(_ request: Request, context: Context) throws -> UserResponse {
         let user = try context.requireIdentity()
         return UserResponse(from: user)
     }

@@ -69,13 +69,13 @@ struct WebController {
     }
 
     /// Renders the input form for user details.
-    @Sendable func input(request: Request, context: some RequestContext) -> HTML {
+    func input(request: Request, context: some RequestContext) -> HTML {
         let html = self.enterTemplate.render((), library: self.library)
         return HTML(html: html)
     }
 
     /// Handles the submission of user details and saves the profile picture.
-    @Sendable func post(request: Request, context: some RequestContext) async throws -> HTML {
+    func post(request: Request, context: some RequestContext) async throws -> HTML {
         let user = try await request.decode(as: User.self, context: context)
         let filename = user.profilePicture.filename
         let urlSafeFilename = user.profilePicture.urlSafeFilename
@@ -92,7 +92,7 @@ struct WebController {
     }
 
     /// Retrieves a file from the virtual file system.
-    @Sendable func files(_ request: Request, context: some RequestContext) async throws -> Response {
+    func files(_ request: Request, context: some RequestContext) async throws -> Response {
         let filename = try context.parameters.require("filename", as: String.self)
         guard let file = await fileSystem.load(filename: filename) else {
             throw HTTPError(.notFound, message: "A file with the specified name was not found")
