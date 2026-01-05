@@ -3,7 +3,7 @@ import MultipartKit
 import StructuredFieldValues
 
 /// A structure representing a file in a multipart request.
-public struct File: MultipartPartConvertible, Decodable {
+public struct File: MultipartPartConvertible, Decodable, Sendable {
     /// The raw data of the file.
     public let data: ByteBuffer
 
@@ -28,10 +28,12 @@ public struct File: MultipartPartConvertible, Decodable {
         guard let contentDispositionHeader = multipart.headers["content-disposition"].first else {
             return nil
         }
-        guard let contentDisposition = try? StructuredFieldValueDecoder().decode(
-            MultipartContentDispostion.self,
-            from: contentDispositionHeader
-        ) else {
+        guard
+            let contentDisposition = try? StructuredFieldValueDecoder().decode(
+                MultipartContentDispostion.self,
+                from: contentDispositionHeader
+            )
+        else {
             return nil
         }
         guard let filename = contentDisposition.parameters.filename else {
