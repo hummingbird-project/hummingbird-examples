@@ -1,36 +1,23 @@
+import Configuration
 import Hummingbird
 import Logging
 import PostgresNIO
-
-/// Application arguments protocol. We use a protocol so we can call
-/// `buildApplication` inside Tests as well as in the App executable.
-/// Any variables added here also have to be added to `App` in App.swift and
-/// `TestArguments` in AppTest.swift
-public protocol AppArguments {
-    var hostname: String { get }
-    var port: Int { get }
-    var logLevel: Logger.Level? { get }
-    var inMemoryTesting: Bool { get }
-}
 
 // Request context used by application
 typealias AppRequestContext = BasicRequestContext
 
 ///  Build application
-/// - Parameter arguments: application arguments
-public func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
-    let environment = Environment()
+/// - Parameter reader: configuration reader
+func buildApplication(reader: ConfigReader) async throws -> some ApplicationProtocol {
     let logger = {
-        var logger = Logger(label: "todos-postgres-tutorial")
-        logger.logLevel =
-            arguments.logLevel ??
-            environment.get("LOG_LEVEL").map { Logger.Level(rawValue: $0) ?? .info } ??
-            .info
+        var logger = Logger(label: "Todos")
+        logger.logLevel = reader.string(forKey: "log.level", as: Logger.Level.self, default: .info)
         return logger
     }()
+    let inMemoryTesting = reader.bool(forKey: "db.inMemoryTesting", default: false)
     var postgresRepository: TodoPostgresRepository?
     let router: Router<AppRequestContext>
-    if !arguments.inMemoryTesting {
+    if !inMemoryTesting {
         let client = PostgresClient(
             configuration: .init(host: "localhost", username: "todos", password: "todos", database: "hummingbird", tls: .disable),
             backgroundLogger: logger
@@ -43,10 +30,7 @@ public func buildApplication(_ arguments: some AppArguments) async throws -> som
     }
     var app = Application(
         router: router,
-        configuration: .init(
-            address: .hostname(arguments.hostname, port: arguments.port),
-            serverName: "todos-postgres-tutorial"
-        ),
+        configuration: ApplicationConfiguration(reader: reader.scoped(to: "http")),
         logger: logger
     )
     // if we setup a postgres service then add as a service and run createTable before
