@@ -1,10 +1,13 @@
-@testable import App
+import Foundation
 import Hummingbird
 import HummingbirdTesting
 import Logging
-import XCTest
+import Testing
 
-final class AppTests: XCTestCase {
+@testable import App
+
+@Suite("S3 Upload Tests", .disabled(if: Environment().get("CI") != nil, "Disabled in CI as it requires an S3 bucket"))
+struct AppTests {
     struct TestArguments: AppArguments {
         let hostname = "127.0.0.1"
         let port = 8080
@@ -17,9 +20,8 @@ final class AppTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
+    @Test
     func testUploadDownload() async throws {
-        try XCTSkipIf(Environment().get("CI") != nil)
-
         let app = buildApplication(TestArguments())
 
         try await app.test(.router) { client in
@@ -35,15 +37,15 @@ final class AppTests: XCTestCase {
             }
 
             let buffer2 = try await client.execute(uri: "/files/\(filename)", method: .get) { response -> ByteBuffer in
-                return response.body
+                response.body
             }
 
-            XCTAssertEqual(buffer, buffer2)
+            #expect(buffer == buffer2)
         }
     }
 
+    @Test
     func testFilename() async throws {
-        try XCTSkipIf(Environment().get("CI") != nil)
 
         let app = buildApplication(TestArguments())
 
@@ -61,12 +63,12 @@ final class AppTests: XCTestCase {
                 let json = try JSONDecoder().decode(S3FileController.UploadModel.self, from: response.body)
                 return json.filename
             }
-            XCTAssertEqual(filename, "testFilename")
+            #expect(filename == "testFilename")
             let buffer2 = try await client.execute(uri: "/files/\(filename)", method: .get) { response -> ByteBuffer in
-                return response.body
+                response.body
             }
 
-            XCTAssertEqual(buffer, buffer2)
+            #expect(buffer == buffer2)
         }
     }
 }
