@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8" />
+  <title>Valkey Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <script src="chat.js?v=1"></script>
+</head>
+<body>
+  <h2 id="title">Valkey Chat</h2>
+  <div><input id="connectButton" type="button" value="Connect" onclick="connect()" /></div>
+  <h4 id="loggedIn"></h4>
+  <div id="output"></div>
+  <input id="input" onchange = "inputEnter()" type="text" name="name" style="width: 90%; display: none"/>
+</body>

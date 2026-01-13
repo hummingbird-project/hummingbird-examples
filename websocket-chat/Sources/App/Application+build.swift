@@ -1,57 +1,66 @@
-import Foundation
 import Hummingbird
 import HummingbirdWebSocket
-import HummingbirdWSCompression
 import Logging
-import ServiceLifecycle
+import Valkey
 
-protocol AppArguments {
+/// Application arguments protocol. We use a protocol so we can call
+/// `buildApplication` inside Tests as well as in the App executable.
+/// Any variables added here also have to be added to `App` in App.swift and
+/// `TestArguments` in AppTest.swift
+public protocol AppArguments {
     var hostname: String { get }
     var port: Int { get }
+    var maxAgeOfLoadedMessages: Int { get }
+}
+extension AppArguments {
+    // default to 10 minutes
+    var maxAgeOfLoadedMessages: Int { 600 }
 }
 
-func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
-    var logger = Logger(label: "WebSocketChat")
+// Request context used by application
+typealias AppRequestContext = BasicRequestContext
+
+///  Build application
+/// - Parameter arguments: application arguments
+public func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
+    var logger = Logger(label: "valkey-chat")
     logger.logLevel = .trace
-    let connectionManager = ConnectionManager(logger: logger)
 
-    // Create a router for the HTTP server
-    let router = Router()
-    router.add(middleware: LogRequestsMiddleware(.debug))
-    router.add(middleware: FileMiddleware(logger: logger))
+    // Valkey client
+    let valkey = ValkeyClient(.hostname("127.0.0.1"), logger: logger)
 
-    // Separate router for websocket upgrade
-    let wsRouter = Router(context: BasicWebSocketRequestContext.self)
-    wsRouter.add(middleware: LogRequestsMiddleware(.debug))
-    wsRouter.ws("chat") { request, _ in
-        // only allow upgrade if username query parameter exists
-        guard request.uri.queryParameters["username"] != nil else {
-            return .dontUpgrade
-        }
-        return .upgrade([:])
-    } onUpgrade: { inbound, outbound, context in
-        // only allow upgrade if username query parameter exists
-        guard let name = context.request.uri.queryParameters["username"] else {
-            try await outbound.close(.unexpectedServerError, reason: "User is not authenticated")
-            return
-        }
-        let outputStream = connectionManager.addUser(name: String(name), inbound: inbound, outbound: outbound)
-        for try await output in outputStream {
-            switch output {
-            case .frame(let frame):
-                try await outbound.write(frame)
-            case .close(let reason):
-                try await outbound.close(.unexpectedServerError, reason: reason)
-            }
-        }
-    }
-
-    var app = Application(
+    let router = buildRouter()
+    let wsRouter = buildWebSocketRouter(valkey: valkey, arguments: arguments)
+    let app = Application(
         router: router,
-        server: .http1WebSocketUpgrade(webSocketRouter: wsRouter, configuration: .init(extensions: [.perMessageDeflate()])),
-        configuration: .init(address: .hostname(arguments.hostname, port: arguments.port)),
+        server: .http1WebSocketUpgrade(webSocketRouter: wsRouter),
+        configuration: .init(
+            address: .hostname(arguments.hostname, port: arguments.port),
+            serverName: "valkey-chat"
+        ),
+        services: [valkey],
         logger: logger
     )
-    app.addServices(connectionManager)
     return app
+}
+
+/// Build router
+func buildRouter() -> Router<AppRequestContext> {
+    let router = Router(context: AppRequestContext.self)
+    // Add middleware
+    router.addMiddleware {
+        // logging middleware
+        LogRequestsMiddleware(.info)
+        // file middleware
+        FileMiddleware(searchForIndexHtml: true)
+    }
+    return router
+}
+
+/// Build websocket router
+func buildWebSocketRouter(valkey: ValkeyClient, arguments: some AppArguments) -> Router<BasicWebSocketRequestContext> {
+    let router = Router(context: BasicWebSocketRequestContext.self)
+    router.add(middleware: LogRequestsMiddleware(.debug))
+    router.addRoutes(ChatController(valkey: valkey, maxAgeOfLoadedMessages: arguments.maxAgeOfLoadedMessages).routes)
+    return router
 }
