@@ -67,11 +67,12 @@ struct ProxyServerMiddleware: RouterMiddleware {
             }
         }
         // extract length from content-length header
-        let contentLength = if let header = request.headers[.contentLength], let value = Int(header) {
-            HTTPClientRequest.Body.Length.known(value)
-        } else {
-            HTTPClientRequest.Body.Length.unknown
-        }
+        let contentLength =
+            if let header = request.headers[.contentLength], let value = Int(header) {
+                HTTPClientRequest.Body.Length.known(Int64(value))
+            } else {
+                HTTPClientRequest.Body.Length.unknown
+            }
         clientRequest.body = .stream(
             request.body,
             length: contentLength

@@ -1,10 +1,11 @@
-@testable import App
 import Hummingbird
 import HummingbirdTesting
 import ServiceLifecycle
-import XCTest
+import Testing
 
-final class AppTests: XCTestCase {
+@testable import App
+
+struct AppTests {
     struct TestAppArguments: AppArguments {
         var hostname: String { "127.0.0.1" }
         var port: Int { 8081 }
@@ -55,66 +56,66 @@ final class AppTests: XCTestCase {
 
     // MARK: tests
 
-    func testSimple() async throws {
+    @Test func testSimple() async throws {
         try await self.testProxy { router in
             router.get("hello") { _, _ in
-                return "Hello"
+                "Hello"
             }
         } test: { port in
             let proxy = buildApplication(TestAppArguments(location: "", target: "http://localhost:\(port)"))
             try await proxy.test(.live) { client in
                 try await client.execute(uri: "/hello", method: .get) { response in
-                    XCTAssertEqual(String(buffer: response.body), "Hello")
+                    #expect(String(buffer: response.body) == "Hello")
                 }
             }
         }
     }
 
-    func testLocation() async throws {
+    @Test func testLocation() async throws {
         try await self.testProxy { router in
             router.get("hello") { _, _ in
-                return "Hello"
+                "Hello"
             }
         } test: { port in
             let proxy = buildApplication(TestAppArguments(location: "/proxy", target: "http://localhost:\(port)"))
             try await proxy.test(.live) { client in
                 try await client.execute(uri: "/proxy/hello", method: .get) { response in
-                    XCTAssertEqual(String(buffer: response.body), "Hello")
+                    #expect(String(buffer: response.body) == "Hello")
                 }
             }
         }
     }
 
-    func testEchoBody() async throws {
+    @Test func testEchoBody() async throws {
         let string = "This is a test body"
         let buffer = ByteBuffer(string: string)
         try await self.testProxy { router in
             router.post("echo") { request, _ in
                 // test content length was passed through
-                XCTAssertEqual(request.headers[.contentLength], buffer.readableBytes.description)
+                #expect(request.headers[.contentLength] == buffer.readableBytes.description)
                 return Response(status: .ok, body: .init(asyncSequence: request.body))
             }
         } test: { port in
             let proxy = buildApplication(TestAppArguments(location: "", target: "http://localhost:\(port)"))
             try await proxy.test(.live) { client in
                 try await client.execute(uri: "/echo", method: .post, body: buffer) { response in
-                    XCTAssertEqual(response.body, buffer)
+                    #expect(response.body == buffer)
                 }
             }
         }
     }
 
-    func testLargeBody() async throws {
+    @Test func testLargeBody() async throws {
         try await self.testProxy { router in
             router.post("echo") { request, _ in
-                return Response(status: .ok, body: .init(asyncSequence: request.body))
+                Response(status: .ok, body: .init(asyncSequence: request.body))
             }
         } test: { port in
             let proxy = buildApplication(TestAppArguments(location: "", target: "http://localhost:\(port)"))
             try await proxy.test(.live) { client in
                 let buffer = self.randomBuffer(size: 1024 * 1500)
                 try await client.execute(uri: "/echo", method: .post, body: buffer) { response in
-                    XCTAssertEqual(response.body, buffer)
+                    #expect(response.body == buffer)
                 }
             }
         }
