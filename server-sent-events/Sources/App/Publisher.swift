@@ -25,7 +25,7 @@ actor Publisher<Value: Sendable>: Service {
 
     ///  Subscribe to service
     /// - Returns: AsyncStream of values, and subscription identifier
-    nonisolated func subscribe() -> (AsyncStream<Value>, SubscriptionID) {
+    nonisolated(nonsending) func subscribe<ReturnValue>(_ operation: (AsyncStream<Value>) async throws -> ReturnValue) async throws -> ReturnValue {
         let id = SubscriptionID()
 
         // Each subscription gets an AsyncStream and a SubscriptionID
@@ -35,12 +35,14 @@ actor Publisher<Value: Sendable>: Service {
         // data will stack up in the server's memory.
         let (stream, source) = AsyncStream<Value>.makeStream()
         subSource.yield(.add(id, source))
-        return (stream, id)
+
+        defer { self.unsubscribe(id) }
+        return try await operation(stream)
     }
 
     ///  Unsubscribe from service
     /// - Parameter id: Subscription identifier
-    nonisolated func unsubscribe(_ id: SubscriptionID) {
+    private nonisolated func unsubscribe(_ id: SubscriptionID) {
         subSource.yield(.remove(id))
     }
 

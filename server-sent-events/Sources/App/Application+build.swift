@@ -1,3 +1,4 @@
+import AsyncAlgorithms
 import Hummingbird
 import Logging
 import NIOCore
@@ -18,7 +19,7 @@ public protocol AppArguments {
 /// The request context can store any data that is associated with the request
 /// This could include things like the authenticated user, a JWT token, or other information derived
 /// from the request such as their IP address, or user agent.
-/// 
+///
 /// The Request Context can be accessed and modified by any middleware or route handler.
 /// This allows middleware to pass information forward to the next middleware or route handler in the chain.
 struct AppRequestContext: RequestContext {
@@ -86,41 +87,56 @@ func buildRouter(requestPublisher: Publisher<String>) -> Router<AppRequestContex
                 // It will stay open until the client closes the connection, or the stream ends
                 let allocator = ByteBufferAllocator()
 
-                // A subscription to some data source is opened
-                // This might be a database like Redis, or some other data source
-                let (stream, id) = requestPublisher.subscribe()
+                // We create a stream to pass our cancel event to
+                enum StreamResult: Sendable {
+                    case event(String)
+                    case cancel
+                }
+                let (cancelStream, cancelCont) = AsyncStream.makeStream(of: StreamResult.self)
 
                 // This is a helper that will call the `onGracefulShutdown` closure
                 // when the application is shutting down.
                 // This helps ensure that the application will gracefully shut down, meaning
                 // any existing work will be correctly cleaned up before the application exits.
                 try await withGracefulShutdownHandler {
-                    // If connection if closed then this function will call the `onInboundCLosed` closure
+                    // If connection if closed then this function will call the `onInboundClosed` closure
                     try await request.body.consumeWithInboundCloseHandler { requestBody in
-                        // This loop will suspend until a new message is available, or the stream ends
-                        // If the stream ends, the loop will finish exiting the loop.
-                        for try await value in stream {
-                            // A new value was received from the data source
-                            // We create a new ServerSentEvent with the value and write it to the response body
-                            // The `await` before the `write` is used to ensure that the write is completed
-                            // before the loop continues to await the next value
-                            // This applies backpressure to the data source
-                            // Depending on the implementation, the data source could buffer the messages
-                            // in memory or suspend the production of events until the client is ready to receive them
-                            // Additionally, data could be dropped if the client is unable to keep up with the rate of data production
-                            try await writer.write(
-                                ServerSentEvent(data: .init(string: value)).makeBuffer(
-                                    allocator: allocator
-                                )
-                            )
+
+                        // A subscription to some data source is opened
+                        // This might be a database like Redis, or some other data source
+                        try await requestPublisher.subscribe { stream in
+                            // We merge the publisher stream with the cancellation stream
+                            let publishAndCancelStream = merge(cancelStream, stream.map { .event($0) })
+
+                            // This will wait for either a publish event or a cancellation event
+                            outsideLoop: for try await value in publishAndCancelStream {
+                                // A new value was received from the data source
+                                switch value {
+                                case .event(let value):
+                                    // if it is a publish event we create a new ServerSentEvent with the value
+                                    // and write it to the response body
+                                    // The `await` before the `write` is used to ensure that the write is completed
+                                    // before the loop continues to await the next value
+                                    // This applies backpressure to the data source
+                                    // Depending on the implementation, the data source could buffer the messages
+                                    // in memory or suspend the production of events until the client is ready to receive them
+                                    // Additionally, data could be dropped if the client is unable to keep up with the rate of data production
+                                    try await writer.write(
+                                        ServerSentEvent(data: .init(string: value)).makeBuffer(
+                                            allocator: allocator
+                                        )
+                                    )
+                                case .cancel:
+                                    // if it is a cancellation event then we exit the loop
+                                    break outsideLoop
+                                }
+                            }
                         }
                     } onInboundClosed: {
-                        // If the client closes the connection, we unsubscribe from the data source 
-                        requestPublisher.unsubscribe(id)
+                        cancelCont.yield(.cancel)
                     }
                 } onGracefulShutdown: {
-                    // If the application is shutting down, we unsubscribe from the data source
-                    requestPublisher.unsubscribe(id)
+                    cancelCont.yield(.cancel)
                 }
                 try await writer.finish(nil)
             }
