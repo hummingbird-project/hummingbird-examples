@@ -20,7 +20,7 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdFluent
 import NIO
-import SRP
+@preconcurrency import SRP
 
 struct UserController {
     typealias Context = AppRequestContext
@@ -53,7 +53,7 @@ struct UserController {
     struct CreateUserInput: Codable {
         let name: String
         let salt: String
-        let verifier: String // hex format
+        let verifier: String  // hex format
     }
 
     struct CreateUserOutput: ResponseCodable {
@@ -63,7 +63,7 @@ struct UserController {
     @Sendable func createUser(request: Request, context: Context) async throws -> CreateUserOutput {
         let input = try await request.decode(as: CreateUserInput.self, context: context)
         guard let verifier = SRPKey(hex: input.verifier) else { throw HTTPError(.badRequest, message: "Invalid verifier") }
-        let user = User(name: input.name, salt: input.salt, verifier: String(base64Encoding: verifier.bytes))
+        let user = User(name: input.name, salt: input.salt, verifier: Base64.encodeToString(bytes: verifier.bytes))
         let db = self.fluent.db()
         // check if user exists and if they don't then add new user
         let dbUser = try await User.query(on: db)
@@ -103,9 +103,9 @@ struct UserController {
         let session = try SRPSession(
             userID: user.requireID(),
             state: .authenticating(
-                A: String(base64Encoding: A.bytes),
-                B: String(base64Encoding: serverKeys.public.bytes),
-                serverSharedSecret: String(base64Encoding: serverSharedSecret.bytes)
+                A: Base64.encodeToString(bytes: A.bytes),
+                B: Base64.encodeToString(bytes: serverKeys.public.bytes),
+                serverSharedSecret: Base64.encodeToString(bytes: serverSharedSecret.bytes)
             )
         )
         context.sessions.setSession(session)
@@ -165,7 +165,7 @@ struct UserController {
 extension Array where Element: FixedWidthInteger {
     /// generate a hexdigest of the array of bytes
     func hexdigest() -> String {
-        return self.map({
+        self.map({
             let characters = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"]
             return "\(characters[Int($0 >> 4)])\(characters[Int($0 & 0xf)])"
         }).joined()
