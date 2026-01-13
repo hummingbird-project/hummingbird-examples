@@ -1,14 +1,17 @@
-@testable import App
+import Foundation
 import Hummingbird
 import HummingbirdTesting
-import XCTest
+import Testing
 
-final class AppTests: XCTestCase {
+@testable import App
+
+struct AppTests {
     struct TestArguments: AppArguments {
         var hostname: String { "127.0.0.1" }
         var port: Int { 0 }
     }
 
+    @Test
     func testUploadDownload() async throws {
         let app = buildApplication(args: TestArguments())
 
@@ -28,18 +31,19 @@ final class AppTests: XCTestCase {
                 headers: [.fileName: testFileName],
                 body: buffer
             ) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
                 let bodyString = String(buffer: response.body)
-                XCTAssertTrue(bodyString.contains(testFileName))
+                #expect(bodyString.contains(testFileName))
             }
 
             try await client.execute(uri: "/files/\(testFileName)", method: .get) { response in
                 let downloadString = String(buffer: response.body)
-                XCTAssertEqual(downloadString, textString, "Downloaded bytes should match uploaded bytes")
+                #expect(downloadString == textString, "Downloaded bytes should match uploaded bytes")
             }
         }
     }
 
+    @Test
     func testUploadDownload2() async throws {
         let app = buildApplication(args: TestArguments())
 
@@ -80,15 +84,14 @@ final class AppTests: XCTestCase {
             headers: [.fileName: testFileName],
             body: buffer
         ) { response in
-            XCTAssertEqual(response.status, .ok)
+            #expect(response.status == .ok)
         }
 
         print("--download-- \(testFileName)")
         try await client.execute(uri: "/files/\(testFileName)", method: .get) { response in
             let dlBytes = response.body.getBytes(at: 0, length: response.body.readableBytes)
 
-            let isOk = dlBytes == bytes
-            XCTAssertTrue(isOk, "Downloaded bytes should match uploaded bytes")
+            #expect(dlBytes == bytes, "Downloaded bytes should match uploaded bytes")
         }
 
         print("--downloaded-- \(testFileName)")
