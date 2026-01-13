@@ -1,15 +1,17 @@
-@testable import App
+import Foundation
 import Hummingbird
 import HummingbirdAuthTesting
 import HummingbirdTesting
-import XCTest
+import Testing
+
+@testable import App
 
 struct TestArguments: AppArguments {
     var migrate: Bool = true
     var inMemoryDatabase: Bool = true
 }
 
-final class AppTests: XCTestCase {
+struct AppTests {
     func createUser<Return>(
         name: String,
         password: String,
@@ -32,7 +34,7 @@ final class AppTests: XCTestCase {
         client: some TestClientProtocol,
         _ callback: @escaping (TestResponse) throws -> Return
     ) async throws -> Return {
-        return try await client.execute(
+        try await client.execute(
             uri: "/user/login",
             method: .post,
             auth: .basic(username: name, password: password)
@@ -46,7 +48,7 @@ final class AppTests: XCTestCase {
         client: some TestClientProtocol,
         _ callback: @escaping (TestResponse) throws -> Return
     ) async throws -> Return {
-        return try await client.execute(
+        try await client.execute(
             uri: "/user",
             method: .get,
             headers: cookie.map { [.cookie: $0] } ?? [:]
@@ -55,48 +57,47 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func testCreateUser() async throws {
+    @Test func testCreateUser() async throws {
         let app = try await buildApplication(TestArguments(), configuration: .init())
         try await app.test(.live) { client in
             try await self.createUser(name: "adam", password: "test", client: client) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await self.createUser(name: "adam", password: "test", client: client) { response in
-                XCTAssertEqual(response.status, .conflict)
+                #expect(response.status == .conflict)
             }
         }
     }
 
-    func testLogin() async throws {
+    @Test func testLogin() async throws {
         let app = try await buildApplication(TestArguments(), configuration: .init())
         try await app.test(.live) { client in
             try await self.createUser(name: "adam", password: "testLogin", client: client) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             try await self.login(name: "adam", password: "testLogin", client: client) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }
 
-    func testSession() async throws {
+    @Test func testSession() async throws {
         let app = try await buildApplication(TestArguments(), configuration: .init())
         try await app.test(.live) { client in
             try await self.createUser(name: "john", password: "testSession", client: client) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
             let cookie = try await self.login(name: "john", password: "testSession", client: client) { response in
-                XCTAssertEqual(response.status, .ok)
-                return try XCTUnwrap(response.headers[.setCookie])
+                #expect(response.status == .ok)
+                return try #require(response.headers[.setCookie])
             }
             try await self.getCurrent(cookie: cookie, client: client) { response in
-                XCTAssertEqual(response.status, .ok)
-                let body = try XCTUnwrap(response.body)
-                let user = try JSONDecoder().decode(UserResponse.self, from: body)
-                XCTAssertEqual(user.name, "john")
+                #expect(response.status == .ok)
+                let user = try JSONDecoder().decode(UserResponse.self, from: response.body)
+                #expect(user.name == "john")
             }
             try await self.getCurrent(cookie: nil, client: client) { response in
-                XCTAssertEqual(response.status, .unauthorized)
+                #expect(response.status == .unauthorized)
             }
         }
     }
