@@ -7,12 +7,12 @@ let package = Package(
     name: "ResponseBodyProcessing",
     platforms: [.macOS(.v14), .iOS(.v17), .tvOS(.v17)],
     products: [
-        .executable(name: "App", targets: ["App"]),
+        .executable(name: "App", targets: ["App"])
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.19.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
-        .package(url: "https://github.com/apple/swift-crypto", from: "3.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto", from: "4.0.0"),
     ],
     targets: [
         .executableTarget(
