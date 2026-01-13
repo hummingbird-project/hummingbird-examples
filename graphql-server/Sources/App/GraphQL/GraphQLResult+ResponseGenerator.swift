@@ -1,6 +1,7 @@
 import GraphQL
 import HTTPTypes
 import Hummingbird
+import NIOFoundationCompat
 
 extension GraphQLResult {
     public func response(from _: Request, context _: some RequestContext) throws -> Response {
