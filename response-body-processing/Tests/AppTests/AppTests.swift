@@ -1,12 +1,13 @@
 import Crypto
+import Foundation
 import Hummingbird
 import HummingbirdTesting
 import Logging
-import XCTest
+import Testing
 
 @testable import App
 
-final class AppTests: XCTestCase {
+final class AppTests {
     struct TestArguments: AppArguments {
         let hostname = "127.0.0.1"
         let port = 0
@@ -19,16 +20,15 @@ final class AppTests: XCTestCase {
         return ByteBufferAllocator().buffer(bytes: data)
     }
 
-    func testApp() async throws {
+    @Test func testApp() async throws {
         let args = TestArguments()
         let app = try await buildApplication(args)
         let buffer = Self.randomBuffer(size: 256 * 000)
         let digest = SHA256.hash(data: Data(buffer.readableBytesView))
         try await app.test(.live) { client in
             try await client.execute(uri: "/echo", method: .post, body: buffer) { response in
-                XCTAssertEqual(
-                    response.trailerHeaders?[.digest],
-                    "sha256=\(digest.hexDigest())"
+                #expect(
+                    response.trailerHeaders?[.digest] == "sha256=\(digest.hexDigest())"
                 )
             }
         }
