@@ -12,6 +12,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.19.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.90.0"),
         .package(url: "https://github.com/GraphQLSwift/Graphiti.git", .upToNextMinor(from: "3.0.0")),
     ],
     targets: [
@@ -21,6 +22,7 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Graphiti", package: "Graphiti"),
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
