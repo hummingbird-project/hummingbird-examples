@@ -1,9 +1,11 @@
-@testable import App
+import Foundation
 import Hummingbird
 import HummingbirdTesting
-import XCTest
+import Testing
 
-final class AppTests: XCTestCase {
+@testable import App
+
+struct AppTests {
     func buildQuery(_ query: String, variables: [String: Any] = [:]) throws -> ByteBuffer {
         struct AnyCodable: Encodable {
             let value: Any
@@ -43,8 +45,7 @@ final class AppTests: XCTestCase {
         variables: [String: Any] = [:],
         expectedResult: String,
         client: some TestClientProtocol,
-        file: StaticString = #filePath,
-        line: UInt = #line
+        sourceLocation: SourceLocation = #_sourceLocation
     ) async throws {
         let testQuery = try self.buildQuery(query, variables: variables)
         try await client.execute(
@@ -53,8 +54,8 @@ final class AppTests: XCTestCase {
             headers: [.contentType: "application/json; charset=utf-8"],
             body: testQuery
         ) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(String(buffer: res.body).trimmingCharacters(in: .whitespacesAndNewlines), expectedResult, file: file, line: line)
+            #expect(res.status == .ok)
+            #expect(String(buffer: res.body).trimmingCharacters(in: .whitespacesAndNewlines) == expectedResult, sourceLocation: sourceLocation)
         }
     }
 
@@ -67,8 +68,7 @@ final class AppTests: XCTestCase {
         variables: [String: Any] = [:],
         expectedResult: Result,
         client: some TestClientProtocol,
-        file: StaticString = #filePath,
-        line: UInt = #line
+        sourceLocation: SourceLocation = #_sourceLocation
     ) async throws {
         let testQuery = try self.buildQuery(query, variables: variables)
         try await client.execute(
@@ -77,15 +77,15 @@ final class AppTests: XCTestCase {
             headers: [.contentType: "application/json; charset=utf-8"],
             body: testQuery
         ) { res in
-            XCTAssertEqual(res.status, .ok)
+            #expect(res.status == .ok)
             let result = try JSONDecoder().decode(DataWrapper<Result>.self, from: res.body)
-            XCTAssertEqual(result.data, expectedResult, file: file, line: line)
+            #expect(result.data == expectedResult, sourceLocation: sourceLocation)
         }
     }
 
     // MARK: Tests
 
-    func testHeroNewHope() async throws {
+    @Test func testHeroNewHope() async throws {
         let app = buildApplication(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
         try await app.test(.router) { client in
             try await self.testQuery(
@@ -96,7 +96,7 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func testHeroNameAndFriends() async throws {
+    @Test func testHeroNameAndFriends() async throws {
         struct Result: Codable, Equatable {
             struct Hero: Codable, Equatable {
                 struct Friend: Codable, ExpressibleByStringLiteral, Equatable {
@@ -123,7 +123,7 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func testGraphQLQueryError() async throws {
+    @Test func testGraphQLQueryError() async throws {
         let app = buildApplication(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
         try await app.test(.router) { client in
             let badQuery = #"{ FAIL"#
@@ -134,12 +134,12 @@ final class AppTests: XCTestCase {
                 headers: [.contentType: "application/json; charset=utf-8"],
                 body: badRequestBody
             ) { res in
-                XCTAssertEqual(res.status, .badRequest)
+                #expect(res.status == .badRequest)
             }
         }
     }
 
-    func testFetchLuke() async throws {
+    @Test func testFetchLuke() async throws {
         let app = buildApplication(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
         try await app.test(.router) { client in
             try await self.testQuery(
@@ -150,7 +150,7 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func testFetchSomeID() async throws {
+    @Test func testFetchSomeID() async throws {
         let app = buildApplication(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
         try await app.test(.router) { client in
             try await self.testQuery(
@@ -162,7 +162,7 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func testFetchLukeAliased() async throws {
+    @Test func testFetchLukeAliased() async throws {
         let app = buildApplication(configuration: .init(address: .hostname("127.0.0.1", port: 8080)))
         try await app.test(.router) { client in
             try await self.testQuery(
@@ -173,7 +173,7 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func testDuplicateFields() async throws {
+    @Test func testDuplicateFields() async throws {
         struct Result: Codable, Equatable {
             struct Character: Codable, Equatable {
                 struct HomePlanet: Codable, Equatable, ExpressibleByStringLiteral {
@@ -203,7 +203,7 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func testUseFragment() async throws {
+    @Test func testUseFragment() async throws {
         struct Result: Codable, Equatable {
             struct Character: Codable, Equatable {
                 struct HomePlanet: Codable, Equatable, ExpressibleByStringLiteral {
@@ -233,7 +233,7 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func testTypeOfR2D2() async throws {
+    @Test func testTypeOfR2D2() async throws {
         struct Result: Codable, Equatable {
             struct Character: Codable, Equatable {
                 let name: String
@@ -257,7 +257,7 @@ final class AppTests: XCTestCase {
         }
     }
 
-    func testSearch() async throws {
+    @Test func testSearch() async throws {
         struct Result: Codable, Equatable {
             struct SearchResult: Codable, Equatable {
                 let name: String

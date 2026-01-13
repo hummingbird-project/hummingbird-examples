@@ -1,18 +1,19 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 import PackageDescription
 
 let package = Package(
     name: "graphql-server",
     platforms: [
-        .macOS(.v14),
+        .macOS(.v14)
     ],
     products: [
-        .executable(name: "App", targets: ["App"]),
+        .executable(name: "App", targets: ["App"])
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.19.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
-        .package(url: "https://github.com/GraphQLSwift/Graphiti.git", .upToNextMinor(from: "1.2.0")),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.90.0"),
+        .package(url: "https://github.com/GraphQLSwift/Graphiti.git", .upToNextMinor(from: "3.0.0")),
     ],
     targets: [
         .executableTarget(
@@ -21,12 +22,13 @@ let package = Package(
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Graphiti", package: "Graphiti"),
                 .product(name: "Hummingbird", package: "hummingbird"),
+                .product(name: "NIOFoundationCompat", package: "swift-nio"),
             ],
             swiftSettings: [
                 // Enable better optimizations when building in Release configuration. Despite the use of
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
                 // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
+                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
             ]
         ),
         .testTarget(
