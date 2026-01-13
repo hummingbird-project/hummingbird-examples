@@ -18,8 +18,7 @@ func buildApplication(configuration: ApplicationConfiguration) -> some Applicati
         }
         return try await graphQLHandler.handle(
             query: graphqlQuery.query,
-            variables: graphqlQuery.variables,
-            eventLoop: eventLoopGroup.any()
+            variables: graphqlQuery.variables
         )
     }
 
