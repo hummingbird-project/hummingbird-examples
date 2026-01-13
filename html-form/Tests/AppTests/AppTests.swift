@@ -1,18 +1,22 @@
-@testable import App
+import Configuration
 import Hummingbird
 import HummingbirdTesting
 import Logging
-import XCTest
+import Testing
 
-final class AppTests: XCTestCase {
-    struct TestArguments: AppArguments {
-        var hostname: String = "127.0.0.1"
-        var port = 8080
-        var logLevel: Logger.Level? = .trace
-    }
+@testable import App
 
-    func testApp() async throws {
-        let app = try await buildApplication(args: TestArguments())
+private let reader = ConfigReader(providers: [
+    InMemoryProvider(values: [
+        "host": "127.0.0.1",
+        "port": "0",
+        "log.level": "trace",
+    ])
+])
+
+struct AppTests {
+    @Test func testApp() async throws {
+        let app = try await buildApplication(reader: reader)
 
         try await app.test(.router) { client in
             let urlencoded = "name=Adam&age=34"
@@ -22,8 +26,8 @@ final class AppTests: XCTestCase {
                 headers: [.contentType: "application/x-www-form-urlencoded"],
                 body: ByteBufferAllocator().buffer(string: urlencoded)
             ) { response in
-                XCTAssertEqual(response.headers[.contentType], "text/html")
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.headers[.contentType] == "text/html")
+                #expect(response.status == .ok)
             }
         }
     }
