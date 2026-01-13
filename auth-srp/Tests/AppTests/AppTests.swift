@@ -12,16 +12,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import App
 import Crypto
 import Foundation
 import Hummingbird
 import HummingbirdTesting
 import Logging
-import SRP
-import XCTest
+@preconcurrency import SRP
+import Testing
 
-final class AppTests: XCTestCase {
+@testable import App
+
+struct AppTests {
     struct TestArguments: AppArguments {
         var hostname = "localhost"
         var port = 8080
@@ -30,6 +31,7 @@ final class AppTests: XCTestCase {
         var inMemoryDatabase = true
     }
 
+    @Test
     func testApp() async throws {
         let srpClient = SRPClient(configuration: SRPConfiguration<Insecure.SHA1>(.N2048))
         let app = try await buildApplication(TestArguments())
@@ -38,7 +40,7 @@ final class AppTests: XCTestCase {
             let createUser = UserController.CreateUserInput(name: "JohnSmith", salt: salt.hexDigest(), verifier: verifier.hex)
             let createUserBody = try JSONEncoder().encode(createUser)
             try await client.execute(uri: "/api/user", method: .post, body: .init(data: createUserBody)) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
 
             let keys = srpClient.generateKeys()
@@ -49,12 +51,12 @@ final class AppTests: XCTestCase {
                 method: .post,
                 body: .init(data: initLoginBody)
             ) { response -> (UserController.InitLoginOutput, String) in
-                XCTAssertEqual(response.status, .ok)
-                let cookies = try XCTUnwrap(response.headers[.setCookie])
+                #expect(response.status == .ok)
+                let cookies = try #require(response.headers[.setCookie])
                 let initLoginResponse = try JSONDecoder().decode(UserController.InitLoginOutput.self, from: response.body)
                 return (initLoginResponse, cookies)
             }
-            let serverPublicKey = try XCTUnwrap(SRPKey(hex: initLoginResponse.B))
+            let serverPublicKey = try #require(SRPKey(hex: initLoginResponse.B))
             let sharedSecret = try srpClient.calculateSharedSecret(
                 username: "JohnSmith",
                 password: "1234567890",
@@ -77,13 +79,13 @@ final class AppTests: XCTestCase {
                 headers: [.cookie: cookies],
                 body: .init(data: verifyLoginBody)
             ) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
                 let verifyLoginResponse = try JSONDecoder().decode(UserController.VerifyLoginOutput.self, from: response.body)
-                let serverProof = try XCTUnwrap(SRPKey(hex: verifyLoginResponse.proof))
+                let serverProof = try #require(SRPKey(hex: verifyLoginResponse.proof))
                 // verify server proof
                 let M = SRPKey(clientProof, padding: srpClient.configuration.sizeN)
                 let calculatedServerProof = [UInt8](srpClient.hash(data: A.bytes + M.bytes + K.bytes))
-                XCTAssertEqual(serverProof.bytes, calculatedServerProof)
+                #expect(serverProof.bytes == calculatedServerProof)
             }
         }
     }
@@ -92,6 +94,6 @@ final class AppTests: XCTestCase {
 extension Sequence where Element == UInt8 {
     /// return a hexEncoded string buffer from an array of bytes
     func hexDigest() -> String {
-        return self.map { String(format: "%02x", $0) }.joined(separator: "")
+        self.map { String(format: "%02x", $0) }.joined(separator: "")
     }
 }
