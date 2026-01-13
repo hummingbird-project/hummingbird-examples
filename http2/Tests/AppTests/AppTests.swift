@@ -1,11 +1,13 @@
-@testable import App
 import Crypto
+import Foundation
 import Hummingbird
 import HummingbirdTesting
 import NIOHTTP2
 import NIOSSL
+import Testing
 import X509
-import XCTest
+
+@testable import App
 
 struct TestAppArguments: AppArguments {
     var tlsConfiguration: TLSConfiguration {
@@ -46,19 +48,19 @@ struct TestAppArguments: AppArguments {
     }
 }
 
-final class AppTests: XCTestCase {
-    func testApp() async throws {
+struct AppTests {
+    @Test func testApp() async throws {
         let app = try buildApplication(arguments: TestAppArguments(), configuration: .init())
 
         try await app.test(.ahc(.https)) { client in
             try await client.execute(uri: "/http", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "Using http v2.0")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "Using http v2.0")
             }
 
             try await client.execute(uri: "/http", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
-                XCTAssertEqual(String(buffer: response.body), "Using http v2.0")
+                #expect(response.status == .ok)
+                #expect(String(buffer: response.body) == "Using http v2.0")
             }
         }
     }
