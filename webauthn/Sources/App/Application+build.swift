@@ -52,7 +52,10 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
     let memoryPersist = MemoryPersistDriver()
 
     // Verify the working directory is correct
-    assert(FileManager.default.fileExists(atPath: "public/images/hummingbird.png"), "Set your working directory to the root folder of this example to get it to work")
+    assert(
+        FileManager.default.fileExists(atPath: "public/images/hummingbird.png"),
+        "Set your working directory to the root folder of this example to get it to work"
+    )
     // load mustache template library
     let library = try await MustacheLibrary(directory: Bundle.module.resourcePath!)
 
@@ -70,7 +73,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
         SessionMiddleware(storage: memoryPersist)
         // health check endpoint
         Get("/health") { _, _ -> HTTPResponse.Status in
-            return .ok
+            .ok
         }
         HTMLController(
             mustacheLibrary: library,
@@ -80,7 +83,7 @@ func buildApplication(_ arguments: AppArguments) async throws -> some Applicatio
         RouteGroup("api") {
             WebAuthnController(
                 webauthn: .init(
-                    config: .init(
+                    configuration: .init(
                         relyingPartyID: "localhost",
                         relyingPartyName: "Hummingbird WebAuthn example",
                         relyingPartyOrigin: "http://localhost:8080"
