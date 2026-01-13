@@ -8,6 +8,7 @@ import Testing
 
 @testable import App
 
+@Suite("S3 Upload Tests", .disabled(if: Environment().get("CI") != nil, "Disabled in CI as it requires a Valkey server"))
 struct AppTests {
     struct TestArguments: AppArguments {
         let hostname = "localhost"
