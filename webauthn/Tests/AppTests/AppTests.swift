@@ -12,12 +12,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-@testable import App
 import Hummingbird
 import HummingbirdTesting
-import XCTest
+import Testing
 
-final class AppTests: XCTestCase {
+@testable import App
+
+struct AppTests {
     struct TestArguments: AppArguments {
         var hostname: String { "127.0.0.1" }
         var port: Int { 8080 }
@@ -26,12 +27,13 @@ final class AppTests: XCTestCase {
         var certificateChain: String { "certs/server.crt" }
     }
 
+    @Test
     func testApp() async throws {
         let args = TestArguments()
         let app = try await buildApplication(args)
         try await app.test(.router) { client in
             try await client.execute(uri: "/health", method: .get) { response in
-                XCTAssertEqual(response.status, .ok)
+                #expect(response.status == .ok)
             }
         }
     }

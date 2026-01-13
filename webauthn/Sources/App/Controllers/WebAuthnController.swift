@@ -29,7 +29,7 @@ struct WebAuthnController: RouterController {
 
     // return RouteGroup with user login endpoints
     var body: some RouterMiddleware<Context> {
-        return RouteGroup("user") {
+        RouteGroup("user") {
             Post("signup", handler: self.signup)
             Get("login", handler: self.beginAuthentication)
             Post("login", handler: self.finishAuthentication)
@@ -50,9 +50,10 @@ struct WebAuthnController: RouterController {
 
     @Sendable func signup(request: Request, context: Context) async throws -> Response {
         let input = try await request.decode(as: SignUpInput.self, context: context)
-        guard try await User.query(on: self.fluent.db())
-            .filter(\.$username == input.username)
-            .first() == nil
+        guard
+            try await User.query(on: self.fluent.db())
+                .filter(\.$username == input.username)
+                .first() == nil
         else {
             throw HTTPError(.conflict, message: "Username already taken.")
         }
@@ -67,10 +68,12 @@ struct WebAuthnController: RouterController {
         let registrationSession = try await context.sessions.session?.session(fluent: self.fluent)
         guard case .signedUp(let user) = registrationSession else { throw HTTPError(.unauthorized) }
         let options = try self.webauthn.beginRegistration(user: user.publicKeyCredentialUserEntity)
-        let session = try WebAuthnSession(from: .registering(
-            user: user,
-            challenge: options.challenge
-        ))
+        let session = try WebAuthnSession(
+            from: .registering(
+                user: user,
+                challenge: options.challenge
+            )
+        )
         context.sessions.setSession(session, expiresIn: .seconds(600))
         return options
     }
@@ -86,7 +89,7 @@ struct WebAuthnController: RouterController {
                 credentialCreationData: input,
                 // this is likely to be removed soon
                 confirmCredentialIDNotRegisteredYet: { id in
-                    return try await WebAuthnCredential.query(on: self.fluent.db()).filter(\.$id == id).first() == nil
+                    try await WebAuthnCredential.query(on: self.fluent.db()).filter(\.$id == id).first() == nil
                 }
             )
             try await WebAuthnCredential(credential: credential, userId: user.requireID()).save(on: self.fluent.db())
@@ -102,10 +105,12 @@ struct WebAuthnController: RouterController {
 
     /// Begin Authenticating a user
     @Sendable func beginAuthentication(_ request: Request, context: Context) async throws -> PublicKeyCredentialRequestOptions {
-        let options = try self.webauthn.beginAuthentication(timeout: 60000)
-        let session = try WebAuthnSession(from: .authenticating(
-            challenge: options.challenge
-        ))
+        let options = self.webauthn.beginAuthentication(timeout: .seconds(60))
+        let session = try WebAuthnSession(
+            from: .authenticating(
+                challenge: options.challenge
+            )
+        )
         context.sessions.setSession(session, expiresIn: .seconds(600))
         return options
     }
@@ -116,10 +121,11 @@ struct WebAuthnController: RouterController {
         let input = try await request.decode(as: AuthenticationCredential.self, context: context)
         guard case .authenticating(let challenge) = authenticationSession else { throw HTTPError(.unauthorized) }
         let id = input.id.urlDecoded.asString()
-        guard let webAuthnCredential = try await WebAuthnCredential.query(on: fluent.db())
-            .filter(\.$id == id)
-            .with(\.$user)
-            .first()
+        guard
+            let webAuthnCredential = try await WebAuthnCredential.query(on: fluent.db())
+                .filter(\.$id == id)
+                .with(\.$user)
+                .first()
         else {
             throw HTTPError(.unauthorized)
         }
