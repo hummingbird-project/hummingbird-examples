@@ -1,16 +1,16 @@
-// swift-tools-version:5.9
+// swift-tools-version:6.0
 import PackageDescription
 
 let package = Package(
     name: "upload-s3",
     platforms: [
-        .macOS(.v14),
+        .macOS(.v14)
     ],
     products: [
-        .executable(name: "App", targets: ["App"]),
+        .executable(name: "App", targets: ["App"])
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.9.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.19.0"),
         .package(url: "https://github.com/soto-project/soto.git", from: "7.0.0"),
         .package(url: "https://github.com/soto-project/soto-core.git", from: "7.9.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
@@ -27,7 +27,7 @@ let package = Package(
                 // Enable better optimizations when building in Release configuration. Despite the use of
                 // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
                 // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release)),
+                .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
             ]
         ),
         .testTarget(
