@@ -5,9 +5,9 @@
  *
  * The Graphiti [README](https://github.com/GraphQLSwift/Graphiti#getting-started) is also a helpful reference.
  */
-import Graphiti
+@preconcurrency import Graphiti
 
-public struct StarWarsAPI: API {
+public struct StarWarsAPI: API, Sendable {
     public let resolver = StarWarsResolver()
 
     public let schema = try! Schema<StarWarsResolver, StarWarsContext> {
@@ -30,7 +30,7 @@ public struct StarWarsAPI: API {
             Field("name", at: \.name)
                 .description("The name of the character.")
 
-            Field("friends", at: \.friends, as: [TypeReference<Character>].self)
+            Field("friends", at: Character.getFriends)
                 .description("The friends of the character, or an empty list if they have none.")
 
             Field("appearsIn", at: \.appearsIn)
@@ -47,9 +47,11 @@ public struct StarWarsAPI: API {
             Field("diameter", at: \.diameter)
             Field("rotationPeriod", at: \.rotationPeriod)
             Field("orbitalPeriod", at: \.orbitalPeriod)
-            Field("residents", at: \.residents, as: [TypeReference<Human>].self)
+            Field("residents", at: \.residents)
         }
-        .description("A large mass, planet or planetoid in the Star Wars Universe, at the time of 0 ABY.")
+        .description(
+            "A large mass, planet or planetoid in the Star Wars Universe, at the time of 0 ABY."
+        )
 
         Type(Human.self, interfaces: [Character.self]) {
             Field("id", at: \.id)
@@ -57,7 +59,7 @@ public struct StarWarsAPI: API {
             Field("appearsIn", at: \.appearsIn)
             Field("homePlanet", at: \.homePlanet)
 
-            Field("friends", at: Human.getFriends, as: [Character].self)
+            Field("friends", at: Human.getFriends)
                 .description("The friends of the human, or an empty list if they have none.")
 
             Field("secretBackstory", at: Human.getSecretBackstory)
@@ -71,7 +73,7 @@ public struct StarWarsAPI: API {
             Field("appearsIn", at: \.appearsIn)
             Field("primaryFunction", at: \.primaryFunction)
 
-            Field("friends", at: Droid.getFriends, as: [Character].self)
+            Field("friends", at: Droid.getFriends)
                 .description("The friends of the droid, or an empty list if they have none.")
 
             Field("secretBackstory", at: Droid.getSecretBackstory)
@@ -82,9 +84,11 @@ public struct StarWarsAPI: API {
         Union(SearchResult.self, members: Planet.self, Human.self, Droid.self)
 
         Query {
-            Field("hero", at: StarWarsResolver.hero, as: Character.self) {
+            Field("hero", at: StarWarsResolver.hero) {
                 Argument("episode", at: \.episode)
-                    .description("If omitted, returns the hero of the whole saga. If provided, returns the hero of that particular episode.")
+                    .description(
+                        "If omitted, returns the hero of the whole saga. If provided, returns the hero of that particular episode."
+                    )
             }
             .description("Returns a hero based on the given episode.")
 
@@ -98,7 +102,7 @@ public struct StarWarsAPI: API {
                     .description("Id of the droid.")
             }
 
-            Field("search", at: StarWarsResolver.search, as: [SearchResult].self) {
+            Field("search", at: StarWarsResolver.search) {
                 Argument("query", at: \.query)
                     .defaultValue("R2-D2")
             }
