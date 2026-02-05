@@ -13,7 +13,6 @@
 //===----------------------------------------------------------------------===//
 
 import Hummingbird
-import HummingbirdValkey
 import Jobs
 import JobsValkey
 import Logging
@@ -50,6 +49,7 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
 
     if !args.processJobs {
         let router = Router()
+        // add route that creates a job
         router.post("/send") { request, context -> HTTPResponse.Status in
             let message = try await request.body.collect(upTo: 2048)
             try await jobQueue.push(
@@ -79,18 +79,33 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
             )
         )
     } else {
+        // Create a JobSchedule and add clean up jobs to the schedule
         var jobSchedule = JobSchedule()
+        // This will remove completed jobs older than 24 hours
         jobSchedule.addJob(
             jobQueue.queue.cleanupJob,
             parameters: .init(completedJobs: .remove(maxAge: .seconds(24 * 60 * 60))),
             schedule: .hourly(minute: 52)
         )
+        // This will re-schedule any jobs whose worker crashed while it was being processed
+        jobSchedule.addJob(
+            jobQueue.queue.cleanupProcessingJob,
+            parameters: .init(maxJobsToProcess: 100),
+            schedule: .onMinutes([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55])
+        )
+        // Create a ServiceGroup that includes the scheduler and the job queue processor. The scheduler is set
+        // to acquire its lock so you can run multiple versions of the application but only one will ever schedule
+        // jobs
         return await ServiceGroup(
             configuration: .init(
                 services: [
                     valkeyClient,
-                    jobQueue.processor(options: .init(numWorkers: 4, gracefulShutdownTimeout: .seconds(10))),
-                    jobSchedule.scheduler(on: jobQueue, named: "HBExample"),
+                    jobQueue.processor(options: .init(numWorkers: 16, gracefulShutdownTimeout: .seconds(10))),
+                    jobSchedule.scheduler(
+                        on: jobQueue,
+                        named: "HBExample",
+                        options: .init(schedulerLock: .acquire(every: .seconds(300), for: .seconds(360)))
+                    ),
                 ],
                 gracefulShutdownSignals: [.sigterm, .sigint],
                 logger: logger
