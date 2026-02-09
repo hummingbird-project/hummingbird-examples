@@ -1,0 +1,12 @@
+services:
+  valkey:
+    image: valkey/valkey:latest
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "valkey-cli", "--raw", "incr", "ping"]
+    volumes:
+      - valkey_data:/data
+
+volumes:
+  valkey_data:
