@@ -10,14 +10,16 @@ let package = Package(
         .executable(name: "App", targets: ["App"])
     ],
     dependencies: [
-        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.6.0"),
+        .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.19.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.3.0"),
+        .package(url: "https://github.com/apple/swift-async-algorithms.git", from: "1.1.0"),
         .package(url: "https://github.com/orlandos-nl/SSEKit.git", from: "1.1.0"),
     ],
     targets: [
         .executableTarget(
             name: "App",
             dependencies: [
+                .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "SSEKit", package: "SSEKit"),
