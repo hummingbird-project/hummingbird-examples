@@ -32,27 +32,37 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
     let logger = {
         var logger = Logger(label: "Jobs")
         logger.logLevel =
-            args.logLevel ?? env.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .info
+            args.logLevel ?? env.get("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .debug
         return logger
     }()
     let valkeyLogger = Logger(label: "Valkey")
     let valkeyClient = ValkeyClient(.hostname(valkeyHost, port: 6379), logger: valkeyLogger)
-    let jobQueue = try await JobQueue(
+    let jobService = try await JobService(
         .valkey(
             valkeyClient,
             configuration: .init(queueName: "HBExample", retentionPolicy: .init(completedJobs: .retain)),
             logger: logger
         ),
-        logger: logger
+        logger: logger,
+        options: .init(
+            processor: .init(numWorkers: 16, gracefulShutdownTimeout: .seconds(10)),
+            scheduler: .init(schedulerLock: .acquire(every: .seconds(300), for: .seconds(360))),
+            cleanup: .init(
+                jobs: .init(
+                    parameters: .init(completedJobs: .remove(maxAge: .seconds(10 * 60))),
+                    schedule: .crontab("*/5 * * * *")
+                )
+            )
+        )
     )
-    _ = JobController(queue: jobQueue, emailService: .init(logger: logger))
+    _ = JobController(queue: jobService, emailService: .init(logger: logger))
 
     if !args.processJobs {
         let router = Router()
         // add route that creates a job
         router.post("/send") { request, context -> HTTPResponse.Status in
             let message = try await request.body.collect(upTo: 2048)
-            try await jobQueue.push(
+            try await jobService.push(
                 JobController.EmailParameters(
                     to: ["john@email.com"],
                     from: "jane@email.com",
@@ -79,33 +89,14 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
             )
         )
     } else {
-        // Create a JobSchedule and add clean up jobs to the schedule
-        var jobSchedule = JobSchedule()
-        // This will remove completed jobs older than 24 hours
-        jobSchedule.addJob(
-            jobQueue.queue.cleanupJob,
-            parameters: .init(completedJobs: .remove(maxAge: .seconds(24 * 60 * 60))),
-            schedule: .hourly(minute: 52)
-        )
-        // This will re-schedule any jobs whose worker crashed while it was being processed
-        jobSchedule.addJob(
-            jobQueue.queue.cleanupProcessingJob,
-            parameters: .init(maxJobsToProcess: 100),
-            schedule: .onMinutes([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55])
-        )
         // Create a ServiceGroup that includes the scheduler and the job queue processor. The scheduler is set
         // to acquire its lock so you can run multiple versions of the application but only one will ever schedule
         // jobs
-        return await ServiceGroup(
+        return ServiceGroup(
             configuration: .init(
                 services: [
                     valkeyClient,
-                    jobQueue.processor(options: .init(numWorkers: 16, gracefulShutdownTimeout: .seconds(10))),
-                    jobSchedule.scheduler(
-                        on: jobQueue,
-                        named: "HBExample",
-                        options: .init(schedulerLock: .acquire(every: .seconds(300), for: .seconds(360)))
-                    ),
+                    jobService,
                 ],
                 gracefulShutdownSignals: [.sigterm, .sigint],
                 logger: logger
