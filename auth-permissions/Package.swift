@@ -7,7 +7,7 @@ let package = Package(
     products: [.executable(name: "App", targets: ["App"])],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.5.0"),
-        .package(url: "https://github.com/hummingbird-project/hummingbird-auth.git", branch: "main"),
+        .package(url: "https://github.com/thoven87/hummingbird-auth.git", branch: "main"),
         .package(url: "https://github.com/hummingbird-project/hummingbird-fluent.git", from: "2.0.0"),
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.4.0"),
         .package(url: "https://github.com/vapor/fluent-kit.git", from: "1.54.0"),
