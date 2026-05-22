@@ -58,8 +58,8 @@ struct UserController {
         let user = User(
             name: createUser.name,
             passwordHash: passwordHash,
-            rolesList: createUser.roles.joined(separator: ","),
-            permissionsList: createUser.permissions.joined(separator: ",")
+            roles: Role(rawValue: createUser.roles),
+            permissions: Permission(rawValue: createUser.permissions)
         )
         try await user.save(on: db)
         return .init(status: .created, response: UserResponse(from: user))

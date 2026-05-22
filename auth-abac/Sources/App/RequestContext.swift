@@ -29,7 +29,7 @@ import HummingbirdAuth
 ///    once where needed.
 ///
 /// All downstream authorization and route handlers operate on `identity`.
-struct AppRequestContext: AuthRequestContext, RequestContext, @unchecked Sendable {
+struct AppRequestContext: AuthRequestContext, RequestContext {
     typealias Identity = DocumentRequest
 
     var coreContext: CoreRequestContextStorage

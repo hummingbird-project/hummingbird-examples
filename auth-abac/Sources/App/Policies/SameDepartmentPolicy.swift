@@ -25,12 +25,12 @@ import HummingbirdAuth
 /// Combine with ``SufficientClearancePolicy`` for the full read-access policy:
 ///
 /// ```swift
-/// .authorized {
+/// .add(middleware: AuthorizationPolicyMiddleware(
 ///     anyOf(
 ///         RolePolicy(.admin),
 ///         allOf(SameDepartmentPolicy(), SufficientClearancePolicy())
 ///     )
-/// }
+/// ))
 /// ```
 struct SameDepartmentPolicy: AuthorizationPolicy {
     typealias Identity = DocumentRequest

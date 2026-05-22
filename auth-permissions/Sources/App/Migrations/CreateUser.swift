@@ -21,8 +21,8 @@ struct CreateUser: AsyncMigration {
             .field("name", .string, .required)
             .unique(on: "name")
             .field("password_hash", .string)
-            .field("roles", .string, .required)
-            .field("permissions", .string, .required)
+            .field("roles_mask", .int32, .required)  // Role OptionSet bitmask
+            .field("permissions_mask", .int32, .required)  // Permission OptionSet bitmask
             .create()
     }
 

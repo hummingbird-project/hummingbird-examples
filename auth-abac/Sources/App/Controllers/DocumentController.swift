@@ -53,34 +53,49 @@ struct DocumentController: Sendable {
         // POST /documents — user needs documents:create permission; no existing document
         authed.group()
             .add(middleware: UserIdentityMiddleware())
-            .authorized { PermissionPolicy(.documentsCreate) }
+            .add(middleware: AuthorizationPolicyMiddleware(PermissionPolicy(.documentsCreate)))
             .post(use: self.create)
 
         // GET /documents/:id — same dept AND sufficient clearance, OR admin
         authed.group(":id")
             .add(middleware: DocumentResolverMiddleware(fluent: self.fluent))
-            .authorized {
-                anyOf(
-                    RolePolicy(.admin),
-                    allOf(SameDepartmentPolicy(), SufficientClearancePolicy())
+            .add(
+                middleware: AuthorizationPolicyMiddleware(
+                    anyOf {
+                        RolePolicy(.admin)
+                        allOf {
+                            SameDepartmentPolicy()
+                            SufficientClearancePolicy()
+                        }
+                    }
                 )
-            }
+            )
             .get(use: self.get)
 
         // PUT /documents/:id — owner OR admin
         authed.group(":id")
             .add(middleware: DocumentResolverMiddleware(fluent: self.fluent))
-            .authorized {
-                anyOf(RolePolicy(.admin), DocumentOwnerPolicy())
-            }
+            .add(
+                middleware: AuthorizationPolicyMiddleware(
+                    anyOf {
+                        RolePolicy(.admin)
+                        DocumentOwnerPolicy()
+                    }
+                )
+            )
             .put(use: self.update)
 
         // DELETE /documents/:id — admin AND within allowed hours
         authed.group(":id")
             .add(middleware: DocumentResolverMiddleware(fluent: self.fluent))
-            .authorized {
-                allOf(RolePolicy(.admin), BusinessHoursPolicy(allowedHours: self.allowedDeletionHours))
-            }
+            .add(
+                middleware: AuthorizationPolicyMiddleware(
+                    allOf {
+                        RolePolicy(.admin)
+                        BusinessHoursPolicy(allowedHours: self.allowedDeletionHours)
+                    }
+                )
+            )
             .delete(use: self.delete)
     }
 

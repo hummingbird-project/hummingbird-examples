@@ -41,7 +41,7 @@ struct PostController: Sendable {
                         .first()
                 }
             )
-            .authorized { PermissionPolicy(.postsWrite) }
+            .add(middleware: AuthorizationPolicyMiddleware(PermissionPolicy(.postsWrite)))
             .post(use: self.create)
 
         // Authenticated + (admin role OR posts:delete permission): delete a post
@@ -53,9 +53,14 @@ struct PostController: Sendable {
                         .first()
                 }
             )
-            .authorized {
-                anyOf(RolePolicy(.admin), PermissionPolicy(.postsDelete))
-            }
+            .add(
+                middleware: AuthorizationPolicyMiddleware(
+                    anyOf {
+                        RolePolicy(.admin)
+                        PermissionPolicy(.postsDelete)
+                    }
+                )
+            )
             .delete(use: self.delete)
     }
 

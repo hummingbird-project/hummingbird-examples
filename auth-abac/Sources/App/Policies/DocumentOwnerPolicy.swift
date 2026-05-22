@@ -25,9 +25,9 @@ import HummingbirdAuth
 /// Compose with ``RolePolicy`` so admins can always update:
 ///
 /// ```swift
-/// .authorized {
+/// .add(middleware: AuthorizationPolicyMiddleware(
 ///     anyOf(RolePolicy(.admin), DocumentOwnerPolicy())
-/// }
+/// ))
 /// ```
 struct DocumentOwnerPolicy: AuthorizationPolicy {
     typealias Identity = DocumentRequest

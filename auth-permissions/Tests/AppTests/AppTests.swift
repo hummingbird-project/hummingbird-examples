@@ -25,8 +25,8 @@ import Testing
 private struct TestCreateUserRequest: Encodable {
     let name: String
     let password: String
-    let roles: [String]
-    let permissions: [String]
+    let roles: Int32
+    let permissions: Int32
 }
 
 private struct TestCreatePostRequest: Encodable {
@@ -42,19 +42,20 @@ private struct TestPostResponse: Decodable {
 
 // MARK: - Shared setup helper
 
-/// Creates a user via `PUT /user`. Shared across all tests.
+/// Creates a user via `PUT /user`.
+/// Accepts ``Role`` and ``Permission`` OptionSets directly — no string arrays needed.
 private func createUser(
     name: String,
     password: String,
-    roles: [String],
-    permissions: [String],
+    roles: Role,
+    permissions: Permission = [],
     client: some TestClientProtocol
 ) async throws {
     let body = TestCreateUserRequest(
         name: name,
         password: password,
-        roles: roles,
-        permissions: permissions
+        roles: roles.rawValue,
+        permissions: permissions.rawValue
     )
     try await client.execute(
         uri: "/user",
@@ -83,8 +84,8 @@ struct AppTests {
             try await createUser(
                 name: "alice",
                 password: "secret",
-                roles: ["admin"],
-                permissions: ["posts:read", "posts:write", "posts:delete"],
+                roles: .admin,
+                permissions: [.postsRead, .postsWrite, .postsDelete],
                 client: client
             )
         }
@@ -107,8 +108,8 @@ struct AppTests {
             try await createUser(
                 name: "admin",
                 password: "pass",
-                roles: ["admin"],
-                permissions: ["posts:read", "posts:write", "posts:delete"],
+                roles: .admin,
+                permissions: [.postsRead, .postsWrite, .postsDelete],
                 client: client
             )
             let postBody = TestCreatePostRequest(title: "Hello", body: "World")
@@ -129,11 +130,10 @@ struct AppTests {
             try await createUser(
                 name: "admin",
                 password: "pass",
-                roles: ["admin"],
-                permissions: ["posts:read", "posts:write", "posts:delete"],
+                roles: .admin,
+                permissions: [.postsRead, .postsWrite, .postsDelete],
                 client: client
             )
-            // Create a post
             let postBody = TestCreatePostRequest(title: "To Delete", body: "Delete me")
             let post = try await client.execute(
                 uri: "/posts",
@@ -144,7 +144,6 @@ struct AppTests {
                 #expect(response.status == .created)
                 return try JSONDecoder().decode(TestPostResponse.self, from: response.body)
             }
-            // Delete it
             try await client.execute(
                 uri: "/posts/\(post.id)",
                 method: .delete,
@@ -161,8 +160,8 @@ struct AppTests {
             try await createUser(
                 name: "admin",
                 password: "pass",
-                roles: ["admin"],
-                permissions: ["posts:read"],
+                roles: .admin,
+                permissions: .postsRead,
                 client: client
             )
             try await client.execute(
@@ -183,8 +182,8 @@ struct AppTests {
             try await createUser(
                 name: "editor",
                 password: "pass",
-                roles: ["editor"],
-                permissions: ["posts:read", "posts:write"],
+                roles: .editor,
+                permissions: [.postsRead, .postsWrite],
                 client: client
             )
             let postBody = TestCreatePostRequest(title: "Editor Post", body: "By editor")
@@ -205,18 +204,17 @@ struct AppTests {
             try await createUser(
                 name: "admin",
                 password: "adminpass",
-                roles: ["admin"],
-                permissions: ["posts:read", "posts:write", "posts:delete"],
+                roles: .admin,
+                permissions: [.postsRead, .postsWrite, .postsDelete],
                 client: client
             )
             try await createUser(
                 name: "editor",
                 password: "editorpass",
-                roles: ["editor"],
-                permissions: ["posts:read", "posts:write"],
+                roles: .editor,
+                permissions: [.postsRead, .postsWrite],
                 client: client
             )
-            // Admin creates a post
             let postBody = TestCreatePostRequest(title: "Admin Post", body: "By admin")
             let post = try await client.execute(
                 uri: "/posts",
@@ -227,7 +225,6 @@ struct AppTests {
                 #expect(response.status == .created)
                 return try JSONDecoder().decode(TestPostResponse.self, from: response.body)
             }
-            // Editor tries to delete → 403
             try await client.execute(
                 uri: "/posts/\(post.id)",
                 method: .delete,
@@ -244,8 +241,8 @@ struct AppTests {
             try await createUser(
                 name: "editor",
                 password: "pass",
-                roles: ["editor"],
-                permissions: ["posts:read", "posts:write"],
+                roles: .editor,
+                permissions: [.postsRead, .postsWrite],
                 client: client
             )
             try await client.execute(
@@ -266,8 +263,8 @@ struct AppTests {
             try await createUser(
                 name: "reader",
                 password: "pass",
-                roles: ["reader"],
-                permissions: ["posts:read"],
+                roles: .reader,
+                permissions: .postsRead,
                 client: client
             )
             let postBody = TestCreatePostRequest(title: "Reader Post", body: "Unauthorized")
@@ -288,15 +285,15 @@ struct AppTests {
             try await createUser(
                 name: "admin",
                 password: "adminpass",
-                roles: ["admin"],
-                permissions: ["posts:read", "posts:write", "posts:delete"],
+                roles: .admin,
+                permissions: [.postsRead, .postsWrite, .postsDelete],
                 client: client
             )
             try await createUser(
                 name: "reader",
                 password: "readerpass",
-                roles: ["reader"],
-                permissions: ["posts:read"],
+                roles: .reader,
+                permissions: .postsRead,
                 client: client
             )
             let postBody = TestCreatePostRequest(title: "Post", body: "Content")
@@ -309,7 +306,6 @@ struct AppTests {
                 #expect(response.status == .created)
                 return try JSONDecoder().decode(TestPostResponse.self, from: response.body)
             }
-            // Reader tries to delete → 403
             try await client.execute(
                 uri: "/posts/\(post.id)",
                 method: .delete,
@@ -325,12 +321,12 @@ struct AppTests {
     @Test func testUserWithDeletePermissionCanDeleteWithoutAdminRole() async throws {
         let app = try await buildApplication(TestAppArguments())
         try await app.test(.router) { client in
-            // moderator has posts:delete permission but no admin role
+            // moderator: no admin role, but holds postsDelete permission
             try await createUser(
                 name: "moderator",
                 password: "pass",
-                roles: ["moderator"],
-                permissions: ["posts:read", "posts:write", "posts:delete"],
+                roles: .moderator,
+                permissions: [.postsRead, .postsWrite, .postsDelete],
                 client: client
             )
             let postBody = TestCreatePostRequest(title: "Some Post", body: "Content")
@@ -343,7 +339,7 @@ struct AppTests {
                 #expect(response.status == .created)
                 return try JSONDecoder().decode(TestPostResponse.self, from: response.body)
             }
-            // posts:delete permission satisfies AnyOf(admin role, posts:delete permission)
+            // postsDelete permission satisfies anyOf(admin role, postsDelete permission)
             try await client.execute(
                 uri: "/posts/\(post.id)",
                 method: .delete,

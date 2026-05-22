@@ -18,47 +18,45 @@ import Hummingbird
 import HummingbirdAuth
 import HummingbirdBasicAuth
 
-// MARK: - Role & Permission enums
+// MARK: - Role & Permission OptionSets
+//
+// Using OptionSet means roles and permissions are stored as a single Int32
+// bitmask column per user. Membership checks become bitwise operations and
+// RolePolicy / PermissionPolicy work unchanged because OptionSet conforms
+// to SetAlgebra — the constraint required by RoleProviding / PermissionProviding.
 
-/// Coarse-grained roles assigned to a user.
-/// Raw values are the strings persisted in the `roles` column.
-enum Role: String, Hashable, Sendable {
-    case admin
-    case editor
-    case moderator
-    case reader
+/// Coarse-grained roles. Each case is a single bit; combinations are formed
+/// with standard OptionSet syntax: `[.admin, .editor]`.
+struct Role: OptionSet, Sendable {
+    let rawValue: Int32
+    static let admin = Role(rawValue: 1 << 0)
+    static let editor = Role(rawValue: 1 << 1)
+    static let moderator = Role(rawValue: 1 << 2)
+    static let reader = Role(rawValue: 1 << 3)
 }
 
-/// Fine-grained permissions assigned to a user.
-/// Raw values are the strings persisted in the `permissions` column.
-enum Permission: String, Hashable, Sendable {
-    case postsRead = "posts:read"
-    case postsWrite = "posts:write"
-    case postsDelete = "posts:delete"
+/// Fine-grained permissions. Combine freely: `[.postsRead, .postsWrite]`.
+struct Permission: OptionSet, Sendable {
+    let rawValue: Int32
+    static let postsRead = Permission(rawValue: 1 << 0)
+    static let postsWrite = Permission(rawValue: 1 << 1)
+    static let postsDelete = Permission(rawValue: 1 << 2)
 }
 
 // MARK: - User model
 
-/// Database description of a user
 final class User: Model, PasswordAuthenticatable, RoleProviding, PermissionProviding, @unchecked Sendable {
     static let schema = "user"
 
-    @ID(key: .id)
-    var id: UUID?
+    @ID(key: .id) var id: UUID?
+    @Field(key: "name") var name: String
+    @OptionalField(key: "password_hash") var passwordHash: String?
 
-    @Field(key: "name")
-    var name: String
+    /// Bitmask persisted as a single Int32 column.
+    @Field(key: "roles_mask") var rolesMask: Int32
 
-    @OptionalField(key: "password_hash")
-    var passwordHash: String?
-
-    /// Comma-separated list of roles, e.g. "admin,editor"
-    @Field(key: "roles")
-    var rolesList: String
-
-    /// Comma-separated list of permissions, e.g. "posts:read,posts:write"
-    @Field(key: "permissions")
-    var permissionsList: String
+    /// Bitmask persisted as a single Int32 column.
+    @Field(key: "permissions_mask") var permissionsMask: Int32
 
     init() {}
 
@@ -66,57 +64,42 @@ final class User: Model, PasswordAuthenticatable, RoleProviding, PermissionProvi
         id: UUID? = nil,
         name: String,
         passwordHash: String?,
-        rolesList: String,
-        permissionsList: String
+        roles: Role,
+        permissions: Permission
     ) {
         self.id = id
         self.name = name
         self.passwordHash = passwordHash
-        self.rolesList = rolesList
-        self.permissionsList = permissionsList
+        self.rolesMask = roles.rawValue
+        self.permissionsMask = permissions.rawValue
     }
 
-    // MARK: - RoleProviding
+    // MARK: - RoleProviding / PermissionProviding
+    // OptionSet.Element == Self, so contains() is a single bitwise AND.
 
-    var roles: Set<Role> {
-        Set(rolesList.split(separator: ",").compactMap { Role(rawValue: String($0)) })
-    }
-
-    // MARK: - PermissionProviding
-
-    var permissions: Set<Permission> {
-        Set(permissionsList.split(separator: ",").compactMap { Permission(rawValue: String($0)) })
-    }
+    var roles: Role { Role(rawValue: rolesMask) }
+    var permissions: Permission { Permission(rawValue: permissionsMask) }
 }
 
 // MARK: - Request / Response types
 
-/// Request body for creating a new user
 struct CreateUserRequest: Decodable {
     let name: String
     let password: String?
-    let roles: [String]
-    let permissions: [String]
-
-    init(name: String, password: String?, roles: [String] = [], permissions: [String] = []) {
-        self.name = name
-        self.password = password
-        self.roles = roles
-        self.permissions = permissions
-    }
+    let roles: Int32
+    let permissions: Int32
 }
 
-/// User encoded into an HTTP response
 struct UserResponse: ResponseCodable {
     let id: UUID?
     let name: String
-    let roles: [String]
-    let permissions: [String]
+    let roles: Int32
+    let permissions: Int32
 
     init(from user: User) {
         self.id = user.id
         self.name = user.name
-        self.roles = user.roles.map(\.rawValue).sorted()
-        self.permissions = user.permissions.map(\.rawValue).sorted()
+        self.roles = user.rolesMask
+        self.permissions = user.permissionsMask
     }
 }

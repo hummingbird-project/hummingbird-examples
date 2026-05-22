@@ -35,7 +35,7 @@ struct AdminController: Sendable {
                         .first()
                 }
             )
-            .authorized { RolePolicy(.admin) }
+            .add(middleware: AuthorizationPolicyMiddleware(RolePolicy(.admin)))
             .get("users", use: self.listUsers)
     }
 

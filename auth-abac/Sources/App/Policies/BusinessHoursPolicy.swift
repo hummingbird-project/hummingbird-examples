@@ -23,9 +23,9 @@ import HummingbirdAuth
 ///
 /// ```swift
 /// // Admin-only deletion, permitted only during business hours
-/// .authorized {
+/// .add(middleware: AuthorizationPolicyMiddleware(
 ///     allOf(RolePolicy(.admin), BusinessHoursPolicy(allowedHours: 9..<17))
-/// }
+/// ))
 /// ```
 ///
 /// In tests, pass `0..<24` to always allow, or `0..<0` to always deny.
