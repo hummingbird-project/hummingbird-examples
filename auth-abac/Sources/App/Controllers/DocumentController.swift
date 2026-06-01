@@ -106,7 +106,7 @@ struct DocumentController: Sendable {
     }
 
     func create(_ request: Request, context: Context) async throws -> EditedResponse<DocumentResponse> {
-        guard let identity = context.identity else { throw HTTPError(.unauthorized) }
+        let identity = try context.requireIdentity()
         guard let ownerID = identity.user.id else { throw HTTPError(.internalServerError) }
 
         let body = try await request.decode(as: CreateDocumentRequest.self, context: context)

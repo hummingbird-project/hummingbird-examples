@@ -1,22 +1,12 @@
-//===----------------------------------------------------------------------===//
-//
-// This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2024 the Hummingbird authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-//===----------------------------------------------------------------------===//
-
 import FluentKit
 import FluentSQLiteDriver
+import Foundation
 import Hummingbird
+import HummingbirdAuth
+import HummingbirdCompression
 import HummingbirdFluent
 import Logging
+import Mustache
 
 protocol AppArguments {
     var hostname: String { get }
@@ -44,13 +34,28 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
     await fluent.migrations.add(CreateUser())
     await fluent.migrations.add(CreateDocument())
 
-    if args.migrate || args.inMemoryDatabase {
-        try await fluent.migrate()
-    }
+    // Create FluentPersistDriver *before* migrating so its _hb_persist_ table migration
+    // is registered and included when fluent.migrate() runs.
+    let fluentPersist = await FluentPersistDriver(fluent: fluent)
+
+    // Always migrate on startup — Fluent tracks applied migrations and skips already-run ones.
+    try await fluent.migrate()
+
+    // Load mustache templates from bundle resources
+    let library = try await MustacheLibrary(directory: Bundle.module.resourcePath!)
 
     let router = Router(context: AppRequestContext.self)
-    router.add(middleware: LogRequestsMiddleware(.debug))
+    router.addMiddleware {
+        LogRequestsMiddleware(.debug)
+        ResponseCompressionMiddleware(minimumResponseSizeToCompress: 256)
+        FileMiddleware(logger: logger)
+        SessionMiddleware(storage: fluentPersist)
+    }
 
+    // Web UI routes
+    WebController(mustacheLibrary: library, fluent: fluent).addRoutes(to: router)
+
+    // API routes (unchanged)
     UserController(fluent: fluent).addRoutes(to: router.group("user"))
     DocumentController(
         fluent: fluent,
@@ -65,6 +70,6 @@ func buildApplication(_ args: AppArguments) async throws -> some ApplicationProt
         ),
         logger: logger
     )
-    app.addServices(fluent)
+    app.addServices(fluent, fluentPersist)
     return app
 }

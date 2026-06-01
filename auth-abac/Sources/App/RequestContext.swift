@@ -1,50 +1,40 @@
-//===----------------------------------------------------------------------===//
-//
-// This source file is part of the Hummingbird server framework project
-//
-// Copyright (c) 2021-2024 the Hummingbird authors
-// Licensed under Apache License v2.0
-//
-// See LICENSE.txt for license information
-// See hummingbird/CONTRIBUTORS.txt for the list of Hummingbird authors
-//
-// SPDX-License-Identifier: Apache-2.0
-//
-//===----------------------------------------------------------------------===//
-
+import Foundation
 import Hummingbird
 import HummingbirdAuth
 
 /// The application request context.
 ///
-/// Two-stage identity assembly:
+/// Two-stage identity assembly for API routes:
+/// 1. ``UserAuthenticatorMiddleware`` verifies Basic auth credentials → `authenticatedUser`.
+/// 2. ``DocumentResolverMiddleware`` / ``UserIdentityMiddleware`` assembles the full ``DocumentRequest``.
 ///
-/// 1. ``UserAuthenticatorMiddleware`` verifies Basic auth credentials and writes
-///    the resolved ``User`` into `authenticatedUser`. The `identity` field remains
-///    `nil` at this point.
-///
-/// 2. Either ``DocumentResolverMiddleware`` (document routes) or
-///    ``UserIdentityMiddleware`` (non-document routes) promotes `authenticatedUser`
-///    into the full ``DocumentRequest`` identity, fetching the document exactly
-///    once where needed.
-///
-/// All downstream authorization and route handlers operate on `identity`.
-struct AppRequestContext: AuthRequestContext, RequestContext {
+/// For web UI routes, `sessions` + `currentUser` are used instead (set by ``WebSessionMiddleware``).
+struct AppRequestContext: AuthRequestContext, SessionRequestContext, RequestContext {
     typealias Identity = DocumentRequest
 
     var coreContext: CoreRequestContextStorage
 
-    /// The ``AuthRequestContext`` identity: a fully assembled ``DocumentRequest``.
-    /// Set by ``DocumentResolverMiddleware`` or ``UserIdentityMiddleware``.
+    /// The ``AuthRequestContext`` identity (used by ABAC API routes).
     var identity: DocumentRequest?
 
-    /// Staging field: the authenticated ``User``, set by ``UserAuthenticatorMiddleware``
-    /// before the document (if any) is resolved. Internal to the middleware pipeline.
+    /// Staging field for API routes: authenticated ``User`` before document resolution.
     var authenticatedUser: User?
+
+    // MARK: - Web UI session support
+
+    /// Session value — stores the logged-in user's UUID for web routes.
+    var sessions: SessionContext<UUID>
+
+    /// The web-authenticated user (resolved from session by ``WebSessionMiddleware``).
+    var currentUser: User?
 
     init(source: Source) {
         self.coreContext = .init(source: source)
         self.identity = nil
         self.authenticatedUser = nil
+        self.sessions = .init()
+        self.currentUser = nil
     }
+
+    var requestDecoder: AppRequestDecoder { AppRequestDecoder() }
 }
