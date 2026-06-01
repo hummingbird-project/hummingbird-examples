@@ -1,0 +1,96 @@
+{{>head}}
+<body class="min-h-screen bg-gray-50">
+
+  <!-- Nav -->
+  <header class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-5xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <span class="text-base font-semibold text-gray-900">{{name}}</span>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100">
+          {{roleInfo}}
+        </span>
+        {{#isAdmin}}
+        <a href="/admin"
+           class="inline-flex items-center gap-1 text-xs font-medium text-purple-700 bg-purple-50 border border-purple-100 rounded-full px-2.5 py-0.5 hover:bg-purple-100 transition-colors">
+          Admin Panel
+        </a>
+        {{/isAdmin}}
+      </div>
+      <form action="/logout" method="post">
+        <button type="submit"
+          class="text-sm text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-md transition-colors">
+          Sign out
+        </button>
+      </form>
+    </div>
+  </header>
+
+  <main class="max-w-5xl mx-auto px-6 py-8">
+    <div class="flex items-center justify-between mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">Blog Posts</h1>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Post list -->
+      <div class="lg:col-span-2 space-y-4">
+        {{#posts}}
+        <article class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+          <h2 class="text-base font-semibold text-gray-900 mb-1">{{title}}</h2>
+          <p class="text-sm text-gray-600 leading-relaxed">{{body}}</p>
+          {{#canDelete}}
+          <div class="mt-3 flex justify-end">
+            <form action="/web/posts/{{id}}/delete" method="post">
+              <button type="submit"
+                class="inline-flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700
+                       bg-red-50 hover:bg-red-100 border border-red-200 px-2.5 py-1 rounded-md transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete
+              </button>
+            </form>
+          </div>
+          {{/canDelete}}
+        </article>
+        {{/posts}}
+        {{^posts}}
+        <div class="bg-white rounded-xl border border-dashed border-gray-300 p-10 text-center">
+          <p class="text-sm text-gray-500">No posts yet. Be the first to write one!</p>
+        </div>
+        {{/posts}}
+      </div>
+
+      <!-- Sidebar: create form -->
+      {{#canWrite}}
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 sticky top-6">
+          <h2 class="text-sm font-semibold text-gray-900 mb-4">New Post</h2>
+          <form action="/web/posts" method="post" class="space-y-3">
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Title</label>
+              <input type="text" name="title" required
+                class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm
+                       focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"/>
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">Content</label>
+              <textarea name="body" required rows="5"
+                class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm resize-none
+                       focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"></textarea>
+            </div>
+            <button type="submit"
+              class="w-full py-2 px-4 rounded-lg text-sm font-semibold text-white
+                     bg-indigo-600 hover:bg-indigo-700 transition-colors">
+              Publish
+            </button>
+          </form>
+        </div>
+      </div>
+      {{/canWrite}}
+
+    </div>
+  </main>
+</body>
+</html>
