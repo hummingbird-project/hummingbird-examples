@@ -38,17 +38,22 @@ struct WebController {
     }
 
     func addRoutes(to router: Router<Context>) {
-        router.group()
+        let group = router.group()
             .add(middleware: ErrorPageMiddleware(errorTemplate: errorTemplate, mustacheLibrary: mustacheLibrary))
-            // Unauthenticated routes
-            .get("/login", use: login)
-            .post("/login", use: loginDetails)
-            .get("/signup", use: signup)
-            .post("/signup", use: signupDetails)
-            .post("/logout", use: logout)
-            // Authenticated web routes
-            .add(middleware: WebSessionMiddleware(fluent: fluent))
-            .add(middleware: WebRedirectMiddleware(to: "/login"))
+
+        // Unauthenticated routes
+        group.get("/login", use: login)
+        group.post("/login", use: loginDetails)
+        group.get("/signup", use: signup)
+        group.post("/signup", use: signupDetails)
+        group.post("/logout", use: logout)
+
+        // Authenticated web routes: session resolution + redirect gate in one middleware step
+        group.group()
+            .addMiddleware {
+                WebSessionMiddleware(fluent: fluent)
+                WebRedirectMiddleware(to: "/login")
+            }
             .get("/", use: home)
             .post("/web/documents", use: createDocument)
             .get("/view/:id", use: viewDocument)

@@ -28,14 +28,14 @@ struct AdminController: Sendable {
     /// - `GET /admin/users` — requires `admin` role
     func addRoutes(to group: RouterGroup<Context>) {
         group
-            .add(
-                middleware: BasicAuthenticator { username, _ in
+            .addMiddleware {
+                BasicAuthenticator { username, _ in
                     try await User.query(on: self.fluent.db())
                         .filter(\.$name == username)
                         .first()
                 }
-            )
-            .add(middleware: AuthorizationPolicyMiddleware(RolePolicy(.admin)))
+                AuthorizationPolicyMiddleware(RolePolicy(.admin))
+            }
             .get("users", use: self.listUsers)
     }
 

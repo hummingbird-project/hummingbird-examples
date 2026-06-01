@@ -34,33 +34,31 @@ struct PostController: Sendable {
 
         // Authenticated + posts:write permission: create a post
         group.group()
-            .add(
-                middleware: BasicAuthenticator { username, _ in
+            .addMiddleware {
+                BasicAuthenticator { username, _ in
                     try await User.query(on: self.fluent.db())
                         .filter(\.$name == username)
                         .first()
                 }
-            )
-            .add(middleware: AuthorizationPolicyMiddleware(PermissionPolicy(.postsWrite)))
+                AuthorizationPolicyMiddleware(PermissionPolicy(.postsWrite))
+            }
             .post(use: self.create)
 
         // Authenticated + (admin role OR posts:delete permission): delete a post
         group.group(":id")
-            .add(
-                middleware: BasicAuthenticator { username, _ in
+            .addMiddleware {
+                BasicAuthenticator { username, _ in
                     try await User.query(on: self.fluent.db())
                         .filter(\.$name == username)
                         .first()
                 }
-            )
-            .add(
-                middleware: AuthorizationPolicyMiddleware(
+                AuthorizationPolicyMiddleware(
                     anyOf {
                         RolePolicy(.admin)
                         PermissionPolicy(.postsDelete)
                     }
                 )
-            )
+            }
             .delete(use: self.delete)
     }
 

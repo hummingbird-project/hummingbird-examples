@@ -52,15 +52,17 @@ struct DocumentController: Sendable {
 
         // POST /documents — user needs documents:create permission; no existing document
         authed.group()
-            .add(middleware: UserIdentityMiddleware())
-            .add(middleware: AuthorizationPolicyMiddleware(PermissionPolicy(.documentsCreate)))
+            .addMiddleware {
+                UserIdentityMiddleware()
+                AuthorizationPolicyMiddleware(PermissionPolicy(.documentsCreate))
+            }
             .post(use: self.create)
 
         // GET /documents/:id — same dept AND sufficient clearance, OR admin
         authed.group(":id")
-            .add(middleware: DocumentResolverMiddleware(fluent: self.fluent))
-            .add(
-                middleware: AuthorizationPolicyMiddleware(
+            .addMiddleware {
+                DocumentResolverMiddleware(fluent: self.fluent)
+                AuthorizationPolicyMiddleware(
                     anyOf {
                         RolePolicy(.admin)
                         allOf {
@@ -69,33 +71,33 @@ struct DocumentController: Sendable {
                         }
                     }
                 )
-            )
+            }
             .get(use: self.get)
 
         // PUT /documents/:id — owner OR admin
         authed.group(":id")
-            .add(middleware: DocumentResolverMiddleware(fluent: self.fluent))
-            .add(
-                middleware: AuthorizationPolicyMiddleware(
+            .addMiddleware {
+                DocumentResolverMiddleware(fluent: self.fluent)
+                AuthorizationPolicyMiddleware(
                     anyOf {
                         RolePolicy(.admin)
                         DocumentOwnerPolicy()
                     }
                 )
-            )
+            }
             .put(use: self.update)
 
         // DELETE /documents/:id — admin AND within allowed hours
         authed.group(":id")
-            .add(middleware: DocumentResolverMiddleware(fluent: self.fluent))
-            .add(
-                middleware: AuthorizationPolicyMiddleware(
+            .addMiddleware {
+                DocumentResolverMiddleware(fluent: self.fluent)
+                AuthorizationPolicyMiddleware(
                     allOf {
                         RolePolicy(.admin)
                         BusinessHoursPolicy(allowedHours: self.allowedDeletionHours)
                     }
                 )
-            )
+            }
             .delete(use: self.delete)
     }
 
