@@ -53,7 +53,7 @@ struct TodoController {
 
     /// List all todos created by current user
     func list(_ request: Request, context: TodoContext) async throws -> [Todo] {
-        return try await context.user.$todos.get(on: self.fluent.db())
+        try await context.user.$todos.get(on: self.fluent.db())
     }
 
     struct CreateTodoRequest: ResponseCodable {
@@ -64,6 +64,7 @@ struct TodoController {
     func create(_ request: Request, context: TodoContext) async throws -> EditedResponse<Todo> {
         let todoRequest = try await request.decode(as: CreateTodoRequest.self, context: context)
         guard let host = request.head.authority else { throw HTTPError(.badRequest, message: "No host header") }
+        guard todoRequest.title.firstIndex(where: { !$0.isWhitespace }) != nil else { throw HTTPError(.badRequest, message: "Empty title") }
         let todo = try Todo(title: todoRequest.title, ownerID: context.user.requireID())
         let db = self.fluent.db()
         _ = try await todo.save(on: db)
@@ -92,10 +93,11 @@ struct TodoController {
         let id = try context.parameters.require("id", as: UUID.self)
         let editTodo = try await request.decode(as: EditTodoRequest.self, context: context)
         let db = self.fluent.db()
-        guard let todo = try await Todo.query(on: db)
-            .filter(\.$id == id)
-            .with(\.$owner)
-            .first()
+        guard
+            let todo = try await Todo.query(on: db)
+                .filter(\.$id == id)
+                .with(\.$owner)
+                .first()
         else {
             throw HTTPError(.notFound)
         }
@@ -109,10 +111,11 @@ struct TodoController {
     func deleteId(_ request: Request, context: TodoContext) async throws -> HTTPResponse.Status {
         let id = try context.parameters.require("id", as: UUID.self)
         let db = self.fluent.db()
-        guard let todo = try await Todo.query(on: db)
-            .filter(\.$id == id)
-            .with(\.$owner)
-            .first()
+        guard
+            let todo = try await Todo.query(on: db)
+                .filter(\.$id == id)
+                .with(\.$owner)
+                .first()
         else {
             throw HTTPError(.notFound)
         }
