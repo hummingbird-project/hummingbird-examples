@@ -1,0 +1,136 @@
+{{>head}}
+<body class="min-h-screen bg-gray-50">
+
+  <!-- Nav -->
+  <header class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/" class="text-sm text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Posts
+        </a>
+        <span class="text-gray-300">/</span>
+        <span class="text-sm font-semibold text-gray-900">Admin Panel</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-500">{{name}}</span>
+        <form action="/logout" method="post">
+          <button type="submit"
+            class="text-sm text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-md transition-colors">
+            Sign out
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-8">
+    <div class="mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">User Management</h1>
+      <p class="mt-1 text-sm text-gray-500">
+        Check/uncheck roles and permissions then click <strong>Save</strong> for each user.
+        Unchecking all boxes removes that user's access entirely.
+      </p>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <table class="min-w-full">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider w-36">User</th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Roles
+              <span class="ml-1 font-normal normal-case text-gray-400">(Admin / Editor / Mod / Reader)</span>
+            </th>
+            <th class="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Permissions
+              <span class="ml-1 font-normal normal-case text-gray-400">(Read / Write / Delete)</span>
+            </th>
+            <th class="px-5 py-3 w-20"></th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-100">
+          {{#users}}
+          <tr class="hover:bg-gray-50 transition-colors">
+            <td class="px-5 py-4">
+              <span class="text-sm font-semibold text-gray-900">{{name}}</span>
+              <p class="text-xs text-gray-400 mt-0.5">{{roleLabel}} &middot; {{permLabel}}</p>
+            </td>
+            <form action="/admin/users/{{id}}/roles" method="post">
+              <td class="px-5 py-4">
+                <div class="flex items-center gap-4">
+                  <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="isAdmin" value="on" {{#isAdmin}}checked{{/isAdmin}}
+                      class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
+                    Admin
+                  </label>
+                  <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="isEditor" value="on" {{#isEditor}}checked{{/isEditor}}
+                      class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
+                    Editor
+                  </label>
+                  <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="isModerator" value="on" {{#isModerator}}checked{{/isModerator}}
+                      class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
+                    Mod
+                  </label>
+                  <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="isReader" value="on" {{#isReader}}checked{{/isReader}}
+                      class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"/>
+                    Reader
+                  </label>
+                </div>
+              </td>
+              <td class="px-5 py-4">
+                <div class="flex items-center gap-4">
+                  <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="canRead" value="on" {{#canRead}}checked{{/canRead}}
+                      class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"/>
+                    Read
+                  </label>
+                  <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="canWrite" value="on" {{#canWrite}}checked{{/canWrite}}
+                      class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"/>
+                    Write
+                  </label>
+                  <label class="flex items-center gap-1.5 text-sm text-gray-700 cursor-pointer">
+                    <input type="checkbox" name="canDelete" value="on" {{#canDelete}}checked{{/canDelete}}
+                      class="h-4 w-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"/>
+                    Delete
+                  </label>
+                </div>
+              </td>
+              <td class="px-5 py-4 text-right">
+                <button type="submit"
+                  class="text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700
+                         px-3 py-1.5 rounded-md transition-colors">
+                  Save
+                </button>
+              </td>
+            </form>
+          </tr>
+          {{/users}}
+          {{^users}}
+          <tr>
+            <td colspan="4" class="px-5 py-10 text-center text-sm text-gray-400">No users yet.</td>
+          </tr>
+          {{/users}}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Legend -->
+    <div class="mt-4 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
+      <p class="text-xs font-semibold text-gray-500 mb-2">How roles and permissions interact</p>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-1 text-xs text-gray-600">
+        <div><span class="font-medium">Admin</span> &mdash; can delete any post; access this panel</div>
+        <div><span class="font-medium">Write</span> &mdash; can create posts</div>
+        <div><span class="font-medium">Editor / Moderator / Reader</span> &mdash; cosmetic labels only</div>
+        <div><span class="font-medium">Delete</span> &mdash; can delete posts (same as Admin for deletes)</div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
