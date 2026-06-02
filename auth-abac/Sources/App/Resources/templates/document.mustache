@@ -1,0 +1,98 @@
+{{>head}}
+<body class="min-h-screen bg-gray-50">
+
+  <!-- Nav -->
+  <header class="bg-white border-b border-gray-200 shadow-sm">
+    <div class="max-w-3xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <a href="/" class="text-sm text-gray-500 hover:text-gray-700 transition-colors flex items-center gap-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+          Documents
+        </a>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs text-gray-500">{{name}} &middot; {{department}} &middot; L{{clearanceLevel}}</span>
+        <form action="/logout" method="post">
+          <button type="submit"
+            class="text-sm text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-md transition-colors">
+            Sign out
+          </button>
+        </form>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-6 py-8">
+
+    <!-- Clearance notice -->
+    {{#needsClearance}}
+    <div class="mb-6 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-5 py-4">
+      <svg class="w-5 h-5 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+      </svg>
+      <div>
+        <p class="text-sm font-medium text-amber-800">Insufficient clearance</p>
+        <p class="text-sm text-amber-700 mt-0.5">
+          Your clearance level ({{clearanceLevel}}) is below the required level for this document ({{docClassification}}).
+          You can see the metadata but not the content.
+        </p>
+      </div>
+    </div>
+    {{/needsClearance}}
+
+    <!-- Document header -->
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+      <div class="px-6 py-5 border-b border-gray-100">
+        <div class="flex items-start justify-between gap-4">
+          <h1 class="text-xl font-bold text-gray-900">{{docTitle}}</h1>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-50 text-sky-700">
+              {{docDepartment}}
+            </span>
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700">
+              {{docClassification}}
+            </span>
+          </div>
+        </div>
+      </div>
+      {{#canRead}}
+      <div class="px-6 py-5">
+        <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{{docContent}}</p>
+      </div>
+      {{/canRead}}
+    </div>
+
+    <!-- Edit form (owner only) -->
+    {{#isOwner}}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+      <h2 class="text-base font-semibold text-gray-900 mb-4">Edit document</h2>
+      <form action="/web/documents/{{docId}}/update" method="post" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <input type="text" name="title" value="{{docTitle}}" required
+            class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm
+                   focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"/>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Content</label>
+          <textarea name="content" rows="8" required
+            class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm shadow-sm resize-none
+                   focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">{{docContent}}</textarea>
+        </div>
+        <div class="flex justify-end">
+          <button type="submit"
+            class="py-2 px-5 rounded-lg text-sm font-semibold text-white
+                   bg-indigo-600 hover:bg-indigo-700 transition-colors">
+            Save changes
+          </button>
+        </div>
+      </form>
+    </div>
+    {{/isOwner}}
+
+  </main>
+</body>
+</html>
