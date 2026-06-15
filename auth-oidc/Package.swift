@@ -4,10 +4,10 @@
 import PackageDescription
 
 let package = Package(
-    name: "oauth",
+    name: "auth-oidc",
     platforms: [.macOS(.v15), .iOS(.v18), .tvOS(.v18)],
     products: [
-        .executable(name: "OAuth2", targets: ["OAuth2"])
+        .executable(name: "OIDC", targets: ["OIDC"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-configuration.git", from: "1.0.0", traits: [.defaults, "CommandLineArguments"]),
@@ -19,7 +19,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "OAuth2",
+            name: "OIDC",
             dependencies: [
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "Configuration", package: "swift-configuration"),
@@ -32,9 +32,9 @@ let package = Package(
             resources: [.process("Resources")]
         ),
         .testTarget(
-            name: "OAuth2Tests",
+            name: "OIDCTests",
             dependencies: [
-                .byName(name: "OAuth2"),
+                .byName(name: "OIDC"),
                 .product(name: "HummingbirdTesting", package: "hummingbird"),
             ],
             path: "Tests/AppTests"
