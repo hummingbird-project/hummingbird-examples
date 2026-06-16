@@ -27,10 +27,23 @@ td.title {
     color: red;
 }
 
-.todo-table, .add-todo {
+.todo-container, .add-todo {
+    width: 100%;
     float: left;
     padding: 16px;
     border: 1px solid black;
+}
+
+.add-todo {
+    width: 50%;
+    float: left;
+    padding: 16px;
+    border: 1px solid black;
+    margin-top: 16px;
+}
+
+.todo-table {
+    width: 90%;
 }
 
 #todo-title {

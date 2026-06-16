@@ -38,6 +38,13 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
     // add logging middleware
     router.addMiddleware {
         LogRequestsMiddleware(.info)
+        ContentSecurityMiddleware(
+            contentSecurityPolicy: [
+                .defaultSrc(.self),
+                .frameAncestors(.self),
+                .formAction(.self),
+            ]
+        )
         ResponseCompressionMiddleware(minimumResponseSizeToCompress: 256)
         FileMiddleware(logger: logger)
         CORSMiddleware(
@@ -45,15 +52,18 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
             allowHeaders: [.contentType],
             allowMethods: [.get, .options, .post, .delete, .patch]
         )
-        SessionMiddleware(storage: fluentPersist)
+        SessionMiddleware(storage: fluentPersist, sessionCookieParameters: .init(sameSite: .strict))
     }
     // add health check route
     router.get("/health") { _, _ in
-        return HTTPResponse.Status.ok
+        HTTPResponse.Status.ok
     }
 
     // Verify the working directory is correct
-    assert(FileManager.default.fileExists(atPath: "public/todos.js"), "Set your working directory to the root folder of this example to get it to work")
+    assert(
+        FileManager.default.fileExists(atPath: "public/todos.js"),
+        "Set your working directory to the root folder of this example to get it to work"
+    )
     // load mustache template library
     let library = try await MustacheLibrary(directory: Bundle.module.resourcePath!)
 

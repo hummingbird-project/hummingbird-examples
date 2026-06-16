@@ -49,9 +49,9 @@ struct WebController {
         // get the mustache templates from the library
         self.mustacheLibrary = mustacheLibrary
         guard let todosTemplate = mustacheLibrary.getTemplate(named: "todos"),
-              let loginTemplate = mustacheLibrary.getTemplate(named: "login"),
-              let signupTemplate = mustacheLibrary.getTemplate(named: "signup"),
-              let errorTemplate = mustacheLibrary.getTemplate(named: "error")
+            let loginTemplate = mustacheLibrary.getTemplate(named: "login"),
+            let signupTemplate = mustacheLibrary.getTemplate(named: "signup"),
+            let errorTemplate = mustacheLibrary.getTemplate(named: "error")
         else {
             preconditionFailure("Failed to load mustache templates")
         }
@@ -109,7 +109,9 @@ struct WebController {
 
     /// Login POST page
     func loginDetails(request: Request, context: Context) async throws -> Response {
+        let emailRegex = /^[\w\-\.]+@([\w-]+\.)+[\w-]{2,}$/
         let details = try await request.decode(as: LoginDetails.self, context: context)
+        guard try! emailRegex.wholeMatch(in: details.email) != nil else { throw HTTPError(.badRequest) }
         // check if user exists in the database and then verify the entered password
         // against the one stored in the database. If it is correct then login in user
         if let user = try await User.login(

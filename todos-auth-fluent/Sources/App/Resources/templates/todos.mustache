@@ -5,9 +5,9 @@ Todos for {{name}}
 </h1>
 <input id="logout" type="button" value="Logout" />
 <div style="float:left; width:100%; height:1px; display:block;"></div>
-<div class="todo-table">
+<div class="todo-container">
 {{#first(todos)}}
-<table>
+<table class="todo-table">
 <tr><th>Title</th><th>Done</th></tr>
 {{#todos}}
 <tr id="{{wrappedValue(_id)}}">
