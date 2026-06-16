@@ -14,7 +14,8 @@ public protocol AppArguments {
 }
 
 func buildApplication(_ arguments: some AppArguments) async throws -> some ApplicationProtocol {
-    let logger = Logger(label: "todos-auth-fluent")
+    var logger = Logger(label: "todos-auth-fluent")
+    logger.logLevel = .trace
     let fluent = Fluent(logger: logger)
     // add sqlite database
     if arguments.inMemoryDatabase {
@@ -77,7 +78,8 @@ func buildApplication(_ arguments: some AppArguments) async throws -> some Appli
 
     var app = Application(
         router: router,
-        configuration: .init(address: .hostname(arguments.hostname, port: arguments.port))
+        configuration: .init(address: .hostname(arguments.hostname, port: arguments.port)),
+        logger: logger
     )
     app.addServices(fluent, fluentPersist)
     return app
