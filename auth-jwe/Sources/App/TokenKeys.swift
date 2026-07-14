@@ -27,22 +27,41 @@ struct TokenKeys {
     let signingPublicKey: JSONWebECPublicKey
     let encryptionPublicKey: JSONWebECPublicKey
 
+    /// Loads the fixed demo keys so tokens remain valid across server restarts.
+    /// A real deployment would load persisted keys from a secret store.
     init() throws {
-        var signing = try JSONWebECPrivateKey(curve: .p256)
-        signing.populateKeyIdIfNeeded()
-        var encryption = try JSONWebECPrivateKey(curve: .p256)
-        encryption.populateKeyIdIfNeeded()
+        try self.init(
+            signing: JSONWebECPrivateKey(from: Self.demoSigningJWK),
+            encryption: JSONWebECPrivateKey(from: Self.demoEncryptionJWK)
+        )
+    }
+
+    init(signing: JSONWebECPrivateKey, encryption: JSONWebECPrivateKey) {
         self.signing = signing
         self.encryption = encryption
         self.signingPublicKey = signing.publicKey
         self.encryptionPublicKey = encryption.publicKey
     }
 
-    /// Assemble from existing keys (used by tests to mix-and-match).
-    init(signing: JSONWebECPrivateKey, encryption: JSONWebECPrivateKey) {
-        self.signing = signing
-        self.encryption = encryption
-        self.signingPublicKey = signing.publicKey
-        self.encryptionPublicKey = encryption.publicKey
+    /// Fresh random keys, used by tests.
+    static func random() throws -> TokenKeys {
+        try .init(
+            signing: JSONWebECPrivateKey(curve: .p256),
+            encryption: JSONWebECPrivateKey(curve: .p256)
+        )
+    }
+
+    /// Demo keys — publicly committed, for local development only.
+    private static let demoSigningJWK = #"""
+    {"kty":"EC","crv":"P-256","d":"08xXj5z1YwjRg2dTwVQPtSyB1qVar1o2vFn-Gq6CK8Y","x":"NtLVcpzdKun_z4uU6ivGZWLjNFzAsvyAw5RpFAZ7ro8","y":"XVqmjCmdHrpn5wlF3i-7WfihNgopIyFTKO2aNjOODIY"}
+    """#
+    private static let demoEncryptionJWK = #"""
+    {"kty":"EC","crv":"P-256","d":"MwDVHxciv7I4Ay1r2HhcDL1cpypxjjAuyKpG0goqnNc","x":"6vvVOB_gfJzsJSr2gr0ma5rBUX58a5L81qwqu3sI7O8","y":"VzR-RImb8eAX4ua7Ua1CPUtVZ-O-pVOXczXB9TZJQOA"}
+    """#
+}
+
+extension JSONWebECPrivateKey {
+    fileprivate init(from jwk: String) throws {
+        self = try JSONDecoder().decode(JSONWebECPrivateKey.self, from: Data(jwk.utf8))
     }
 }

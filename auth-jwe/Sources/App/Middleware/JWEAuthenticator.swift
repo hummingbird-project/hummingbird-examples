@@ -18,33 +18,29 @@ import HummingbirdAuth
 import JWSETKit
 
 /// Decrypts a JWE bearer token and verifies the nested JWT.
+///
+/// Returns `nil` on any failure, per the authenticator convention: the request
+/// continues unauthenticated and the protected route rejects it via
+/// `requireIdentity()`. This lets other authenticators run in a chain.
 struct JWEAuthenticator: AuthenticatorMiddleware {
     typealias Context = AppRequestContext
     let keys: TokenKeys
     let audience: String
 
     func authenticate(request: Request, context: Context) async throws -> User? {
-        // `HTTPError` is ambiguous between Hummingbird and JWSETKit; qualify ours.
-        guard let token = request.headers.bearer?.token else {
-            throw Hummingbird.HTTPError(.unauthorized)
-        }
+        guard let token = request.headers.bearer?.token else { return nil }
         do {
-            let jwe = try JSONWebEncryption(from: token)
-            let jwt = try jwe.openNestedToken(keys: self.keys, audience: self.audience)
-            guard let subject = jwt.payload.subject else {
-                throw Hummingbird.HTTPError(.unauthorized)
-            }
+            let jwt = try JSONWebEncryption(from: token).openNestedToken(keys: self.keys, audience: self.audience)
+            guard let subject = jwt.payload.subject else { return nil }
             return User(
-                username: subject,
+                name: subject,
                 passwordHash: nil,
                 email: jwt.payload.email,
                 role: jwt.payload["role"]
             )
-        } catch let error as Hummingbird.HTTPError {
-            throw error
         } catch {
             context.logger.debug("token rejected: \(error)")
-            throw Hummingbird.HTTPError(.unauthorized)
+            return nil
         }
     }
 }
@@ -54,11 +50,15 @@ extension JSONWebEncryption {
     func openNestedToken(keys: TokenKeys, audience: String) throws -> JSONWebToken {
         // Only accept tokens that declare a nested JWT payload.
         guard header.protected.contentType == .jwt else {
-            throw Hummingbird.HTTPError(.unauthorized)
+            throw NestedTokenError.notNestedJWT
         }
         let plaintext = try decrypt(using: keys.encryption)
         let jwt = try JSONWebToken(from: plaintext)
         try jwt.verify(using: keys.signingPublicKey, for: audience)
         return jwt
     }
+}
+
+enum NestedTokenError: Error {
+    case notNestedJWT
 }

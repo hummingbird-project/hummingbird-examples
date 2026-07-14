@@ -27,6 +27,25 @@ private let testReader = ConfigReader(providers: [
     ]),
 ])
 
+private struct TestCreateUserRequest: Encodable {
+    let name: String
+    let password: String
+    let email: String
+    let role: String
+}
+
+/// Register the demo user (`alice`) via the signup route.
+private func createAlice(_ client: some TestClientProtocol) async throws {
+    let body = TestCreateUserRequest(name: "alice", password: "alice-password", email: "alice@example.com", role: "admin")
+    try await client.execute(
+        uri: "/user",
+        method: .put,
+        body: JSONEncoder().encodeAsByteBuffer(body, allocator: ByteBufferAllocator())
+    ) { response in
+        #expect(response.status == .created)
+    }
+}
+
 struct AppTests {
     @Test
     func appStarts() async throws {
@@ -40,13 +59,9 @@ struct AppTests {
 
     @Test
     func nestedTokenRoundTrip() throws {
-        let keys = try TokenKeys()
-        let user = User(username: "alice", passwordHash: nil, email: "alice@example.com", role: "admin")
-        let token = try user.issueNestedToken(
-            keys: keys,
-            issuer: "auth-jwe-example",
-            audience: "hummingbird-clients"
-        )
+        let keys = try TokenKeys.random()
+        let user = User(name: "alice", passwordHash: nil, email: "alice@example.com", role: "admin")
+        let token = try user.issueNestedToken(keys: keys, issuer: "auth-jwe-example", audience: "hummingbird-clients")
         // The token is a 5-segment JWE, not a 3-segment JWS: claims are not
         // readable by the client.
         #expect(token.split(separator: ".").count == 5)
@@ -56,14 +71,15 @@ struct AppTests {
             .openNestedToken(keys: keys, audience: "hummingbird-clients")
         #expect(jwt.payload.subject == "alice")
         #expect(jwt.payload.email == "alice@example.com")
-        #expect(jwt.payload.storage["role"] == "admin")
+        #expect(jwt.payload["role"] == "admin")
     }
 
     @Test
     func loginReturnsEncryptedToken() async throws {
-        let keys = try TokenKeys()
+        let keys = try TokenKeys.random()
         let app = try await buildApplication(reader: testReader, keys: keys)
         try await app.test(.router) { client in
+            try await createAlice(client)
             let token = try await client.execute(
                 uri: "/user/login",
                 method: .post,
@@ -81,7 +97,23 @@ struct AppTests {
                 .openNestedToken(keys: keys, audience: "hummingbird-clients")
             #expect(jwt.payload.subject == "alice")
             #expect(jwt.payload.email == "alice@example.com")
-            #expect(jwt.payload.storage["role"] == "admin")
+            #expect(jwt.payload["role"] == "admin")
+        }
+    }
+
+    @Test
+    func createDuplicateUserFails() async throws {
+        let app = try await buildApplication(reader: testReader)
+        try await app.test(.router) { client in
+            try await createAlice(client)
+            let body = TestCreateUserRequest(name: "alice", password: "other", email: "a@b.c", role: "user")
+            try await client.execute(
+                uri: "/user",
+                method: .put,
+                body: JSONEncoder().encodeAsByteBuffer(body, allocator: ByteBufferAllocator())
+            ) { response in
+                #expect(response.status == .conflict)
+            }
         }
     }
 
@@ -89,6 +121,7 @@ struct AppTests {
     func loginWithWrongPasswordFails() async throws {
         let app = try await buildApplication(reader: testReader)
         try await app.test(.router) { client in
+            try await createAlice(client)
             try await client.execute(
                 uri: "/user/login",
                 method: .post,
@@ -103,6 +136,7 @@ struct AppTests {
     func protectedRouteReturnsPrivateClaims() async throws {
         let app = try await buildApplication(reader: testReader)
         try await app.test(.router) { client in
+            try await createAlice(client)
             let token = try await client.execute(
                 uri: "/user/login",
                 method: .post,
@@ -123,16 +157,12 @@ struct AppTests {
 
     @Test
     func protectedRouteRejectsTokenEncryptedToWrongKey() async throws {
-        let keys = try TokenKeys()
-        let strangerKeys = try TokenKeys()
+        let keys = try TokenKeys.random()
+        let strangerKeys = try TokenKeys.random()
         let app = try await buildApplication(reader: testReader, keys: keys)
         try await app.test(.router) { client in
-            let foreign = try User(username: "alice", passwordHash: nil, email: nil, role: nil)
-                .issueNestedToken(
-                    keys: strangerKeys,
-                    issuer: "auth-jwe-example",
-                    audience: "hummingbird-clients"
-                )
+            let foreign = try User(name: "alice", passwordHash: nil)
+                .issueNestedToken(keys: strangerKeys, issuer: "auth-jwe-example", audience: "hummingbird-clients")
             try await client.execute(uri: "/auth", method: .get, auth: .bearer(foreign)) { response in
                 #expect(response.status == .unauthorized)
             }
@@ -141,18 +171,14 @@ struct AppTests {
 
     @Test
     func protectedRouteRejectsInnerJWTSignedByWrongKey() async throws {
-        let keys = try TokenKeys()
-        let strangerKeys = try TokenKeys()
+        let keys = try TokenKeys.random()
+        let strangerKeys = try TokenKeys.random()
         // Encrypted to the right key but signed by the wrong one.
         let mixed = TokenKeys(signing: strangerKeys.signing, encryption: keys.encryption)
         let app = try await buildApplication(reader: testReader, keys: keys)
         try await app.test(.router) { client in
-            let forged = try User(username: "alice", passwordHash: nil, email: nil, role: nil)
-                .issueNestedToken(
-                    keys: mixed,
-                    issuer: "auth-jwe-example",
-                    audience: "hummingbird-clients"
-                )
+            let forged = try User(name: "alice", passwordHash: nil)
+                .issueNestedToken(keys: mixed, issuer: "auth-jwe-example", audience: "hummingbird-clients")
             try await client.execute(uri: "/auth", method: .get, auth: .bearer(forged)) { response in
                 #expect(response.status == .unauthorized)
             }
@@ -161,16 +187,11 @@ struct AppTests {
 
     @Test
     func protectedRouteRejectsExpiredInnerToken() async throws {
-        let keys = try TokenKeys()
+        let keys = try TokenKeys.random()
         let app = try await buildApplication(reader: testReader, keys: keys)
         try await app.test(.router) { client in
-            let expired = try User(username: "alice", passwordHash: nil, email: nil, role: nil)
-                .issueNestedToken(
-                    keys: keys,
-                    issuer: "auth-jwe-example",
-                    audience: "hummingbird-clients",
-                    expiresIn: -3600
-                )
+            let expired = try User(name: "alice", passwordHash: nil)
+                .issueNestedToken(keys: keys, issuer: "auth-jwe-example", audience: "hummingbird-clients", expiresIn: -3600)
             try await client.execute(uri: "/auth", method: .get, auth: .bearer(expired)) { response in
                 #expect(response.status == .unauthorized)
             }
@@ -181,7 +202,7 @@ struct AppTests {
     func protectedRouteRejectsPlainJWSToken() async throws {
         // A signed-but-not-encrypted token must be rejected: this server only
         // accepts JWE bearer tokens.
-        let keys = try TokenKeys()
+        let keys = try TokenKeys.random()
         let app = try await buildApplication(reader: testReader, keys: keys)
         try await app.test(.router) { client in
             let plainJWS = try String(JSONWebToken(
