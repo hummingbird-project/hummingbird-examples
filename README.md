@@ -18,6 +18,7 @@
 Examples converted to Hummingbird 2.0
 
 - [auth-cognito](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-cognito) - Authentication via AWS Cognito.
+- [auth-jwe](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-jwe) - Encrypted authentication tokens: signed JWTs nested inside JWE, using JWSETKit.
 - [auth-jwt](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-jwt) - Authentication using JWT.
 - [auth-otp](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-otp) - Using one time passwords authentication.
 - [auth-srp](https://github.com/hummingbird-project/hummingbird-examples/tree/main/auth-srp) - Secure Remote Password authentication.
