@@ -2,7 +2,7 @@
 
 Demonstrating file uploads to disk using Hummingbird.
 
-This demo may be useful for organziations that handle secret / sensitive data or otherwise do not want to rely on third party object storage vendors.
+This demo may be useful for organizations that handle secret / sensitive data or otherwise do not want to rely on third party object storage vendors.
 
 ## Crucial Requirements
 
