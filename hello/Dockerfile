@@ -1,7 +1,7 @@
 # ================================
 # Build image
 # ================================
-FROM swift:6.1-noble AS build
+FROM swift:6.3-noble AS build
 
 # Install OS updates
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
@@ -80,8 +80,8 @@ ENV SWIFT_BACKTRACE=enable=yes,sanitize=yes,threads=all,images=all,interactive=n
 USER hummingbird:hummingbird
 
 # Let Docker bind to port 8080
-EXPOSE 8080
+EXPOSE 8081
 
 # Start the Hummingbird service when the image is run, default to listening on 8080 in production environment
 ENTRYPOINT ["./App"]
-CMD ["--hostname", "0.0.0.0", "--port", "8080"]
+CMD ["--http-host", "0.0.0.0", "--http-port", "8081"]
