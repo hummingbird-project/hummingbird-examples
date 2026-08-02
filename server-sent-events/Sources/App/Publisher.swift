@@ -54,7 +54,7 @@ actor Publisher<Value: Sendable>: Service {
                 case .add(let id, let source):
                     self._addSubscriber(id, source: source)
                 case .remove(let id):
-                    self._removeSubsciber(id)
+                    self._removeSubscriber(id)
                 }
             }
         } onGracefulShutdown: {
@@ -66,7 +66,7 @@ actor Publisher<Value: Sendable>: Service {
         self.subscriptions[id] = source
     }
 
-    private func _removeSubsciber(_ id: SubscriptionID) {
+    private func _removeSubscriber(_ id: SubscriptionID) {
         self.subscriptions[id]?.finish()
         self.subscriptions[id] = nil
     }
