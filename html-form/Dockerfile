@@ -40,7 +40,7 @@ RUN cp "/usr/libexec/swift/linux/swift-backtrace-static" ./
 # Copy resources bundled by SPM to staging area
 RUN find -L "$(swift build --package-path /build -c release --show-bin-path)/" -regex '.*\.resources$' -exec cp -Ra {} ./ \;
 
-# Copy any resouces from the public directory if the directories exist
+# Copy any resources from the public directory if the directories exist
 # Ensure that by default, neither the directory nor any of its contents are writable.
 RUN [ -d /build/public ] && { mv /build/public ./public && chmod -R a-w ./public; } || true
 
