@@ -52,9 +52,9 @@ actor Publisher<Value: Sendable>: Service {
             for try await command in self.subStream {
                 switch command {
                 case .add(let id, let source):
-                    self._addSubsciber(id, source: source)
+                    self._addSubscriber(id, source: source)
                 case .remove(let id):
-                    self._removeSubsciber(id)
+                    self._removeSubscriber(id)
                 }
             }
         } onGracefulShutdown: {
@@ -62,11 +62,11 @@ actor Publisher<Value: Sendable>: Service {
         }
     }
 
-    private func _addSubsciber(_ id: SubscriptionID, source: AsyncStream<Value>.Continuation) {
+    private func _addSubscriber(_ id: SubscriptionID, source: AsyncStream<Value>.Continuation) {
         self.subscriptions[id] = source
     }
 
-    private func _removeSubsciber(_ id: SubscriptionID) {
+    private func _removeSubscriber(_ id: SubscriptionID) {
         self.subscriptions[id]?.finish()
         self.subscriptions[id] = nil
     }
