@@ -46,7 +46,7 @@ func buildServiceGroup(_ args: AppArguments) async throws -> ServiceGroup {
         logger: logger,
         options: .init(
             processor: .init(numWorkers: 16, gracefulShutdownTimeout: .seconds(10)),
-            scheduler: .init(schedulerLock: .acquire(every: .seconds(300), for: .seconds(360))),
+            scheduler: .init(schedulerLock: .acquire(every: .seconds(180), for: .seconds(200))),
             cleanup: .init(
                 jobs: .init(
                     parameters: .init(completedJobs: .remove(maxAge: .seconds(10 * 60))),
