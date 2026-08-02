@@ -6,4 +6,4 @@ This example uses the GraphQLSwift [Graphiti](https://github.com/GraphQLSwift/Gr
 
 ## Ideas to extend use
 
-- Replace the `StarWarsContext` with `Fluent` or another persistance layer
+- Replace the `StarWarsContext` with `Fluent` or another persistence layer

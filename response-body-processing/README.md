@@ -1,6 +1,6 @@
 # Echo with SHA256 Digest using ResponseBodyWriter
 
-This is an example demostrating how you can process Response bodies in middleware using a type conforming to `ResponseBodyWriter`. The server has one endpoint `/echo` which will echo the body of the request back in its response. The response will also include in the response the SHA256 of the data being sent back as a trailing header.
+This is an example demonstrating how you can process Response bodies in middleware using a type conforming to `ResponseBodyWriter`. The server has one endpoint `/echo` which will echo the body of the request back in its response. The response will also include in the response the SHA256 of the data being sent back as a trailing header.
 
 You can test the sample as follows:
 
