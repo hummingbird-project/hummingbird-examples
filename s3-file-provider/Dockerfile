@@ -1,7 +1,7 @@
 # ================================
 # Build image
 # ================================
-FROM swift:6.0-noble as build
+FROM swift:6.3-noble as build
 
 # Install OS updates
 RUN export DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
@@ -83,4 +83,4 @@ EXPOSE 8080
 
 # Start the Hummingbird service when the image is run, default to listening on 8080 in production environment
 ENTRYPOINT ["./App"]
-CMD ["--hostname", "0.0.0.0", "--port", "8080"]
+CMD ["--http-host", "0.0.0.0", "--http-port", "8080"]
