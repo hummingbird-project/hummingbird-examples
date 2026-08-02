@@ -1,3 +1,4 @@
+import Configuration
 import Hummingbird
 import Logging
 import SotoCore
@@ -18,23 +19,19 @@ typealias AppRequestContext = BasicRequestContext
 
 ///  Build application
 /// - Parameter arguments: application arguments
-public func buildApplication(_ arguments: some AppArguments, environment: Environment) async throws -> some ApplicationProtocol {
+public func buildApplication(reader: ConfigReader) async throws -> some ApplicationProtocol {
     let logger = {
         var logger = Logger(label: "s3_file_provider")
-        logger.logLevel =
-            arguments.logLevel ?? environment.get("LOG_LEVEL").flatMap(Logger.Level.init) ?? .info
+        logger.logLevel = reader.string(forKey: "log.level", as: Logger.Level.self, default: .info)
         return logger
     }()
 
     let awsClient = AWSClient()
     do {
-        let router = try buildRouter(environment, awsClient: awsClient)
+        let router = try buildRouter(reader: reader, awsClient: awsClient)
         let app = Application(
             router: router,
-            configuration: .init(
-                address: .hostname(arguments.hostname, port: arguments.port),
-                serverName: "s3_file_provider"
-            ),
+            configuration: .init(reader: reader),
             services: [awsClient],
             logger: logger
         )
@@ -47,13 +44,12 @@ public func buildApplication(_ arguments: some AppArguments, environment: Enviro
 
 /// Build router
 func buildRouter(
-    _ environment: Environment,
+    reader: ConfigReader,
     awsClient: AWSClient
 ) throws -> Router<AppRequestContext> {
-    let regionString = try environment.require("s3_file_region")
-    let region = Region(rawValue: regionString)
-    let bucket = try environment.require("s3_file_bucket")
-    let rootFolder = environment.get("s3_file_path") ?? ""
+    let region = try reader.requiredString(forKey: "s3.file.region", as: Region.self)
+    let bucket = try reader.requiredString(forKey: "s3.file.bucket")
+    let rootFolder = reader.string(forKey: "s3.file.path", default: "")
 
     let router = Router(context: AppRequestContext.self)
     // Add middleware
