@@ -1,6 +1,6 @@
-import ArgumentParser
+public import ArgumentParser
 import Hummingbird
-import Logging
+public import Logging
 
 @main
 struct AppCommand: AsyncParsableCommand, AppArguments {
@@ -20,8 +20,8 @@ struct AppCommand: AsyncParsableCommand, AppArguments {
 }
 
 /// Extend `Logger.Level` so it can be used as an argument
-#if hasFeature(RetroactiveAttribute)
-    extension Logger.Level: @retroactive ExpressibleByArgument {}
-#else
-    extension Logger.Level: ExpressibleByArgument {}
-#endif
+extension Logger.Level: @retroactive ExpressibleByArgument {
+    public init?(argument: String) {
+        self.init(rawValue: argument)
+    }
+}
